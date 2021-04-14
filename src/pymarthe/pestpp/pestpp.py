@@ -11,7 +11,7 @@ class MartheToPest(object):
     obs_prefix = 'O'
     def __init__(self, dfSim, obsname_fmt='pestpp'):
         """
-        A PestPP object generated from a simulation dataframe built from 
+        A MartheToPest object generated from a simulation dataframe built from 
         a MARTHE historiq file. The simulation dataframe needs to have a 
         panda.DatetimeIndex index.
 
@@ -76,7 +76,7 @@ class MartheToPest(object):
     @classmethod
     def from_historiq_file(cls, fname, obsname_fmt='pestpp'):
         """
-        Build a PestPP instance from a MARTHE historiq.prn file
+        Build a MartheToPest instance from a MARTHE historiq.prn file
 
         Parameters
         ----------
