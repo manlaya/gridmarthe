@@ -8,6 +8,7 @@ class MartheToPest(object):
     """
     MartheToPest object for generated pest++ instruction and control files.
     """
+    obs_prefix = 'O'
     def __init__(self, dfSim, obsname_fmt='pestpp'):
         """
         A PestPP object generated from a simulation dataframe built from 
@@ -65,7 +66,7 @@ class MartheToPest(object):
         dfObsName.iloc[:,:] = data
         dfObsName = dfObsName.where(
             dfObsName.isna(),
-            'Obs' + dfObsName.astype('Int64').astype('str')
+            self.obs_prefix + dfObsName.astype('Int64').astype('str')
         )
         dfObsName.iloc[dfObsName.isna()] = 'w'
         return dfObsName
