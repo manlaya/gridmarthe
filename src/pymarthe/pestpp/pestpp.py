@@ -188,7 +188,7 @@ class MartheToPest(object):
                                 temp.append(i)
                     date_obs_name = ' '.join(temp[::-1])
                     f.write(
-                        'l{0} !dum! w {1}\n'.format(nbl, date_obs_name)
+                        'l{0} w w {1}\n'.format(nbl, date_obs_name)
                     )
                     nbl = 1
     
