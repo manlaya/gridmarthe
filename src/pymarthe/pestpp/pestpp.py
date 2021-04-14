@@ -32,7 +32,7 @@ class MartheToPest(object):
         self.dfWeight = dfSim.copy()
         self.dfWeight.loc[:,:] = 1
         self.dfGroup = dfSim.copy()
-        self.dfGroup.loc[:,:] = 'default_group'
+        self.dfGroup.loc[:,:] = 'default_grp'
         self.obsname_fmt = obsname_fmt
         
     def _reindex_dataframe(self, df, field):
@@ -54,6 +54,7 @@ class MartheToPest(object):
             )
             dfObsName.loc[date, :] = date_obs_name
         dfObsName[self.dfObs.isna()] = 'w'
+        self.obsname_fmt = 'pestpp'
         return dfObsName
 
     def _format_obsname_to_pest(self):
@@ -69,6 +70,7 @@ class MartheToPest(object):
             self.obs_prefix + dfObsName.astype('Int64').astype('str')
         )
         dfObsName.iloc[dfObsName.isna()] = 'w'
+        self.obsname_fmt = 'pest'
         return dfObsName
 
     @classmethod
@@ -216,11 +218,22 @@ class MartheToPest(object):
             for group in groups:
                 f.write(' ' + group + '\n')
             f.write('* observation data\n')
+            max_len_name = df['Name'].str.len().max()
+            max_len_group = df['Group'].str.len().max()
+            if self.obsname_fmt == 'pest':
+                try:
+                    assert max_len_name <= 20
+                except AssertionError:
+                    print("Format PEST : nom d'observation > à 20 caractères")
+                try:
+                    assert max_len_group <= 12
+                except AssertionError:
+                    print("Format PEST : nom de groupe > à 12 caractères")
             formats = {
-                'Name': '{:<%ds}' % df['Name'].str.len().max(),
+                'Name': '{:<%ds}' % max_len_name,
                 'Value': '{:<20.8}',
                 'Weight': '{:<20.8}',
-                'Group': '{:<%ds}' % df['Group'].str.len().max()
+                'Group': '{:<%ds}' % max_len_group
             }
             formatters = {k: v.format for k, v in formats.items()}
             df.to_string(
