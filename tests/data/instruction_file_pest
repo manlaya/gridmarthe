@@ -1,8 +1,8 @@
 pif %
 %<Date>%
-l1 !dum! w w w !Obs1!
-l1 !dum! w w w !Obs2!
-l1 !dum! w w w !Obs3!
-l1 !dum! w w w !Obs4!
-l1 !dum! w w w !Obs5!
-l1 !dum! w w w !Obs6!
+l1 w w w w !O1!
+l1 w w w w !O2!
+l1 w w w w !O3!
+l1 w w w w !O4!
+l1 w w w w !O5!
+l1 w w w w !O6!

@@ -1,9 +1,9 @@
 * observation group
- default_group
+ default_grp
 * observation data
- Obs1 0.96                 1.0                   default_group
- Obs2 95.485214            1.0                   default_group
- Obs3 0.95                 1.0                   default_group
- Obs4 0.94                 1.0                   default_group
- Obs5 0.49                 1.0                   default_group
- Obs6 0.92                 1.0                   default_group
+ O1 0.96                 1.0                   default_grp
+ O2 95.485214            1.0                   default_grp
+ O3 0.95                 1.0                   default_grp
+ O4 0.94                 1.0                   default_grp
+ O5 0.49                 1.0                   default_grp
+ O6 0.92                 1.0                   default_grp
