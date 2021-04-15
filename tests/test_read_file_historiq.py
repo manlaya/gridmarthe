@@ -1,11 +1,15 @@
+from re import I
 import unittest
+import os
 
 import pymarthe as prt
+
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TestReadHistoriq(unittest.TestCase):
     def setUp(self):
         self.df = prt.read_historiq_file(
-            'data/historiq.prn'
+            os.path.join(THIS_DIR, 'data/historiq.prn')
         )
     def test_index_size(self):
         self.assertEqual(self.df.index.size, 6)
@@ -31,7 +35,7 @@ class TestReadHistoriq(unittest.TestCase):
 class TestReadHistoriqGigogne(TestReadHistoriq):
     def setUp(self):
         self.df = prt.read_historiq_file(
-            'data/historiq_gigogne.prn'
+            os.path.join(THIS_DIR, 'data/historiq_gigogne.prn')
         )
 
 if __name__ == '__main__':

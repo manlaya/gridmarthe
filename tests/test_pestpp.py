@@ -6,30 +6,35 @@ import numpy as np
 
 from pymarthe.pestpp import MartheToPest
 
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-instruction_file_pestpp = open('data/instruction_file_pestpp', 'r').read().strip()
-instruction_file_pest = open('data/instruction_file_pest', 'r').read().strip()
-instruction_file_pestpp2 = open('data/instruction_file_pestpp2', 'r').read().strip()
-instruction_file_pest2 = open('data/instruction_file_pest2', 'r').read().strip()
-control_file_pestpp = open('data/control_file_pestpp', 'r').read().strip()
-control_file_pest = open('data/control_file_pest', 'r').read().strip()
-control_file_pestpp2 = open('data/control_file_pestpp2', 'r').read().strip()
-control_file_pest2 = open('data/control_file_pest2', 'r').read().strip()
+def tf(fname):
+    return os.path.join(THIS_DIR, fname)
+
+instruction_file_pestpp = open(tf('data/instruction_file_pestpp'), 'r').read().strip()
+instruction_file_pest = open(tf('data/instruction_file_pest'), 'r').read().strip()
+instruction_file_pestpp2 = open(tf('data/instruction_file_pestpp2'), 'r').read().strip()
+instruction_file_pest2 = open(tf('data/instruction_file_pest2'), 'r').read().strip()
+control_file_pestpp = open(tf('data/control_file_pestpp'), 'r').read().strip()
+control_file_pest = open(tf('data/control_file_pest'), 'r').read().strip()
+control_file_pestpp2 = open(tf('data/control_file_pestpp2'), 'r').read().strip()
+control_file_pest2 = open(tf('data/control_file_pest2'), 'r').read().strip()
 
 class BaseTest(unittest.TestCase):
     def tearDown(self):
         self.cleanOutput()
     
     def cleanOutput(self):
-        if os.path.exists('data/test.out'):
-            os.remove('data/test.out')
+        if os.path.exists(tf('data/test.out')):
+            os.remove(tf('data/test.out'))
 
 class TestMartheToPest(BaseTest):
     def setUp(self):
         self.cleanOutput()
-        self.pest = MartheToPest.from_historiq_file('data/historiq.prn')
+        self.pest = MartheToPest.from_historiq_file(
+            tf('data/historiq.prn'))
         df = pd.read_csv(
-            'data/observations.csv',
+            tf('data/observations.csv'),
             parse_dates=True,
             index_col=0
         )
@@ -70,29 +75,30 @@ class TestMartheToPest(BaseTest):
     
     def test_write_to_instructionfile_pestpp(self):
         self.pest.convert_obsname('pestpp')
-        self.pest.write_instruction_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_instruction_file(
+            tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, instruction_file_pestpp)
 
     def test_write_to_instructionfile_pest(self):
         self.pest.convert_obsname('pest')
-        self.pest.write_instruction_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_instruction_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, instruction_file_pest)
 
     def test_write_to_controlfile_pestpp(self):
         self.pest.convert_obsname('pestpp')
-        self.pest.write_pst_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_pst_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, control_file_pestpp)
 
     def test_write_to_controlfile_pest(self):
         self.pest.convert_obsname('pest')
-        self.pest.write_pst_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_pst_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, control_file_pest)
 
@@ -100,9 +106,9 @@ class TestMartheToPest(BaseTest):
 class TestMartheToPest2(BaseTest):
     def setUp(self):
         self.cleanOutput()
-        self.pest = MartheToPest.from_historiq_file('data/historiq.prn')
+        self.pest = MartheToPest.from_historiq_file(tf('data/historiq.prn'))
         df = pd.read_csv(
-            'data/observations.csv',
+            tf('data/observations.csv'),
             parse_dates=True,
             index_col=0
         )
@@ -115,29 +121,29 @@ class TestMartheToPest2(BaseTest):
 
     def test_write_to_instructionfile_pestpp2(self):
         self.pest.convert_obsname('pestpp')
-        self.pest.write_instruction_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_instruction_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, instruction_file_pestpp2)
 
     def test_write_to_instructionfile_pest2(self):
         self.pest.convert_obsname('pest')
-        self.pest.write_instruction_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_instruction_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, instruction_file_pest2)
 
     def test_write_to_controlfile_pestpp2(self):
         self.pest.convert_obsname('pestpp')
-        self.pest.write_pst_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_pst_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, control_file_pestpp2)
 
     def test_write_to_controlfile_pest2(self):
         self.pest.convert_obsname('pest')
-        self.pest.write_pst_file('data/test.out')
-        with open('data/test.out') as f:
+        self.pest.write_pst_file(tf('data/test.out'))
+        with open(tf('data/test.out')) as f:
             lines = f.read().strip()
             self.assertEqual(lines, control_file_pest2)
 
