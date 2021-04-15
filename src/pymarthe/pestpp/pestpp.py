@@ -69,7 +69,7 @@ class MartheToPest(object):
             dfObsName.isna(),
             self.obs_prefix + dfObsName.astype('Int64').astype('str')
         )
-        dfObsName.iloc[dfObsName.isna()] = 'w'
+        dfObsName = dfObsName.where(~dfObsName.isna(), 'w')
         self.obsname_fmt = 'pest'
         return dfObsName
 
