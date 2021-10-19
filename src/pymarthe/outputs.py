@@ -1,13 +1,17 @@
-import pandas as pd
-import re
+"""
+Read outputs
+"""
 import datetime
+import re
+import pandas as pd
 
-date_parser = lambda x: datetime.datetime.strptime(x, '%d/%m/%Y')
+def date_parser(x):
+    return datetime.datetime.strptime(x, '%d/%m/%Y')
 
-def read_historiq_file(fname):
+def open_historiq(fname):
     """
     Read a "historiq.prn" file of MARTHE
-    
+
     Parameters
     ----------
     fname : str

@@ -1,3 +1,6 @@
-from pymarthe.utils.historiqfile import *
-import pymarthe.pestpp as pestpp
-import pymarthe.utils as utils
+"""
+Pymarthe module
+"""
+from pymarthe.outputs import open_historiq
+from pymarthe.grid import Permh, OutFile
+import pymarthe.inputs as inputs
