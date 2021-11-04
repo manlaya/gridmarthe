@@ -4,9 +4,8 @@ Objets grilles de Marthe
 import re
 import numpy as np
 import pandas as pd
-import gdal
-import osr
-
+from osgeo import gdal
+from osgeo import osr
 
 def _replace(xstr):
     """
