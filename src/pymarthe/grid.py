@@ -4,8 +4,8 @@ Objets grilles de Marthe
 import re
 import numpy as np
 import pandas as pd
-from osgeo import gdal
-from osgeo import osr
+# from osgeo import gdal
+# from osgeo import osr
 
 def _replace(xstr):
     """
@@ -14,48 +14,48 @@ def _replace(xstr):
     return re.sub('[0-9]-[1-9][0-9]', 'E-10', xstr)
 
 
-def array2raster(
-        newRasterfn,
-        rasterOrigin,
-        pixelWidth,
-        pixelHeight,
-        array,
-        epsg
-):
-    """
-    Convert an array to raster
-
-    Parameters
-    ----------
-    newRasterfn : str
-    rasterOrigin : tuple
-        Raster origin (West, North) in meter
-    pixelWidth : int
-    pixelHeight : int
-        Always negative
-    array : numpy.array
-        North to South orientation
-    epsg : str or int
-    """
-    cols = array.shape[1]
-    rows = array.shape[0]
-    origin_x = rasterOrigin[0]
-    origin_y = rasterOrigin[1]
-    assert pixelHeight < 0
-
-    driver = gdal.GetDriverByName('GTiff')
-    out_raster = driver.Create(
-        newRasterfn, cols, rows, 1, gdal.GDT_Float32
-    )
-    out_raster.SetGeoTransform(
-        (origin_x, pixelWidth, 0, origin_y, 0, pixelHeight)
-    )
-    outband = out_raster.GetRasterBand(1)
-    outband.WriteArray(array)
-    out_raster_srs = osr.SpatialReference()
-    out_raster_srs.ImportFromEPSG(int(epsg))
-    out_raster.SetProjection(out_raster_srs.ExportToWkt())
-    outband.FlushCache()
+# def array2raster(
+#         newRasterfn,
+#         rasterOrigin,
+#         pixelWidth,
+#         pixelHeight,
+#         array,
+#         epsg
+# ):
+#     """
+#     Convert an array to raster
+# 
+#     Parameters
+#     ----------
+#     newRasterfn : str
+#     rasterOrigin : tuple
+#         Raster origin (West, North) in meter
+#     pixelWidth : int
+#     pixelHeight : int
+#         Always negative
+#     array : numpy.array
+#         North to South orientation
+#     epsg : str or int
+#     """
+#     cols = array.shape[1]
+#     rows = array.shape[0]
+#     origin_x = rasterOrigin[0]
+#     origin_y = rasterOrigin[1]
+#     assert pixelHeight < 0
+# 
+#     driver = gdal.GetDriverByName('GTiff')
+#     out_raster = driver.Create(
+#         newRasterfn, cols, rows, 1, gdal.GDT_Float32
+#     )
+#     out_raster.SetGeoTransform(
+#         (origin_x, pixelWidth, 0, origin_y, 0, pixelHeight)
+#     )
+#     outband = out_raster.GetRasterBand(1)
+#     outband.WriteArray(array)
+#     out_raster_srs = osr.SpatialReference()
+#     out_raster_srs.ImportFromEPSG(int(epsg))
+#     out_raster.SetProjection(out_raster_srs.ExportToWkt())
+#     outband.FlushCache()
 
 
 def _avancer(fichier, field):
