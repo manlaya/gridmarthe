@@ -428,7 +428,6 @@ CONTAINS
                     ENDDO
                 ENDIF
                 
-                print *, 'Shift=', shift
                 
                 DO N_COUCH=1, NLAY
                     

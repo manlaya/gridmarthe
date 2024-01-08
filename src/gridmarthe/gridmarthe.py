@@ -424,6 +424,73 @@ def stack_coords(ds, coords=['z', 'y', 'x']):
 
 
 
+def parse_dims(str_dims):
+    return [list(map(int, x.split(' '))) for x in str_dims.strip('x, y, z [grids]: ').split('; ')]
+
+def datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
+    # Memo: here, origin should be defined from pastp (time since timestep 0)
+    idate = (zdates - np.datetime64(origin)) / np.timedelta64(1, 's')
+    idate = np.where(idate < 0., 0., idate) # fake dates from load_marthe_grid will be set to 0, meaning timestep -9999. (eg used in parameters grids)
+    return idate
+
+def is_sorted(a):
+    return np.all(a[:-1] <= a[1:])
+
+def sort_data(ds):
+    # TODO:
+    # s'assurer de l'ordre si ds a été retravaillé :
+        # order by z, y, x
+    # extraire les x, y, dx, dy selon dims = pas de doublons
+    print('not yet available')
+
+def extract_zvar(ds):
+    
+    zvar    = ds[varname].data
+    zdates  = ds.time.data
+    zxcol   = ds.x.data
+    zylig   = ds.y.data
+    zdxlu   = ds.dx.data
+    zdylu   = ds.dy.data
+    ztitle  = ds.attrs['title']
+    dims    = parse_dims(ds.attrs['original_dimensions'])
+    izdates = datetime64_to_float(zdates)
+
+    return (
+        zvar, zdates,
+        zxcol, zylig, zdxlu, zdylu,
+        ztitle, dims, izdates
+    )
+    
+def write_marthe_grid(ds, varname='charge', file='grid.out', atitle='', debug=False):
+    # ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
+    # TODO more flexible
+    
+    (
+        zvar, zdates,
+        zxcol, zylig, zdxlu, zdylu,
+        ztitle, dims, izdates
+    ) = extract_zvar(ds)
+    
+    gm.lecsem.modgridmarthe.write_grid(
+        xvar=zvar,
+        xcol=zxcol,
+        ylig=zylig,
+        dxlu=zdxlu,
+        dylu=zdylu,
+        typ_don=varname.upper(),
+        titsem=atitle, #TODO debug use of ztitle
+        n_dims=dims,
+        nval=len(zvar[0]),
+        ngrid=len(dims),
+        nsteps=len(zdates),
+        dates=izdates,
+        debug=debug,
+        xfile='test.out'
+    )
+    
+    return None
+
+
 if __name__ == '__main__':
     
     print(lecsem.__doc__)
