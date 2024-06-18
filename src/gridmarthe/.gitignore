@@ -1,0 +1,6 @@
+*.so
+*.mod
+*.dll
+*.exe
+*.pyd
+
