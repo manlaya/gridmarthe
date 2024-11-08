@@ -1,11 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+
 from .gridmarthe import *
-from .mgrid_utils import *
+from .operasem import *
+from .plot import plot_nested_grid, plot_outcrop
+
+
+__version__ = '0.1.0'
+
 
 
 @xr.register_dataset_accessor('mart')
 class MartheGrid(object):
-    """ A Marthe grid attributes/methods accessor for xarray.Dataset objects """
-    def __init__(self, xr_obj):
+    """ A Marthe grid attributes/methods accessor for xarray.Dataset objects
+    example: ds = gm.load_marthe_grid(); ds.mart.dropna('permeab', 0.)
+    """
+    def __init__(self, xr_obj: xr.Dataset|None=None):
         self.obj = xr_obj
     
     def assign_coords(self, add_lay=True):
@@ -20,16 +31,15 @@ class MartheGrid(object):
     
     def to_recarray(self):
         """ return a np.recarray from pymarthe compatibility """
-        # TODO, add pymarthe requested informations (i, j, etc.)
+        # TODO, add pymarthe requested informations (i, j, etc.) => grid should be read with `add_grid_id`, and `keep_col` options.
         df = self.obj.to_dataframe()
         return df.to_records()
     
     def to_raster(self, x_dim='x', y_dim='y', time=None, epsg=27572, fout_template='raster'):
-        # from .mgrid_utils import write_raster_from_da
         
         if time is None:
             time = self.obj.times # if not defined, get all available times
-        if isintance(time, str): # make sure to get a iterable for slicing
+        if isinstance(time, str): # make sure to get a iterable for slicing
             time = [time]
         
         for t in time:
@@ -38,15 +48,18 @@ class MartheGrid(object):
         return None
     
     def get_outcrop(self, subset_layers=None):
-        # from .mgrid_utils import get_min_layer
         return get_min_layer(self.obj, subset_layers)
     
-    def subset(self, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
-        # from .mgrid_utils import subset_with_coords
+    def subset_coords(self, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
         return subset_with_coords(self.obj, dims, gdf, xmin, ymin, xmax, ymax)
     
     def dropna(self, varname='charge', nanval=9999.):
         ds = self.obj.copy()
         masque = ds[varname].where(ds[varname] != nanval).dropna(dim='zone') # drop nanval
-        # masque = ds[varname].where(ds[varname] != nanval, drop=True)
         return ds.sel(zone=masque['zone'])
+    
+    # def write(self, fmt='mart'):
+        # if fmt.lower() in ['mart', 'marthe']
+            # write_marthe_grid()
+        # else:
+            # self.obj.to_netcdf()

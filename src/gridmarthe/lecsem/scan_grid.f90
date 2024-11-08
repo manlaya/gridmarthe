@@ -1,5 +1,13 @@
 MODULE MODGRIDMARTHE
-
+!   MODGRIDMARTHE
+!   -------------
+!   Module using lecsem/edsemi subroutines for python wrapper
+!   coding: utf-8
+!
+!   Author/Developper:
+!       JP Vergnes, 2021
+!       A. Manlay,  2022-2023
+!
     INTEGER :: LEC                      ! Unité de lecture
     INTEGER :: IOUCON                   ! Ecriture sur la console (<0 non, 0 = erreurs, >0 = tout)
     INTEGER :: NLIG, NKOL               ! Nombre maximum de ligne et de colonne / en retour nbre de ligne et de colonne
@@ -13,18 +21,18 @@ MODULE MODGRIDMARTHE
     INTEGER :: LIRE_DXDY                ! LIRE_DXDY : 0 = On ne veut pas lire de DX() et DY()
                                         !                (On les saute s'ils existent)
                                         !           : 1 = On veut lire les DX() et DY() (s'ils existent)
-    CHARACTER (LEN=132) :: TITSEM       ! TITSEM = Dernier titre lu pour la Grille (len=132)
+    CHARACTER (LEN=132)  :: TITSEM      ! TITSEM = Dernier titre lu pour la Grille (len=132)
     INTEGER :: LU_DXDY                  ! LU_DXDY : 0 = On n'a pas lu de DX et DY
                                         !         : 1 = On a lu des DX et DY
     INTEGER :: LU_XY                    ! LU_XY   : 0 = On n'a pas lu de X() et Y() : Par ex lecture en format libre
                                         !         : 1 = On a lu des X() et Y()
-    REAL, DIMENSION(999)              :: XCOL ! XCOL  = Tableau des abscisses (si LU_XY > 0)
-    REAL, DIMENSION(999)              :: YLIG ! YLIG  = Tableau des ordonnées (si LU_XY > 0)
-    REAL, DIMENSION(999)              :: DXLU ! DXLU  = DX lus si LU_DXDY > 0
-    REAL, DIMENSION(999)              :: DYLU ! DYLU  = DY lus si LU_DXDY > 0
+    REAL, DIMENSION(999) :: XCOL        ! XCOL  = Tableau des abscisses (si LU_XY > 0)
+    REAL, DIMENSION(999) :: YLIG        ! YLIG  = Tableau des ordonnées (si LU_XY > 0)
+    REAL, DIMENSION(999) :: DXLU        ! DXLU  = DX lus si LU_DXDY > 0
+    REAL, DIMENSION(999) :: DYLU        ! DYLU  = DY lus si LU_DXDY > 0
     REAL    :: X0                       ! X0    = Abscisse du cote ouest de la colonne n°1    (si LU_XY > 0)
     REAL    :: Y0                       ! Y0    = Ordonnée du    bas     de la ligne   n°NLIG (si LU_XY > 0)
-    REAL, DIMENSION(999*999)              :: FONC  ! FONC  = Tableau des valeurs lues
+    REAL, DIMENSION(999*999) :: FONC    ! FONC  = Tableau des valeurs lues
     INTEGER :: IERLEC                   ! IERLEC =  0 Si normal
                                         ! IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
                                         ! IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
@@ -138,7 +146,6 @@ CONTAINS
         IMPLICIT NONE
         !
         CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
-        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM             ! Modifs AM: ajout TITSEM dans les sorties de la subroutine (+ ajout en `dummy argument` càd réf dans la list d'arg de la procedure)
         INTEGER, INTENT(IN)                           :: KNBTOT
         INTEGER, INTENT(IN)                           :: KNBSTEP
         INTEGER, INTENT(IN)                           :: KNU_ZOOMX
@@ -146,8 +153,10 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNBSTEP), INTENT(OUT) :: PDATES
         REAL(KIND=4), DIMENSION(KNBSTEP, KNBTOT), INTENT(OUT) :: PVAR
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
+        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM             ! Modifs AM: ajout TITSEM dans les sorties de la subroutine (+ ajout en `dummy argument` càd réf dans la list d'arg de la procedure)
         !
         INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP
+        ! LOGICAL    :: debug
         !
         LIRE_DXDY =  1
         IANALY    =  0
@@ -170,6 +179,7 @@ CONTAINS
         ISTEP_TEMP = -1
         INTOT_TEMP =  1
         !
+        ! debug = .FALSE.               
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
         !
         DO WHILE (IERLEC == 0)
@@ -200,6 +210,7 @@ CONTAINS
                 ENDIF
                 PVAR(ISTEPINC, INTOT_TEMP:INTOT_TEMP + NTOT -1) = FONC(:NTOT)
                 INTOT_TEMP = INTOT_TEMP + NTOT
+            ! if(debug) print *, 'ERRLEC:', IERLEC, 'At step:', ISTEPINC, 'in layer:', N_COUCH, 'at mesh:', NUMERR
             ENDIF
         ENDDO
         !
@@ -375,6 +386,7 @@ CONTAINS
                           N_DIMS, NVAL, NGRID, NSTEPS, DATES, XFILE, DEBUG, IEREDI)
         ! --- Write array to Marthe Grid format (v9.0) ---
         ! XVAR should not have missing value (if nan, set 9999. before writing !)
+        ! BUT, XVAR should contain all possible value (9999. if nan but do NOT drop nan before)
         ! XVAR shoult be sorted according to sorted indexes (in this order) : Time(asc), GRID(main/gig, asc) LAYER(asc), YCOL (dsc), XCOL (asc)
         IMPLICIT NONE
         !
@@ -395,20 +407,23 @@ CONTAINS
         integer :: ISTEP, TMP_ISTEP, NU_ZOO, NU_GRID, N_COUCH, LEC, INVY, NKOL, NLIG, NTOT, NLAY, NGIG, start_idx, end_idx, shift, i
         real    :: X0, Y0
         real, dimension(:), allocatable :: XTEMPVAR, XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
+        logical :: DEBUGG
         
         INVY   = 0
         IEREDI = 0
         LEC    = 20 ! unité d'écriture, IOUMAI from DTH
         NLAY   = N_DIMS(1, 3)
         NGIG   = NGRID - 1
+        DEBUGG = .FALSE.  ! default value for debugging
         !
-        IF(.NOT. PRESENT(DEBUG)) DEBUG = .FALSE. ! default value for debug
+        IF(PRESENT(DEBUG)) DEBUGG = DEBUG
         !
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='write')
         
         ! Starting process:
         ! loop over timesteps, then id_grid (main, gig), then layers. Write each grid.
-        ! data are stored in 2D array (Time, Zone), so we need to extract values from it based on those indexes (layer, grid, time indexes)
+        ! data are stored in 2D array (Time, Zone), so we need to extract values from it
+        ! based on those indexes (layer, grid, time indexes)
         DO ISTEP=1, NSTEPS
             DATE = DATES(ISTEP)
             
@@ -420,7 +435,8 @@ CONTAINS
                 
                 ! To navigate through XVAR, before computing start_idx, end_idx based on NLAY, NLIG, NKOL,
                 ! we compute a 'shift' index, to jump over previous grids, if id_grid > 0
-                ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig) wich might not be equals
+                ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig)
+                ! wich might not be equals
                 shift = 0
                 IF (NU_ZOO >= 1) THEN
                     DO i=NU_ZOO, 1, -1
@@ -469,17 +485,14 @@ CONTAINS
                         ,DXTEMP, DYTEMP &
                     )
                     !
-                    IF (IEREDI /= 0) THEN
-                        if (DEBUG) then
+                    if (IEREDI /= 0) then
+                        if (DEBUGG) then
                             ! errors might come from non-sorted XY or negatives XY
-                            write (LEC, *),"Writing error, status ", IEREDI, "Lay=", N_COUCH, "Grid=", NU_ZOO
-                            write (LEC, *), "Lay=", N_COUCH, "Grid=", NU_ZOO
-                            write (LEC, *), "X0=", X0, "Y0=", Y0
-                            write (LEC, *), XTEMPCOL
-                            write (LEC, *), YTEMPLIG
+                            write (LEC, *),"Writing error, status ", IEREDI, "Lay=", N_COUCH, "Grid=", NU_ZOO, "X0=", X0, "Y0=", Y0
+                            write (LEC, *), XTEMPCOL, ''
+                            write (LEC, *), YTEMPLIG, ''
                         endif
-                        ! EXIT
-                    ENDIF
+                    endif
                     !
                 ENDDO ! end layer loop
             ENDDO ! end grid loop
