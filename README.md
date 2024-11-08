@@ -1,18 +1,21 @@
 # Gridmarthe
 
 Python project for (fast) Gridmarthe operations.
-A brand new "operasem" in other words :)
+
+*THIS IS A BETA VERSION, improvements and documentation are needed.*
 
 
 ## gridmarthe in a nutshell
 
-Full support of gridmarthe read operations by wrapping MARTHE fortran read/write module,
+Full support of gridmarthe read operations by wrapping MARTHE fortran read/write modules,
 allowing fast reading of marthe grid file (v9, v8, constant_data, etc.), for any variable.
 Recent developpment also allow writting MartheGrid_v9.0 file.
 
 In python, gridmarthe files are loaded using numpy and xarray libraries.
 
 Some "utils" functions are also provided (plot_nested_grid, interp, etc.).
+
+MARTHE is a hydrogeological modelling code developped at BRGM, French Geological Survey [[1]](#1).
 
 
 ## Installation
@@ -30,15 +33,14 @@ f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --fcompiler=gfortran
 ```
 
 On a windows machine, with gitbash, gfortran (mingw project https://mingw-w64.org/ ou https://winlibs.com/#download-release),
-make, microsoft visual C++ V14, 
 python (v3), numpy (version < 2.0) and charset_normalizer:
 
 ```bash
 cd src/gridmarthe/lecsem
 python setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
 ```
-TODO: adapter le setup.py pour windows et numpy>=2.0 (sans distutils)
-TODO: meson compilation at `pip install .`
+
+
 
 ### pip install
 
@@ -55,7 +57,17 @@ A simple example can be found as a
 
 
 ## License
-[MIT Licensed](LICENSE)
+[GNU/GPL-V3 Licensed](LICENSE)
 
 ## Authors and acknowledgment
 J.P. Vergnes and A. Manlay
+
+
+## References
+
+<a id="1">[1]</a> 
+Thiery, D. (2020). Guidelines for MARTHE v7.8 computer code for
+hydro-systems modelling (English version) (Report BRGM/RP-69660-FR; p. 246 p.)
+ <http://ficheinfoterre.brgm.fr/document/RP-69660-FR>
+
+
