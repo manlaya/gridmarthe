@@ -22,38 +22,40 @@ to be compiled before local installation.
 
 ### Compilation
 
-On a linux machine, with gfortran, python3, numpy and charset_normalizer:
+On a linux machine, with gfortran, python3, numpy (version < 2.0) and charset_normalizer:
 
 ```bash
-cd src/gridmarthe
+cd src/gridmarthe/lecsem
 f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --fcompiler=gfortran
 ```
 
-On a windows machine, with gitbash and gfortran (mingw project https://mingw-w64.org/)
+On a windows machine, with gitbash, gfortran (mingw project https://mingw-w64.org/ ou https://winlibs.com/#download-release),
+make, microsoft visual C++ V14, 
+python (v3), numpy (version < 2.0) and charset_normalizer:
+
 ```bash
-cd src/gridmarthe
+cd src/gridmarthe/lecsem
 python setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
 ```
-
+TODO: adapter le setup.py pour windows et numpy>=2.0 (sans distutils)
 TODO: meson compilation at `pip install .`
 
 ### pip install
 
-Install the python package (optionnaly in developper/editable mode)
+Install the python package (optionnaly in developper/editable mode), back at package root directory:
 
 ```
 pip install [-e] .
 ```
 
 ## Usage
-TODO
 
-## Contributing
-TODO
+A simple example can be found as a
+[notebook](example/gm_example.ipynb).
+
 
 ## License
 [MIT Licensed](LICENSE)
 
 ## Authors and acknowledgment
-Created by JP Vergnes,
-developped by JP Vergnes and A. Manlay
+J.P. Vergnes and A. Manlay

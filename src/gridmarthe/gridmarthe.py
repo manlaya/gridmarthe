@@ -23,12 +23,6 @@ from . import lecsem
     with decorator accessor, after read (gridmarthe.load_marthe_grid()) xr.Dataset methods can be called directly on read object
     new methods are added with `mart` accessor.
     
-    # TODO:
-    in utils, xarray ok
-    in lec, just use netcdf4 ?
-    avoid pandas too ?
-    
-    
     Example:
         import gridmarthe as gm
         ds = gm.load_marthe_grid('chasim.out')
@@ -51,16 +45,16 @@ VARS_ATTRS = {
 }
 
 
-def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
+def read_dates_from_pastp(fpastp):
     # reading file as raw df - not str ; faster with pandas func
     pastp = pd.read_csv(
         fpastp,
         header=None,
-        encoding=encoding
+        encoding='cp1252'
     ).squeeze('columns')
 
     # First, get steady state time
-    idx_0  = pastp.loc[pastp.str.contains(' \*\*\* D.*but de la simulation.*')].index.values[0]
+    idx_0  = pastp.loc[pastp.str.contains(' \*\*\* Début de la simulation.*')].index.values[0]
     date_0 = re.findall(r'[0-9]+', pastp.iloc[idx_0] )
     
     # convert as DF
@@ -97,37 +91,40 @@ def scan_var(xfile):
 def read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     """ Read a Marthe grid file
     using fortran wrapper, for a specific variable
+    TODO write Docstring
     
     Parameters
     ----------
     
     xfile   (str): filename to read
     varname (str): string of variable in xfile to get values. Default is CHARGE (groundwater head)
+
     
     Returns
     -------
     
-    zvar    (np.array): variable read from marthe grid file as numpy ndarray (one vector)
-    zdates  (np.array): array of dates (from start))
-    isteps  (np.array): array of indexes of timesteps
-    zxcol   (np.array): array of x coordinates
-    zylig   (np.array): array of y coordinates
-    zdxlu   (np.array): array of dx (equals np.diff(x))
-    zdylu   (np.array): array of dy (equals np.diff(y))
-    ztitle  (np.array): title of marthe grid file read
-    dims    (np.array): list of dimensions of grid [maingrid[x, y, z], nestedgrid1[...], ...]
+    zvar    (np.array): 
+    zdates  (np.array): 
+    isteps  (np.array): 
+    zxcol   (np.array): 
+    zylig   (np.array): 
+    zdxlu   (np.array): 
+    zdylu   (np.array): 
+    ztitle  (np.array): 
+    dims    (np.array): 
     
     """
+    
     nu_zoomx = lecsem.modgridmarthe.scan_nu_zoomx(xfile) # scan nb of nested grids (gig)
     dims, nbsteps = lecsem.modgridmarthe.scan_dim(xfile, varname, nu_zoomx)
     nbtot = np.prod(dims, axis=1).sum() # product deprecated => prod // DeprecationWarning: `product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.
     if nbtot == 0:
-        raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
+        raise ValueError('Varname not found in xfile. No data to parse.')
     
     if shallow_only:
         res = list(lecsem.modgridmarthe.read_grid_shallow( xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx ))
     else:
-        res = list(lecsem.modgridmarthe.read_grid( xfile, varname, nbsteps, nbtot, nu_zoomx))
+        res = list(lecsem.modgridmarthe.read_grid( xfile, varname, nbsteps, nbtot, nu_zoomx ))
     
     res.append(dims)
     return res
@@ -210,7 +207,7 @@ def get_col_and_lig(dims):
         # 3,     ...
         # but flattened, so: repeat ylig value on xcol size, then tile on z_dim size
         ligs = np.append( ligs, np.tile( np.repeat(zligs, zcols.shape[0]), grid[-1] ) )
-    return cols.astype(np.int32), ligs.astype(np.int32)
+    return cols, ligs
 
 def get_id_grid(dims):
     # add id grid : 0 = main grid, >0 = nested grid(s)
@@ -284,7 +281,6 @@ def load_marthe_grid(
         ds (xr.Dataset): a xarray.Dataset object containing values and attributes read from Marthe grid file.
     
     """
-    
     # Fortran error cause sys exit. To avoid this, we add a test on file first
     if not os.path.exists(filename):
         raise FileNotFoundError("File : `{}` does not exist. Please check syntax/path.".format(filename))
@@ -292,16 +288,9 @@ def load_marthe_grid(
     if varname is None:
         if verbose:
             print("Warning, no varname passed to function `read_marthe_grid`. Taking the first varname in filename")
-        varname = scan_var(filename)
-        if verbose:
-            print('Variables founded: ', varname)
-        if len(varname) >= 1:
-            varname = varname[0]
-        else:
-            # if no varname read from scan, it can be a bug (some version of marthe did not write field name in metadata)
-            raise ValueError('No variable founded in file, please consider clean it (cleanmgrid util or winmarthe)')
+        varname = scan_var(filename)[0]
 
-    elif varname == 'all':
+    if varname == 'all':
         varname  = scan_var(filename)
         # -- recursive call
         arrays = []
@@ -312,7 +301,7 @@ def load_marthe_grid(
             ) )
         return xr.merge(arrays)
         
-    elif varname.islower():
+    if varname.islower():
         varname = varname.upper() # in marthegridfiles, varnames are always uppercase; if user pass lowercase, this avoid error/empty array
     
     # --- read var, xycoords, timesteps, etc. from file
@@ -320,6 +309,7 @@ def load_marthe_grid(
         zvar, zdates, isteps, zxcol,
         zylig, zdxlu, zdylu, ztitle, dims
     ) = read_marthe_grid(filename, varname) #, shallow_only=shallow_only)
+    
     
     # --- transform data and parse into xarray.Dataset
     if title is None:
@@ -329,13 +319,13 @@ def load_marthe_grid(
     xcols, dxlus = transform_xcoords(zxcol, zylig, zdxlu, nlayer=dims[0][-1], factor=xyfactor)
     yligs, dylus = transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
     
-    if varname == '': varname = 'variable' # security if force mode
+    
     vattrs = VARS_ATTRS.get(varname.lower(), {})
     vattrs.update(var_attrs)
     dic_data = {
         varname.lower() : (["time", "zone"], zvar, vattrs), #dict(**vattrs, **var_attrs)
-        'x'  : ("zone", xcols, {'units': 'm', 'axis': 'X',  'coverage_content_type' : "coordinate"}), #'standard_name': 'longitude',
-        'y'  : ("zone", yligs, {'units': 'm', 'axis': 'Y',  'coverage_content_type' : "coordinate"}), #'standard_name': 'latitude' ,
+        'x'  : ("zone", xcols, {'units': 'm', 'axis': 'X', 'standard_name': 'longitude', 'coverage_content_type' : "coordinate"}),
+        'y'  : ("zone", yligs, {'units': 'm', 'axis': 'Y', 'standard_name': 'latitude' , 'coverage_content_type' : "coordinate"}),
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
@@ -370,11 +360,7 @@ def load_marthe_grid(
         data_vars=dic_data,
         coords={
             'time': dates,
-            'zone': range(1, zvar.shape[1] + 1),
-            # 'x': (['zone'], xcols),
-            # 'y': (['zone'], yligs),
-            # 'domain_size': dims, # add non dimension coordinate for info
-            # 'domain_origin': [(x0, y0) for igig in grids], # add non dimension coordinate for info
+            'zone': range(1, zvar.shape[1] + 1)
         },
         attrs={
             # attrs must be string, int, float
@@ -398,24 +384,16 @@ def load_marthe_grid(
     if dropna:
         if nanval is None:
             nanval = vattrs.get('missing_value', 9999.) # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
-        ds = dropnan(ds, varname, nanval)
+        masque = ds[varname.lower()].where(ds[varname.lower()] != nanval).dropna(dim='zone') # drop nanval
+        ds = ds.sel(zone=masque['zone'])
     
     return ds
 
-def dropnan(ds, varname, nanval):
-    """ Drop nan values for 1D (or 2D (time, zone)) array
-    zone must me a coordinate dimension.
-    """
-    mask = ds[varname.lower()].where(ds[varname.lower()] != nanval).dropna(dim='zone') # drop nanval
-    ds_no_nan = ds.sel(zone=mask['zone'])
-    return ds_no_nan
 
-
-def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False):
-    """ assign coords to set a 1D or 2D (time, zone) array to 3D or 4D 
-    """
+def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z']):
+    
     if len(coords) == 3:
-        z_coords = da_in.get(coords[2], None) # assert z is here, or bypass
+        z_coords = da_in.get(coords[2], None)
     else:
         z_coords = None
     
@@ -433,100 +411,17 @@ def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False):
         da = da.assign_coords(z=('zone', da_in[coords[2]].data))
         dims.insert(0, 'z')
     
-    da = da.set_index(zone=dims)
-    if not keep_zone:
-        da = da.drop_duplicates('zone').unstack('zone') # drop duplicates is a security for nested grids, if dropnan was not performed
+    da = da.set_index(zone=dims).unstack('zone')
     return da.sortby(dims)
 
-
-def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
-    """ Transform a 3 or 4D aray into 1 or 2D array 
-    inverse of : assign_coords()
-    """
-    # create zone index
+def stack_coords(ds, coords=['z', 'y', 'x']):
     coords = [d for d in coords if d in ds.coords.keys()] # make sure to drop coords that are not present
     dims = np.prod( [len(ds[d]) for d in coords] ) # create new zone dim
     zone = np.arange(dims)
-    
-    # stack coords
     ds2 = ds.copy().stack(zone=coords) # multiindex zone grouping coords key
-    
-    # keep only zone as dim
-    ds3 = ds2.drop_vars(['zone'] + coords).assign_coords(zone=('zone', zone))
-    
-    # get back xy[z] as var
-    for c in coords:
-        ds3[c] = ('zone', ds2[c].data)
-    
-    if dropna:
-        ds3 = ds3.dropna(dim='zone')
-    return ds3
+    ds2 = ds2.drop_vars(['zone'] + coords).assign_coords(zone=('zone', zone)).dropna(dim='zone')
+    return ds2
 
-
-
-def reset_geometry(ds, permh, variable='permeab', fillna=False, nanval=0.):
-    """ Reset a Marthe grid geometry based on permh dataset
-    All values (nan, nested grid margins) should be included in
-    permh dataset.
-    Join is performed with xy[z] (if xy are present in coords) or zone
-    to get zone back in full domain (if dropped, or nan were dropped, etc.)
-    Useful before writting marthe grid (full domain is needed) 
-    """
-    da = ds.copy()
-    if 'x' in da.coords.keys():
-        da = stack_coords(da, dropna=True)
-        coords = [x for x in da.coords.keys() if x in ['x', 'y', 'z']] # if xy assert only existing coords in xyz
-    else:
-        coords = ['zone']
-
-    # to pandas for simplier join/merge operations
-    da = da.to_dataframe().reset_index()
-    
-    # get real zone back
-    grid = permh.to_dataframe().reset_index()
-    grid['inactive'] = grid['permeab']
-    grid = grid.drop('permeab', axis=1)
-    # todo groupby time, loop on time and join grid every timestep... if needed to write with time ?
-    # mostly used for parameters...
-    tmp = grid.merge(
-        da.loc[:, coords+[variable]],
-        on=coords,
-        suffixes=['', '_y'],
-        how='left',
-    )
-    tmp = tmp.drop(tmp.filter(regex='_y$', axis=1),axis=1) # drop overlapping cols, if there is some.
-    if fillna:
-        # tmp = tmp.fillna(nanval) # no because, different codes for nested or not.
-        tmp[variable] = np.where(np.isnan(tmp[variable]), grid['inactive'], tmp[variable])
-    tmp = tmp.drop('inactive', axis=1)
-    tmp = tmp.set_index(['time', 'zone']).to_xarray()
-    tmp.attrs = ds.attrs # get back attrs
-    return tmp
-
-
-# def __reset_geometry_from_zone(ds, permh, variable='permeab', nanval=0.):
-#     """ Reset a Marthe grid geometry based on permh dataset
-#     All values (nan, nested grid margins) should be included in
-#     permh dataset.
-#     Join is performed with zone to get back all zone (if zone with nanval was dropped)
-#     """
-
-#     return tmp
-
-# def reset_geomtry(ds, permh, variable='permeab', nanval=0., mode='zone'):
-#     """ Reset a Marthe grid geometry based on permh dataset
-#     All values (nan, nested grid margins) should be included in
-#     permh dataset.
-#     Wrapper func:
-#         if mode='xy'    Join is performed with xy[z] to get zone back in full domain
-#         if mode='zone'  Join is performed with zone to get back all zone (if zone with nanval was dropped)
-#     """
-#     if mode == 'xy':
-#         return __reset_geometry_from_xy(ds, permh, variable, nanval)
-#     elif mode == 'zone':
-#         return __reset_geometry_from_zone(ds, permh, variable, nanval)
-#     else:
-#         raise ValueError('Unknown option `mode` : {}. Please use either "xy" or "zone"'.format(mode))
 
 
 def parse_dims(str_dims):
@@ -548,7 +443,7 @@ def sort_data(ds):
     # extraire les x, y, dx, dy selon dims = pas de doublons
     print('not yet available')
 
-def extract_zvar(ds, varname, dims=None):
+def extract_zvar(ds):
     
     zvar    = ds[varname].data
     zdates  = ds.time.data
@@ -556,10 +451,8 @@ def extract_zvar(ds, varname, dims=None):
     zylig   = ds.y.data
     zdxlu   = ds.dx.data
     zdylu   = ds.dy.data
-    # from pymarthe :         dx, dy = map(abs, map(np.gradient, [xcc,ycc])) # Using the absolute gradient TODO
-    ztitle  = ds.attrs.get('title', '')
-    if dims is None:
-        dims = parse_dims(ds.attrs.get('original_dimensions', None))
+    ztitle  = ds.attrs['title']
+    dims    = parse_dims(ds.attrs['original_dimensions'])
     izdates = datetime64_to_float(zdates)
 
     return (
@@ -568,7 +461,7 @@ def extract_zvar(ds, varname, dims=None):
         ztitle, dims, izdates
     )
     
-def write_marthe_grid(ds, fileout='toto.out', varname='charge', atitle='', dims=None, debug=False):
+def write_marthe_grid(ds, varname='charge', file='grid.out', atitle='', debug=False):
     # ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
     # TODO more flexible
     
@@ -576,14 +469,9 @@ def write_marthe_grid(ds, fileout='toto.out', varname='charge', atitle='', dims=
         zvar, zdates,
         zxcol, zylig, zdxlu, zdylu,
         ztitle, dims, izdates
-    ) = extract_zvar(ds, varname, dims)
-
-    if dims is None:
-        raise ValueError("""Original dimensions cannot be None.\
-Attributes was not founded in dataset so pleave provide a list with original domain dimensions
-""")
+    ) = extract_zvar(ds)
     
-    status = lecsem.modgridmarthe.write_grid(
+    gm.lecsem.modgridmarthe.write_grid(
         xvar=zvar,
         xcol=zxcol,
         ylig=zylig,
@@ -597,16 +485,10 @@ Attributes was not founded in dataset so pleave provide a list with original dom
         nsteps=len(zdates),
         dates=izdates,
         debug=debug,
-        xfile=fileout
+        xfile='test.out'
     )
-
-    if status != 0:
-        print("\033[1;31m\nEDISEM Status={}\033[0m\n".format(status))
-        print("""Ooops ! Something bad happen when writting Marthe Grid.
-Please check array consistency (9999. or 0. for nan values
-[ie, do not drop nan val before write or use `gm.stack_coords()`]) or coordinates order [zyx] """)
     
-    return status 
+    return None
 
 
 if __name__ == '__main__':

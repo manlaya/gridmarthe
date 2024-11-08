@@ -1,15 +1,12 @@
 from .gridmarthe import *
-from .operasem import *
-from .plot import plot_nested_grid, plot_outcrop
+from .mgrid_utils import *
+
 
 @xr.register_dataset_accessor('mart')
 class MartheGrid(object):
     """ A Marthe grid attributes/methods accessor for xarray.Dataset objects """
-    def __init__(self, xr_obj: xr.Dataset|None=None):
+    def __init__(self, xr_obj):
         self.obj = xr_obj
-    
-    # def read(self, fname: str):
-        # return load_marthe_grid()
     
     def assign_coords(self, add_lay=True):
         return assign_coords(self.obj, add_lay)
@@ -32,7 +29,7 @@ class MartheGrid(object):
         
         if time is None:
             time = self.obj.times # if not defined, get all available times
-        if isinstance(time, str): # make sure to get a iterable for slicing
+        if isintance(time, str): # make sure to get a iterable for slicing
             time = [time]
         
         for t in time:
@@ -53,9 +50,3 @@ class MartheGrid(object):
         masque = ds[varname].where(ds[varname] != nanval).dropna(dim='zone') # drop nanval
         # masque = ds[varname].where(ds[varname] != nanval, drop=True)
         return ds.sel(zone=masque['zone'])
-    
-    # def write(self, fmt='mart'):
-        # if fmt.lower() in ['mart', 'marthe']
-            # write_marthe_grid()
-        # else:
-            # self.obj.to_netcdf()

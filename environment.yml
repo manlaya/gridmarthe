@@ -1,0 +1,16 @@
+# mamba env create -n gm -f environment.yml
+channels:
+  - conda-forge
+dependencies:
+  # Build dependencies
+  - make
+  - gfortran
+  - gcc
+  - numpy
+  - meson
+  - meson-python
+  # Host dependencies
+  - python
+  - numpy
+  - netcdf4
+  - xarray
