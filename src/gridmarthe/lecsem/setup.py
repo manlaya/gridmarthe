@@ -1,5 +1,5 @@
-# python .\setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
 from numpy.distutils.core import Extension, setup
+# memo: python setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
 
 if __name__ == "__main__":
     setup(
@@ -12,3 +12,4 @@ if __name__ == "__main__":
                       )
         ]
     )
+

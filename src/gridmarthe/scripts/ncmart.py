@@ -8,7 +8,7 @@ import gridmarthe as gm
 
 def parse_args():
     parser = ArgumentParser(
-        prog='chasim2nc',
+        prog='ncmart',
         description="""Convert a Marthe GridFile to netCDF format.
 Usage: `chasim2nc PATH_CHASIM PATH_PASTP [-o output] [-v varname]
 """
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     
     """
     Usage
-        chasim2nc $CHASIM $FPASTP
+        ncmart $CHASIM $FPASTP
     """
     status = main()
     sys.exit(status)

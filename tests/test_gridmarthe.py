@@ -1,16 +1,16 @@
 
 import gridmarthe as gm
 
-inputs = './data/craie_npc.permh', "PERMEAB"
+inputs = './data/craie_npc.permh', "PERMEAB" # ajouter tests/data ici pour conda-forge ?
 
 
 toto = gm.load_marthe_grid(*inputs)
-toto = gm.load_marthe_grid(*inputs, dropna=True)
-toto = gm.load_marthe_grid(*inputs, dropna=True, nanval=0.)
-toto = gm.load_marthe_grid(inputs[0], varname=None)
-toto = gm.load_marthe_grid(inputs[0], varname='all')
-toto = gm.load_marthe_grid(*inputs, keepligcol=True)
-toto = gm.load_marthe_grid(*inputs, add_id_grid=True)
+# toto = gm.load_marthe_grid(*inputs, dropna=True)
+# toto = gm.load_marthe_grid(*inputs, dropna=True, nanval=0.)
+# toto = gm.load_marthe_grid(inputs[0], varname=None)
+# toto = gm.load_marthe_grid(inputs[0], varname='all')
+# toto = gm.load_marthe_grid(*inputs, keepligcol=True)
+# toto = gm.load_marthe_grid(*inputs, add_id_grid=True)
 
 print(toto.attrs)
 

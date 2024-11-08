@@ -8,7 +8,7 @@ import xarray as xr #needs netcdf4, rioxarray
 from shapely.geometry import Polygon
 import geopandas as gpd
 
-from .utils_mgrid import get_scale
+from .utils import _get_scale, _nearest_node
 
 """
 Some useful functions to manage MartheGrid in python
@@ -16,6 +16,7 @@ Some useful functions to manage MartheGrid in python
 TODO:   make it a real new operasem
         (add functions available in winmarthe or operasem,
         eg. get_layer_depths(), get_layer_thickness())
+        get_runoff_direction(), remove_layer(), remove_nested(), etc.
 """
 
 # -------------------------------------------------------- #
@@ -32,12 +33,13 @@ def get_new_coords(ds, res=1000):
     
     return new_x, new_y
 
-def coarse_nested_grid(da, varname='charge'):
+def coarse_nested_grid(da, varname='charge', dx=None, dy=None):
     """ Coarse nested grid to res of main grid
     only realy valid if nested grid resolution is a multiple of maingrid resolution
     coords needs to be assign first
     """
-    dx, dy = get_scale(da)
+    if dx is None or dy is None:
+        dx, dy = _get_scale(da)
     dx1, dy1 = dx.pop(0), dy.pop(0)
     grid = da.where(da['dx'] == dx1, drop=True) # & da['dy'] == dy1
     for dx2, dy2 in zip(dx, dy):
@@ -60,20 +62,81 @@ def rescale(da, res=1000, **kwargs):
     return new_da
 
 def get_min_layer(ds, aquif_layers=None):
-    """ return min layer for every zone of a grimarthe dataset with z coords 
-    allow subset on aquifer layers
-    if set, aquif_layers must be a sequence (list, tuple, array)
+    """ Compute surface mask of marthe domain
+    
+    This function return min layer for every zone of a grimarthe dataset with z coords
+    A subset on specific (aquifers) layers can be performed with `aquif_layers`.
+    if set, aquif_layers must be a sequence (list, tuple, array) of layer (list of int).
+    
+    This should be used to get a surface mask, ie get zone to filter a dataset.
+    example : 
+        mask = get_min_layer(ds, [6,8,9])
+        ds_surf = ds.sel(zone=mask.zone.data)
+        
+    Parameters
+    ----------
+        ds: xr.Dataset
+        aquif_layers: sequence (list, tuple, array) of int
+            representing layers to subset ds
+    Returns
+    -------
+        surface_mask: xr.Dataset
     """
     df = ds.to_dataframe()
-    df.reset_index(inplace=True)
+    df = df.reset_index()
     
     if aquif_layers is not None:
         df = df[df['z'].isin(aquif_layers)]
     
     idx_z_min = df.groupby(['x', 'y', 'time']).z.idxmin() # get index of min z ("layer") for each x,y,t groups
-    first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone')
+    first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone').drop('index', axis=1)
     # time not needed here, zone are independant from time coords
     return first_aquif_lay.to_xarray()
+
+
+def get_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout: str='mask.shp'):
+    """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
+    input ds should be permh
+    """
+    mask = ds.where(~ds[varname].isin(nanval), drop=True)
+    mask = ds.sel(zone=mask['zone'])
+    gdf  = to_geodataframe(mask)
+    gdf  = gdf.dissolve()
+    gdf.to_file(fileout)
+    return gdf
+
+
+def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
+    """ search zone number in marthe grid,
+    based on xy or ij (col, lig)
+    
+    if ds is multilayered, you need to provide the layer you want (int)
+    ds should contains dx and dy
+    ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
+    """
+    ds_search = ds.copy()
+    
+    if z is not None:
+        ds_search = ds_search.where(ds_search.z == z, drop=True)
+
+    if x is not None:
+        assert y is not None, 'if x is provided, y cannot be None'
+        ## mask = ds.sel(x=x, y=y, method='nearest') # possible uniquement si x,y sont des coordonnées/dim
+        nearest = _nearest_node(np.array([(x, y)]), np.array(list(zip(ds_search['x'].data, ds_search['y'].data))))
+        nearest_zone = ds_search.isel(zone=nearest)
+        
+        # check if xy is in a cell == dx and dy are not greater than grid resolution
+        dx = np.abs(nearest_zone.x.data - x)
+        dy = np.abs(nearest_zone.y.data - y)
+        mask = ds_search['zone'] == nearest_zone.zone if (dx <= nearest_zone.dx.data) & (dy <= nearest_zone.dy.data) else ds_search['zone'].isnull()
+
+    if i is not None:
+        assert j is not None, 'if i is provided, j cannot be None'
+        mask = (ds_search['col'] == i) & (ds_search['lig'] == j)
+
+    # zone = ds.where(mask, drop=True)['zone'].data
+    zone = ds_search.where(mask, drop=True)
+    return zone
 
 # -------------------------------------------------------- #
 #                      GIS Functions                       #
@@ -105,7 +168,21 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
     return da.where(mask_lon & mask_lat, drop=True)
 
 
-def build_polyg(ds):
+def _mk_cell_polygon(xleft, ylower, xright, yupper):
+    return Polygon(
+        (
+            (xleft , ylower),
+            (xright, ylower),
+            (xright, yupper),
+            (xleft , yupper),
+            (xleft , ylower)
+        )
+    )
+
+_polygonize = np.vectorize(_mk_cell_polygon)
+
+
+def _build_polyg(ds):
     """ build a (rectangular) polygon shape from marthegrid dataset """
     
     x0 = ds.x.values - (ds.dx.values / 2.)
@@ -113,19 +190,7 @@ def build_polyg(ds):
     x1 = ds.x.values + (ds.dx.values / 2.)
     y1 = ds.y.values + (ds.dy.values / 2.)
     
-    def mk_cell_polygon(xleft, yleft, xright, yright):
-        return Polygon(
-            (
-                (xleft , yleft ),
-                (xright, yleft ),
-                (xright, yright),
-                (xleft , yright),
-                (xleft , yleft )
-            )
-        )
-    polygonize = np.vectorize(mk_cell_polygon)
-    return polygonize(x0, y0, x1, y1)
-
+    return _polygonize(x0, y0, x1, y1)
 
 
 def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
@@ -133,10 +198,12 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     fmt must be long or wide, default is long
     """
     
-    polygons = build_polyg(ds)
+    polygons = _build_polyg(ds.isel(time=0))
     df = ds.to_dataframe() #.to_pandas() # only for 1 dim
+    
     if 'time' in ds.dims.keys():
-        polygons = np.tile(polygons, len(np.unique(df.index.get_level_values('time')))) # ad geom for every timestep
+        polygons = np.tile(polygons.flatten(), len(np.unique(df.index.get_level_values('time')))) # ad geom for every timestep
+    
     gdf = gpd.GeoDataFrame(
         df,
         geometry=polygons,

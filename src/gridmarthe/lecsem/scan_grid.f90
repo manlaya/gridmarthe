@@ -407,20 +407,23 @@ CONTAINS
         integer :: ISTEP, TMP_ISTEP, NU_ZOO, NU_GRID, N_COUCH, LEC, INVY, NKOL, NLIG, NTOT, NLAY, NGIG, start_idx, end_idx, shift, i
         real    :: X0, Y0
         real, dimension(:), allocatable :: XTEMPVAR, XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
+        logical :: DEBUGG
         
         INVY   = 0
         IEREDI = 0
         LEC    = 20 ! unité d'écriture, IOUMAI from DTH
         NLAY   = N_DIMS(1, 3)
         NGIG   = NGRID - 1
+        DEBUGG = .FALSE.  ! default value for debugging
         !
-        IF(.NOT. PRESENT(DEBUG)) DEBUG = .FALSE. ! default value for debug
+        IF(PRESENT(DEBUG)) DEBUGG = DEBUG
         !
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='write')
         
         ! Starting process:
         ! loop over timesteps, then id_grid (main, gig), then layers. Write each grid.
-        ! data are stored in 2D array (Time, Zone), so we need to extract values from it based on those indexes (layer, grid, time indexes)
+        ! data are stored in 2D array (Time, Zone), so we need to extract values from it
+        ! based on those indexes (layer, grid, time indexes)
         DO ISTEP=1, NSTEPS
             DATE = DATES(ISTEP)
             
@@ -432,7 +435,8 @@ CONTAINS
                 
                 ! To navigate through XVAR, before computing start_idx, end_idx based on NLAY, NLIG, NKOL,
                 ! we compute a 'shift' index, to jump over previous grids, if id_grid > 0
-                ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig) wich might not be equals
+                ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig)
+                ! wich might not be equals
                 shift = 0
                 IF (NU_ZOO >= 1) THEN
                     DO i=NU_ZOO, 1, -1
@@ -481,15 +485,14 @@ CONTAINS
                         ,DXTEMP, DYTEMP &
                     )
                     !
-                    IF (IEREDI /= 0) THEN
-                        if (DEBUG) then
+                    if (IEREDI /= 0) then
+                        if (DEBUGG) then
                             ! errors might come from non-sorted XY or negatives XY
                             write (LEC, *),"Writing error, status ", IEREDI, "Lay=", N_COUCH, "Grid=", NU_ZOO, "X0=", X0, "Y0=", Y0
                             write (LEC, *), XTEMPCOL, ''
                             write (LEC, *), YTEMPLIG, ''
                         endif
-                        ! EXIT
-                    ENDIF
+                    endif
                     !
                 ENDDO ! end layer loop
             ENDDO ! end grid loop

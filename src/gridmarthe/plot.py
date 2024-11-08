@@ -6,19 +6,39 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from .utils_mgrid import get_scale
+from .utils import _get_scale
 
 # TODO: plot_section() # outil de coupe
 
 def plot_nested_grid(da, ax=None, var='charge', **kwargs):
-    """ da MUST be a 2D array, with dims = x,y. In other words, you may need to sel z and time before plot"""
+    """ Usefull function to plot nested grids, keeping heterogeneous resolution
+    
+    Parameters
+    ----------
+    da: xr.Dataset
+        the dataset MUST be a 2D array, with dims = x,y.
+        In other words, you may need to sel z and time before plot, and you need to apply `assign_coord()`
+    
+    ax: matplotlib axe, Optionnal.
+        if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
+    
+    var: str, Optionnal
+        the variable to plot in dataset. Default is 'charge'.
+    
+    kwargs: optionnal.
+        any keywords argument from `xr.Dataset.plot.pcolormesh()`
+    
+    Returns
+    -------
+    ax: matplotlib axis.
+    """
     
     vmin, vmax = da[var].min(), da[var].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
     cbar_kwargs = kwargs.pop('cbar_kwargs', {})
     
     # split grids
-    dx, dy = get_scale(da)
+    dx, dy = _get_scale(da)
     dx1, dy1 = dx.pop(0), dy.pop(0)
     grid = da.where(da['dx'] == dx1, drop=True)
     
@@ -28,20 +48,65 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     # plots nested then main
     for dx2, dy2 in zip(dx, dy):
         gig = da.where(da['dx'] == dx2, drop=True)
-        gig[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, add_colorbar=False, **kwargs)
+        gig[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, add_colorbar=False, **{k:v for k,v in kwargs.items() if k != 'add_colorbar'})
     grid[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
     
     return ax
 
+def plot_mesh_time_serie(*arg, zone: int, varname='charge', show=False, figsize=(12,4), **kwargs):
+    """ Usefull function to plot time serie from any dataset, by extracting a specific cell timeserie
+    
+    Parameters
+    ----------
+    
+    arg: xr.Dataset,
+        any datasets (you can pass multiple datasets, eg. `plot_mesh_time_serie(ds1, ds2, ds3, ... zone=32)`
+    
+    zone: int
+        zone value (dimension) to select data
+    
+    varname: str, Optionnal (default is 'charge')
+        Variable to plot. Must be a key of all dataset passed as *arg.
+    
+    show: bool, Optionnal.
+        show plot using `plt.show()`
+    
+    figsize: tuple[int], Optionnal.
+        figsize argument for matplotlib.
+    
+    kwargs: any keywords argument for `xr.Dataset.plot()` method
+    
+    Returns
+    -------
+    ax: matplotlib axis.
+    
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    for da in arg:
+        da[varname].sel(zone=zone).plot(ax=ax, **kwargs)
+    ax.grid(True)
+    if show:
+        plt.show(block=False)
+    return ax
+
 def plot_outcrop(ds_outcrop, fout=None, engine='xr'):
     
-    """ plot outcrop layers
-    two mode : xr.plot or gpd.plot (useful for nested grid)
+    """ Usefull function to plot outcrop layers of a marthe (multilayer) grid
+    
+    The Marthe grid must have a `z` dimension.
+    
+    There is two mode implementend yet, using xr.plot or gpd.plot (useful for nested grid)
     TODO xr version for nested with `plot_nested_grid()`, see func below in src
 
     if engine == 'xr' => ds_outcrop need to get coords before (use `gm.assign_coords(ds_outcrop, add_lay=False)`)
     if engine == 'gpd => ds_outcrop need to be a gpd.GeoDataframe (use `gm.to_geodataframe(ds_outcrop)`)
-
+    
+    Parameters
+    ----------
+    TODO docstring
+    
+    Returns
+    -------
     """
     if isinstance(ds_outcrop, xr.Dataset):
         assert 'z' in ds_outcrop.keys(), "No `z` dimension. Outcrop plot is not possible."
