@@ -1,6 +1,61 @@
+# --- Setup file for gridmarthe python package --- #
+
 [build-system]
-requires = [
-    "setuptools",
-    "wheel",
-]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "gridmarthe"
+dynamic = ["version"]
+authors = [
+    {name = "Jean-Pierre Vergnes", email = "jp.vergnes@brgm.fr"},
+    {name = "Adrien Manlay", email = "a.manlay@brgm.fr"},
+]
+
+description = "python package to read/write/manage Marthe Grids"
+readme = {file = "README.md", content-type = "text/markdown"}   
+license = {file = "LICENSE"}
+
+classifiers = [
+    "Programming Language :: Python : 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+
+keywords = ["hydrology", "groundwater", "modelling"]
+
+requires-python = ">=3.8"
+dependencies = [
+    "numpy", #==1.26"
+    "pandas",
+    "netCDF4",
+    "h5netcdf",
+    "xarray",
+    "shapely",
+    "matplotlib"
+]
+
+[project.optional-dependencies]
+# install with `pip install gridmarthe[gis]`
+gis = ["geopandas", "rioxarray", "rasterio"]
+
+[project.urls]
+Homepage = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe"
+
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "gridmarthe.__version__"}
+
+# [tool.setuptools.packages.find]
+# where = ["src"] # not necessary, with toml, by default, src and flat layout are automatically discovered
+
+[tool.setuptools.package-data]
+"*" = ["*.pyd", "*.dll", "*.so"] # works like a charm
+
+[project.scripts]
+ncmart = "gridmarthe:scripts.ncmart"
+cleanmgrid = "gridmarthe:scripts.cleanmgrid"

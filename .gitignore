@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
+*.pyd
+*.dll
 
 # Distribution / packaging
 .Python
@@ -112,6 +114,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venvrc
 
 # Spyder project settings
 .spyderproject
@@ -139,3 +142,9 @@ cython_debug/
 
 # vscodes
 .vscode
+
+
+*.bak
+bak/
+dev/
+meson/

@@ -1,3 +1,5 @@
-import setuptools
+#!/usr/bin/env python3
 
-setuptools.setup()
+from setuptools import setup
+
+setup()
