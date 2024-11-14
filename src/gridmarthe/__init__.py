@@ -7,14 +7,19 @@ from .operasem import *
 from .plot import plot_nested_grid, plot_outcrop
 
 
-__version__ = '0.1.0'
+__version__ = '0.0.1'
 
 
 
 @xr.register_dataset_accessor('mart')
 class MartheGrid(object):
     """ A Marthe grid attributes/methods accessor for xarray.Dataset objects
-    example: ds = gm.load_marthe_grid(); ds.mart.dropna('permeab', 0.)
+    
+    Example
+    --------
+    >>> ds = gm.load_marthe_grid()
+    >>> ds.mart.dropna('permeab', 0.)
+    
     """
     def __init__(self, xr_obj: xr.Dataset|None=None):
         self.obj = xr_obj

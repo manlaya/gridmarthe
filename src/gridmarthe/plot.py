@@ -89,7 +89,7 @@ def plot_mesh_time_serie(*arg, zone: int, varname='charge', show=False, figsize=
         plt.show(block=False)
     return ax
 
-def plot_outcrop(ds_outcrop, fout=None, engine='xr'):
+def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
     
     """ Usefull function to plot outcrop layers of a marthe (multilayer) grid
     
@@ -134,6 +134,7 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr'):
             levels=bounds,
             add_colorbar=False,
         )
+    
     elif engine == 'gpd':
         
         ds_outcrop.plot(
@@ -156,6 +157,9 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr'):
     
     if fout is not None:
         plt.savefig(fout, dpi=300)
-    plt.show()
-    plt.close()
-    return None
+    if show:
+        plt.show()
+        plt.close()
+        return None
+    else:
+        return fig, ax, ax_cbar
