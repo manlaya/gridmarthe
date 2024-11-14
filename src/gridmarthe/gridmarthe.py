@@ -116,7 +116,9 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     ----------
     
     xfile   (str): filename to read
-    varname (str): string of variable in xfile to get values. Default is CHARGE (groundwater head)
+    
+    varname (str): string of variable in xfile to get values.
+        Default is CHARGE (groundwater head)
     
     Returns
     -------
@@ -268,10 +270,15 @@ def load_marthe_grid(
     """ LECSEM python wrapper
     Fortran modules from marthe src wrapped for python module
     
-    memo :  file.out read as seq => all layer then nested grid and all layers too. 
-            And so on for every timestep.
-            coords with no value read as 1e+20
-            zvar read as a single 1D array for every timestep
+    The gridfile is read as a sequence: the variable for all layer
+    for main grid, then all layer for nested grids, is stored in
+    a 1D vector for every timestep. A single spatial identifier
+    `zone` is used to map spatial coordinates.
+
+    Before plot operations, user can assign coordinates (set x,y
+    as dimension coordinates and drop zone) to get 2-D arrays (or
+    3D arrays if multilayer) for every timesteps.
+
     
     Parameters
     ----------

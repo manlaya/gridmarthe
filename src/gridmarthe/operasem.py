@@ -13,9 +13,8 @@ from .utils import _get_scale, _nearest_node
 """
 Some useful functions to manage MartheGrid in python
 
-TODO:   make it a real new operasem
-        (add functions available in winmarthe or operasem,
-        eg. get_layer_depths(), get_layer_thickness())
+TODO:   add functions available in winmarthe or operasem.
+        eg. get_layer_depths(), get_layer_thickness(),
         get_runoff_direction(), remove_layer(), remove_nested(), etc.
 """
 
@@ -49,6 +48,25 @@ def coarse_nested_grid(da, varname='charge', dx=None, dy=None):
     return grid
 
 def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
+    """ Interpolate on a new grid using `xarray.Dataset.interp`
+
+    Parameters
+    ----------
+    da: xr.Dataset
+        the input dataset to interpolate on new coordinates.
+    new_x: array-like
+        the new x-axis coordinate to use
+    new_y: array-like
+        the new y-axis coordinate to use
+    method: str, Optionnal (default='nearest')
+        `xr.Dataset.interp` method to use. Default is 'nearest'
+    **kwargs: dict, Optionnal.
+        Any keywords argument to pass to `xr.Dataset.interp`.
+    
+    Returns
+    -------
+        interpolated xr.Dataset
+    """
     # https://docs.xarray.dev/en/stable/user-guide/interpolation.html
     # https://earth-env-data-science.github.io/lectures/xarray/xarray-part2.html
     if new_x is None or new_y is None:
@@ -57,6 +75,13 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
     return da.interp(x=new_x, y=new_y, method=method, **kwargs)
 
 def rescale(da, res=1000, **kwargs):
+    """ Wrapper function that uses `get_new_coords()` and `interp_grid()` together
+    
+    See also
+    --------
+    `get_new_coords`
+    `interp_grid`
+    """
     new_x, new_y = get_new_coords(da, res)
     new_da = interp_grid(da, new_x, new_y, **kwargs) # here da with assign coords
     return new_da
@@ -69,9 +94,11 @@ def get_min_layer(ds, aquif_layers=None):
     if set, aquif_layers must be a sequence (list, tuple, array) of layer (list of int).
     
     This should be used to get a surface mask, ie get zone to filter a dataset.
-    example : 
-        mask = get_min_layer(ds, [6,8,9])
-        ds_surf = ds.sel(zone=mask.zone.data)
+    
+    Examples
+    --------
+    >>>    mask = get_min_layer(ds, [6,8,9])
+    >>>    ds_surf = ds.sel(zone=mask.zone.data)
         
     Parameters
     ----------
@@ -96,7 +123,7 @@ def get_min_layer(ds, aquif_layers=None):
 
 def get_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout: str='mask.shp'):
     """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
-    input ds should be permh
+    input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic conductivity)
     """
     mask = ds.where(~ds[varname].isin(nanval), drop=True)
     mask = ds.sel(zone=mask['zone'])
@@ -145,6 +172,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
     """
     subset DataArray or Dataset with gpd.GeoDataFrame or bounds
+    TODO: real shp clip
     """
     if gdf is not None:
         # edit, one line with total_bounds attribute instead of bounds
