@@ -7,8 +7,9 @@ build:
   tools:
     python: "3.10"
   commands:
+    - sudo apt-get update && sudo apt-get install -y gfortran
     - pip install numpy charset_normalizer
-    - cd src/gridmarthe/lecsem ; f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem
+    - cd src/gridmarthe/lecsem ; FC=gfortran f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem
 
 python:
   install:
