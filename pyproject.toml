@@ -38,6 +38,7 @@ dependencies = [
 [project.optional-dependencies]
 # install with `pip install gridmarthe[gis]`
 gis = ["geopandas", "rioxarray", "rasterio"]
+doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
 
 [project.urls]
 Homepage = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe"
