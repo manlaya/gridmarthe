@@ -6,12 +6,12 @@ from argparse import ArgumentParser
 import gridmarthe as gm
 
 
+# Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]` 
+
 def parse_args():
     parser = ArgumentParser(
         prog='ncmart',
-        description="""Convert a Marthe GridFile to netCDF format.
-Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]
-"""
+        description="Convert a Marthe GridFile to netCDF format."
     )
     parser.add_argument('opt', metavar='chasim pastp', type=str, nargs='+', help='Paths to chasim and pastp files are expected')
     parser.add_argument('--output'  , '-o'  , type=str, default=None, help='output filename. Default is input.nc')
