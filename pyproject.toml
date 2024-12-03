@@ -63,5 +63,5 @@ include-package-data = true
 #
 
 [project.scripts]
-ncmart = "gridmarthe:scripts.ncmart"
-cleanmgrid = "gridmarthe:scripts.cleanmgrid"
+ncmart = "gridmarthe:scripts.ncmart.main"
+cleanmgrid = "gridmarthe:scripts.cleanmgrid.main"
