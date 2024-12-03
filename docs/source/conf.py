@@ -10,7 +10,7 @@ import os, sys
 sys.path.insert(0, '../../src')
 
 project = 'gridmarthe'
-copyright = '2024, Adrien Manlay, Jean-Pierre Vergnes'
+copyright = '2024, Adrien Manlay, Jean-Pierre Vergnes - BRGM'
 author = 'Jean-Pierre Vergnes, Adrien Manlay'
 release = '0.0.1'
 

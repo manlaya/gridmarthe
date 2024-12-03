@@ -10,7 +10,7 @@ def parse_args():
     parser = ArgumentParser(
         prog='ncmart',
         description="""Convert a Marthe GridFile to netCDF format.
-Usage: `chasim2nc PATH_CHASIM PATH_PASTP [-o output] [-v varname]
+Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]
 """
     )
     parser.add_argument('opt', metavar='chasim pastp', type=str, nargs='+', help='Paths to chasim and pastp files are expected')
@@ -31,8 +31,8 @@ def main():
     Convert a Marthe Grid file to NetCDF format, using gridmarthe pymodule
     """
     args   = parse_args()
-    ds     = gm.load_marthe_grid(args.opt[0], fpastp=args.opt[1], drop_nan=True, varname=args.variable)
-    encode = {'charge': {'zlib': True, 'complevel': 6}}
+    ds     = gm.load_marthe_grid(args.opt[0], fpastp=args.opt[1], drop_nan=True, varname=args.variable.upper())
+    encode = {args.variable.lower(): {'zlib': True, 'complevel': 6}}
     ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
     return 0
     

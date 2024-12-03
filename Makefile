@@ -58,7 +58,7 @@ install: requirements lecsem.so
 	# $(PY) -m pip install $(PIPFLAGS) .
 
 requirements:
-	$(PY) -m pip install charset_normalizer numpy #==1.26 #--user
+	$(PY) -m pip install charset_normalizer numpy meson meson-python
 
 lecsem.pyf:
 	cd $(F90SRCDIR); echo "******** Generating signature ********"; \

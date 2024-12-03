@@ -25,7 +25,7 @@ to be compiled before local installation.
 
 ### Compilation
 
-On a linux machine, with gfortran, python3, numpy (version < 2.0) and charset_normalizer:
+On a linux machine, with gfortran, ninja-build, python3, numpy, meson, meson-python and charset_normalizer:
 
 ```bash
 cd src/gridmarthe/lecsem

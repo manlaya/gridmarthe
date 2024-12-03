@@ -1,0 +1,75 @@
+image: nexus-docker.brgm.fr/brgm/miniconda3:latest
+
+
+before_script:
+  - echo "pyspli ci/cd pipeline"
+  - python --version
+  - conda install -c conda-forge gcc gfortran ninja
+
+stages:
+  - test
+  - build
+  - deploy
+
+# trigger pipeline only on tag version
+# T. Janvier courtesy
+.version_tag: &version_tag
+  only:
+    variables:
+      - $CI_COMMIT_TAG =~ /^v?\d{1}\.(\d{1,2}\.?){1,2}([a-zA-Z]+\d{1,2})?/
+
+pytest:
+  <<: *version_tag
+  stage: test
+  before_script:
+    - python -m pip install pytest
+  script:
+    - pip install -e . # need setup.py on this image (python-build) for edit mode (py3.7.4, pip 20.0.2)
+    - python -m pytest tests
+  allow_failure: true
+  when: manual
+
+
+wheels:
+  <<: *version_tag
+  stage: build
+  before_script:
+    - rm -rf dist
+  script:
+    - pip install numpy charset_normalizer meson meson-python
+    - cd src/gridmarthe/lecsem ; CC=gcc FC=gfortran f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
+    - python -m pip wheel . -w ./dist --no-deps
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    paths:
+      - dist/
+    expire_in: 1 day
+  when: manual
+
+
+publish_release:
+  <<: *version_tag
+  stage: deploy
+  needs: ["wheels"]
+  before_script:
+    - python -m pip install twine
+  script:
+    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-releases/ dist/*
+  when: manual
+
+
+publish_nexus:
+  <<: *version_tag
+  stage: deploy
+  needs: ["wheels"]
+  before_script:
+    - python -m pip install twine
+    - echo ${NEXUS_URL}
+    - echo ${REGISTRY_NEXUS_USER}
+  script:
+    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-all/ dist/*
+  when: manual
+  # only:
+    # - tags
+  # except:
+    # - branches
