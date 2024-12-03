@@ -9,7 +9,7 @@ build:
   apt_packages:
     - gcc
     - gfortran
-    - ninja
+    - ninja-build
   jobs:
     pre_build:
       - pip install numpy charset_normalizer meson meson-python
