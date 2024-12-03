@@ -12,11 +12,10 @@ from .utils import _get_scale, _nearest_node
 
 """
 Some useful functions to manage MartheGrid in python
-
-TODO:   add functions available in winmarthe or operasem.
-        eg. get_layer_depths(), get_layer_thickness(),
-        get_runoff_direction(), remove_layer(), remove_nested(), etc.
 """
+# TODO:   add functions available in winmarthe or operasem.
+#         eg. get_layer_depths(), get_layer_thickness(),
+#         get_runoff_direction(), remove_layer(), remove_nested(), etc.
 
 # -------------------------------------------------------- #
 #  Operation on Marthe Grids (semis, marthe easter eggs).  #

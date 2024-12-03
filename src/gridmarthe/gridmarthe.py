@@ -8,9 +8,11 @@ import pandas as pd
 import numpy as np
 import xarray as xr #needs netcdf4
 
-
 from . import lecsem
 from .utils import _datetime64_to_float, _is_sorted
+
+from typing import Union
+
 
 # http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
 # pas vraiment, pour respecter la convention, le nom de variable le plus proche est : water_table_depth / mais on parle de charge pas prof
@@ -103,6 +105,7 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
 
 
 def scan_var(xfile):
+    """ List all variables stored in a Marthe grid file """
     var = lecsem.modgridmarthe.scan_typevar(xfile) # get a list of unique type_var that are in xfile
     var = np.char.strip(np.char.decode(var, 'ISO-8859-1')) # decode byte array provided by f2py
     var = var[var != ''] # get rid of empty element provided by fortran code
@@ -114,25 +117,32 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     
     Parameters
     ----------
-    
-    xfile   (str): filename to read
-    
-    varname (str): string of variable in xfile to get values.
+    xfile: str
+        Filename to read
+    varname : str
+        string of variable in xfile to get values.
         Default is CHARGE (groundwater head)
     
     Returns
     -------
-    
-    zvar    (np.array): variable read from marthe grid file as numpy ndarray (one vector)
-    zdates  (np.array): array of dates (from start))
-    isteps  (np.array): array of indexes of timesteps
-    zxcol   (np.array): array of x coordinates
-    zylig   (np.array): array of y coordinates
-    zdxlu   (np.array): array of dx (equals np.diff(x))
-    zdylu   (np.array): array of dy (equals np.diff(y))
-    ztitle  (np.array): title of marthe grid file read
-    dims    (np.array): list of dimensions of grid [maingrid[x, y, z], nestedgrid1[...], ...]
-    
+    zvar  : np.array
+        variable read from marthe grid file as numpy ndarray (one vector)
+    zdates: np.array
+        array of dates (from start))
+    isteps: np.array
+        array of indexes of timesteps
+    zxcol : np.array
+        array of x coordinates
+    zylig : np.array
+        array of y coordinates
+    zdxlu : np.array
+        array of dx (equals np.diff(x))
+    zdylu : np.array
+        array of dy (equals np.diff(y))
+    ztitle: np.array
+        title of marthe grid file read
+    dims  : np.array
+        list of dimensions of grid [maingrid[x, y, z], nestedgrid1[...], ...]
     """
     nu_zoomx = lecsem.modgridmarthe.scan_nu_zoomx(xfile) # scan nb of nested grids (gig)
     dims, nbsteps = lecsem.modgridmarthe.scan_dim(xfile, varname, nu_zoomx)
@@ -238,37 +248,27 @@ def _get_id_grid(dims):
 
 
 
-def marthe_grid_as_nc(*args, **kwargs):
-    return open_mgrid(*args, **kwargs)
-
-def open_mgrid(*args, **kwargs):
-    print("Warning, open_mgrid is deprecated, please use load_marthe_grid() in the future")
-    return load_marthe_grid(*args, **kwargs)
-
-
-
 def load_marthe_grid(
     filename: str,
-    varname: str|None=None,
+    varname: Union[str, None] = None,
     dates=None,
-    fpastp: str|None=None,
-    nanval: int|float|None=None,
-    drop_nan: bool=False,
-    xyfactor: int|float=1.,
+    fpastp: Union[str, None] = None,
+    nanval: Union[int, float, None] = None,
+    drop_nan: bool = False,
+    xyfactor: Union[int, float] = 1.,
     # shallow_only=False,
-    keepligcol: bool=False,
-    add_id_grid: bool=False,
-    title: str|None=None,
-    var_attrs: dict={},
-    model_attrs: dict={
+    keepligcol: bool = False,
+    add_id_grid: bool = False,
+    title: Union[str, None] = None,
+    var_attrs: dict = {},
+    model_attrs: dict = {
         'resolution_units': 'm',
         'projection'      : 'epsg:27572',
         'domain'          : 'FR-France',
     },
     verbose: bool=False,
 ):
-    """ LECSEM python wrapper
-    Fortran modules from marthe src wrapped for python module
+    """ Read Marthe Grid File as xarray.Dataset 
     
     The gridfile is read as a sequence: the variable for all layer
     for main grid, then all layer for nested grids, is stored in
@@ -282,43 +282,64 @@ def load_marthe_grid(
     
     Parameters
     ----------
-        filename    (str):  A path to marthegrid file (*.permh, *.out, etc.)
+    
+        filename: str
+            A path to marthegrid file (*.permh, *.out, etc.)
         
-        varname     (str):  variable to access in martgrid file, e.g `CHARGE` for groundwater head. See marthegrid file content.
-                            if None  is passed (default), function will scan all varnames in filename and keep first only
-                            if 'all' is passed,  function will scan all varnames in filename and keep all. All datavars are added to dataset, using recursive call to func
-                            if wrong variable name is passed, empty data will be returned.
+        varname : str, Optionnal
+            variable to access in martgrid file, e.g `CHARGE` for groundwater head. See marthegrid file content.
+            if None  is passed (default), function will scan all varnames in filename and keep first only
+            if 'all' is passed,  function will scan all varnames in filename and keep all. 
+            All datavars are added to dataset, using recursive call to func
+            if wrong variable name is passed, empty data will be returned.
         
-        dates       (sequence, Optionnal): Can be a pd.date_range, pd.Series, pd.DatetimeIndex, np.array or list of datetime/np.datetime objects.
-                                           If no dates (or no fpastp) is provided, a fake sequence of dates from 1850 to 1900 will be used for xarray object
+        dates: sequence, Optionnal
+            Can be a pd.date_range, pd.Series, pd.DatetimeIndex, np.array or list of datetime/np.datetime objects.
+            If no dates (or no fpastp) is provided, a fake sequence of dates from 1850 to 1900 will
+            be used for xarray object
         
-        fpastp      (str, Optionnal)     : A pastp file to read for dates
+        fpastp: str, Optionnal
+            A pastp file to read for dates
         
-        nanval      (float, Optionnal)   : A code value for nan values. Default is 9999.
+        nanval: float, Optionnal
+            A code value for nan values. Default is 9999.
         
-        drop_nan    (bool, Optionnal)    : Drop nan values (corresponding to nanval) in xarray object to return, default is False (keep nan values).
+        drop_nan: bool, Optionnal
+            Drop nan values (corresponding to nanval) in xarray object to return.
+            Default is False (keep nan values).
         
-        xyfactor    (int or float, Optionnal): factor to transform X and Y values. e.g.: 1000 to convert km XY to meters. Default is 1.
+        xyfactor: int or float, Optionnal
+            factor to transform X and Y values. e.g.: 1000 to convert km XY to meters.
+            Default is 1.
         
-        keepligcol  (bool, Optionnal): Add columns (col) and rows (lig) index (from 1 to n), Default is False.
+        keepligcol: bool, Optionnal
+            Add columns (col) and rows (lig) index (from 1 to n), Default is False.
         
-        add_id_grid (bool, Optionnal): Add grid id (from 0 to n), useful for nested grids. 0 is main grid, Default is False
+        add_id_grid: bool, Optionnal
+            Add grid id (from 0 to n), useful for nested grids.
+            0 is main grid, Default is False
         
-        title       (str , Optionnal): Title for grid attributes. Default is None (not used)
+        title: str , Optionnal
+            Title for grid attributes. Default is None (not used)
         
-        var_attrs   (dict, Optionnal): Dictionnary of attributes to add to variable DataArray.
+        var_attrs: dict, Optionnal
+            Dictionnary of attributes to add to variable DataArray.
         
-        model_attrs (dict, Optionnal): Dictionnary of attributes to add to Dataset.
-                                       by default, gis attrs are added and can be modified
-                                    'resolution_units': 'm',
-                                    'projection'      : 'epsg:27572',
-                                    'domain'          : 'FR-France',
+        model_attrs: dict, Optionnal
+            Dictionnary of attributes to add to Dataset.
+            by default, gis attrs are added and can be modified
+            >>>    'resolution_units': 'm',
+            >>>    'projection'      : 'epsg:27572',
+            >>>    'domain'          : 'FR-France',
         
-        verbose     (bool, Optionnal): Print some information about execution in stdout. Default is False.
+        verbose: bool, Optionnal
+            Print some information about execution in stdout.
+            Default is False.
     
     Returns
     -------
-        ds (xr.Dataset): a xarray.Dataset object containing values and attributes read from Marthe grid file.
+        ds: xr.Dataset
+            A xarray.Dataset object containing values and attributes read from Marthe grid file.
     
     """
     
@@ -466,7 +487,7 @@ def dropna(ds, varname, nanval):
 
 def subset(ds, varname, value):
     """ Subset dataset based on variable name and value.
-    --> inverse of dropna()
+    --> inverse of :py:func:`dropna`
     """
     if isinstance(value, (float, int, str)):
         value = [value]
@@ -477,18 +498,18 @@ def subset(ds, varname, value):
 def replace(ds, varname, value, replace):
     """ Replace a value in xr.Dataset for a variable
     """
-    ds[varname].data = np.where(ds[varname].data == nanval, replace, ds[varname].data)
+    ds[varname].data = np.where(ds[varname].data == value, replace, ds[varname].data)
     return ds
     
 def fillna(ds, varname, value):
-    """ Replace nan value in dataset[varname], edge case of replace()
+    """ Replace nan value in dataset[varname], edge case of :py:func:`replace()`
     """
     ds[varname].data = np.where(np.isnan(ds[varname].data), value, ds[varname].data)
     return ds
 
 
 def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zone_label='zone'):
-    """ assign coords to set a 1D or 2D (time, zone) array to 3D or 4D 
+    """ assign coords to transform a 1D or 2D (time, zone) array to 3D or 4D
     """
     if len(coords) == 3:
         z_coords = da_in.get(coords[2], None) # assert z is here, or bypass
@@ -518,7 +539,7 @@ def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, 
 
 def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
     """ Transform a 3 or 4D aray into 1 or 2D array 
-    inverse of : assign_coords()
+    inverse of  :py:func:`assign_coords`
     """
     # create zone index
     coords = [d for d in coords if d in ds.coords.keys()] # make sure to drop coords that are not present
@@ -637,8 +658,9 @@ def _extract_zvar(ds, varname, dims=None):
 
 def write_marthe_grid(ds, fileout='toto.out', varname='charge', title='', dims=None, debug=False):
     """ Write Dataset as MartheGrid v9 file
-    /!\ ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
-    in case of error, please use `gm.reset_geometry()` first.
+    
+    ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
+    in case of error, please use :py:func:`gm.reset_geometry` first.
     
     Parameters
     ----------
@@ -656,12 +678,12 @@ def write_marthe_grid(ds, fileout='toto.out', varname='charge', title='', dims=N
     
     dims: list of array
         list containing array of dimension for every grid (ie len(dims) > 1 if nested grid)
-        format is [[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]
-        eg. [[354,252,2], [182,156,2]]
-        if only main grid : [[x,y,z]]
+        format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
+        eg. `[[354,252,2], [182,156,2]]`
+        if only main grid : `[[x,y,z]]`
         if None (default, dims will be parsed from ds.attrs['original_dimensions'] which is added
-        when read with `load_marthe_grid()`. If not present (lost in some computation for example),
-        please use `gm.reset_geometry(ds)` or provide list of dims manually.
+        when read with :py:func:`gridmarthe.load_marthe_grid`. If not present (lost in some computation for example),
+        please use py:func:`gridmarthe.reset_geometry(ds)` or provide list of dims manually.
     
     debug: bool, Optionnal (default is False).
     

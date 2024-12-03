@@ -25,9 +25,9 @@ classifiers = [
 
 keywords = ["hydrology", "groundwater", "modelling"]
 
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    "numpy", #==1.26"
+    "numpy",
     "pandas",
     "h5netcdf",
     "xarray",
@@ -41,6 +41,9 @@ gis = ["geopandas", "rioxarray", "rasterio"]
 
 [project.urls]
 Homepage = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe"
+Issues = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues"
+Changelog = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe/changelog.rst"
+# Documentation = ''
 
 
 [tool.setuptools]

@@ -5,7 +5,6 @@
 
 FC := gfortran
 CC := gcc
-F2PY := python3 -m numpy.f2py
 
 # editable
 PIPFLAGS ?= #-e
@@ -33,11 +32,13 @@ ifeq ($(OS), Windows_NT)
     # edit, on windows, just use distutils in setup.py ; will not work after py3.12 (distutils deprecation)...
     F2PYFLAGS +=-fdefault-real-8 -fPIC -Wno-error -static -static-libgfortran -static-libgcc
     PY := python
-    COMPILE = python setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
+    F2PY = $(PY) -m numpy.f2py
+    COMPILE = $(PY) setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
 else
     # FC := gfortran
     F2PYFLAGS +=-static -fdefault-real-8
     PY := python3
+    F2PY = $(PY) -m numpy.f2py
     COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(F2PYFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem $(F2PYOPT)
 endif
 
@@ -59,9 +60,9 @@ install: requirements lecsem.so
 requirements:
 	$(PY) -m pip install charset_normalizer numpy #==1.26 #--user
 
-# lecsem.pyf:
-	# cd $(F90SRCDIR); echo "******** Generating signature ********"; \
-	# $(F2PY) $(F90FILES) -m lecsem -h $@ $(F2PYOPT)
+lecsem.pyf:
+	cd $(F90SRCDIR); echo "******** Generating signature ********"; \
+	$(F2PY) $(F90FILES) -m lecsem -h $@ $(F2PYOPT)
 
 lecsem.so:
 	cd $(F90SRCDIR); echo "******** Building F2PY Library ********"; \

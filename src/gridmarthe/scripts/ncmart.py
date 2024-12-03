@@ -31,7 +31,7 @@ def main():
     Convert a Marthe Grid file to NetCDF format, using gridmarthe pymodule
     """
     args   = parse_args()
-    ds     = gm.load_marthe_grid(args.opt[0], fpastp=args.opt[1], dropna=True, varname=args.variable)
+    ds     = gm.load_marthe_grid(args.opt[0], fpastp=args.opt[1], drop_nan=True, varname=args.variable)
     encode = {'charge': {'zlib': True, 'complevel': 6}}
     ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
     return 0

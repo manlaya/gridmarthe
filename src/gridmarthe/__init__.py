@@ -6,6 +6,7 @@ from .gridmarthe import *
 from .operasem import *
 from .plot import plot_nested_grid, plot_outcrop
 
+from typing import Union
 
 __version__ = '0.0.1'
 
@@ -17,11 +18,11 @@ class MartheGrid(object):
     
     Example
     --------
-    >>> ds = gm.load_marthe_grid()
+    >>> ds = gm.load_marthe_grid(**kwargs)
     >>> ds.mart.dropna('permeab', 0.)
     
     """
-    def __init__(self, xr_obj: xr.Dataset|None=None):
+    def __init__(self, xr_obj: Union[xr.Dataset, None] = None):
         self.obj = xr_obj
     
     def assign_coords(self, add_lay=True):
@@ -41,7 +42,9 @@ class MartheGrid(object):
         return df.to_records()
     
     def to_raster(self, x_dim='x', y_dim='y', time=None, epsg=27572, fout_template='raster'):
-        
+        """ Write raster file for a specific timestep (or all) from dataset 
+        Warning, only functionnal for regular grids
+        """
         if time is None:
             time = self.obj.times # if not defined, get all available times
         if isinstance(time, str): # make sure to get a iterable for slicing
