@@ -12,9 +12,9 @@ build:
     - gfortran
   jobs:
     post_checkout:
-      - pip install numpy charset_normalizer
       - gfortran -v
     pre_build:
+      - pip install numpy charset_normalizer
       - cd src/gridmarthe/lecsem ; CC=gcc FC=gfortran f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
 
 python:
