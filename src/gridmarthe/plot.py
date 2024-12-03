@@ -10,6 +10,9 @@ from .utils import _get_scale
 
 # TODO: plot_section() # outil de coupe
 
+""" Module for visualisation of gridmarthe files
+"""
+
 def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
     
