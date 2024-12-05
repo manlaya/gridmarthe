@@ -12,7 +12,7 @@ sys.path.insert(0, '../../src')
 project = 'gridmarthe'
 copyright = '2024, Adrien Manlay, Jean-Pierre Vergnes - BRGM'
 author = 'Jean-Pierre Vergnes, Adrien Manlay'
-release = '0.0.1'
+release = '0.1.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
