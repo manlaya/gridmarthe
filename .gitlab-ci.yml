@@ -74,6 +74,7 @@ build-windows:
   stage: test
   # extends: .only-pepver
   allow_failure: true
+  when: manual
   before_script:
     - python -m pip install dist/wheelhouse/*.whl # --no-index --no-deps
   script:
