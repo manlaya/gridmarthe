@@ -8,12 +8,12 @@ requires = [
     "wheel",
     "charset_normalizer",
     "numpy",
-    # "meson",
-    # "meson-python",
-    # "ninja"
+    "meson",
+    "meson-python",
+    "ninja"
 ]
-build-backend = "setuptools.build_meta"
-# build-backend = "mesonpy"
+# build-backend = "setuptools.build_meta"
+build-backend = "mesonpy"
 
 [project]
 name = "gridmarthe"
@@ -70,7 +70,7 @@ include-package-data = true
 [tool.setuptools.package-data]
 "*" = ["*.pyd", "*.dll", "*.so"] # works like a charm
 
-#[tool.mesonpy]
+#[tool.meson-python]
 #
 
 [project.scripts]

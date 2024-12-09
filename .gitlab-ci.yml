@@ -25,12 +25,12 @@ stages:
     # variables: # see https://peps.python.org/pep-0440/
       # - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
 
-.only-pepver:
-  only: # see https://peps.python.org/pep-0440/
-    variables:
-      - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
-  except:
-    - branches
+# .only-pepver:
+  # only: # see https://peps.python.org/pep-0440/
+    # variables:
+      # - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
+  # except:
+    # - branches
 
 
 # ----- Build ----- #
@@ -38,10 +38,10 @@ stages:
 .build:
   # <<: *version_tag # alias
   stage: build
-  extends: .only-pepver
+  # extends: .only-pepver
   when: manual
   before_script:
-    - python -m pip install cibuildwheel
+    - python -m pip install cibuildwheel build
     # uncomment next line if you need internal dependencies
     # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
   script:
@@ -72,7 +72,7 @@ build-windows:
 
 .test:
   stage: test
-  extends: .only-pepver
+  # extends: .only-pepver
   allow_failure: true
   before_script:
     - python -m pip install dist/wheelhouse/*.whl # --no-index --no-deps
@@ -91,7 +91,7 @@ test-windows:
 # ----- Publish ----- #
 
 .deploy:
-  extends: .only-pepver
+  # extends: .only-pepver
   stage: deploy
   except:
     - branches
