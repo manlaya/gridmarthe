@@ -95,7 +95,6 @@ test-windows:
   stage: deploy
   except:
     - branches
-  needs: ["build"]
 
 
 deploy-nexus_snapshot:
