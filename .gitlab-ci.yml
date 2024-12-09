@@ -73,7 +73,7 @@ test-windows:
     - .windows
     - .test
 
-deploy-nexus:
+deploy_nexus:
   <<: *version_tag
   stage: deploy
   needs: ["build"]
@@ -81,7 +81,7 @@ deploy-nexus:
     - branches
   before_script:
     - echo $REGISTRY_NEXUS_USER
-    - echo REGISTRY_NEXUS
+    - echo $REGISTRY_NEXUS
     - pip install twine
   script:
     - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-releases/ dist/*.whl # dist/wheelhouse/*.whl
@@ -89,7 +89,7 @@ deploy-nexus:
     - manual
 
 
-release-public:
+release_public:
   <<: *version_tag
   stage: deploy
   needs: ["build"]
