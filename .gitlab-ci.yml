@@ -36,7 +36,7 @@ stages:
 # ----- Build ----- #
 
 .build:
-  # <<: *version_tag
+  # <<: *version_tag # alias
   stage: build
   extends: .only-pepver
   when: manual
@@ -99,7 +99,7 @@ test-windows:
 # ----- Publish ----- #
 
 deploy-nexus_snapshot:
-  <<: *version_tag
+  # <<: *version_tag
   extends: .deploy
   before_script:
     - echo $REGISTRY_NEXUS_USER
@@ -112,7 +112,7 @@ deploy-nexus_snapshot:
 
 
 deploy-pip:
-  <<: *version_tag
+  # <<: *version_tag
   extends: .deploy
   before_script:
     - pip install twine
