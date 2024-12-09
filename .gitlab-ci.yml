@@ -102,11 +102,13 @@ deploy-nexus_snapshot:
   # <<: *version_tag
   extends: .deploy
   before_script:
-    - echo $REGISTRY_NEXUS_USER
-    - echo $REGISTRY_NEXUS
+    - echo ${NEXUS_URL}
+    - echo ${REGISTRY_NEXUS_USER}
+    - echo ${REGISTRY_NEXUS}
     - pip install twine
   script:
-    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-snapshots/ dist/*.whl # dist/wheelhouse/*.whl
+    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-snapshots/ dist/*.whl
+    # - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-snapshots/ dist/wheelhouse/*.whl
   when:
     - manual
 
