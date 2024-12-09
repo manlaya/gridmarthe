@@ -18,9 +18,9 @@ project('gridmarthe', ['fortran', 'c'],
 # subdir('src/gridmarthe')
 
 fortran_sources = files([
-    'src/gridmarthe/martsem/lecsem.f90',
-    'src/gridmarthe/martsem/edsemigl.f90',
-    'src/gridmarthe/martsem/scan_grid.f90'
+    'src/gridmarthe/lecsem/lecsem.f90',
+    'src/gridmarthe/lecsem/edsemigl.f90',
+    'src/gridmarthe/lecsem/scan_grid.f90'
 ])
 
 # ----- Get compiler and build options ------ #
@@ -75,7 +75,7 @@ py.extension_module('lecsem',
   include_directories: [inc_np,inc_f2py],
   dependencies: [py_dep],
   install: true,
-  install_dir: python_install_dir / 'gridmarthe/martsem/',
+  install_dir: python_install_dir / 'gridmarthe/lecsem/',
   fortran_args : fortran_args,
   # dependencies : [fc],
   # override_options : ['fortran_std=none']
