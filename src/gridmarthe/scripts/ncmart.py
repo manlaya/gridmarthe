@@ -14,8 +14,9 @@ Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]
 """
     )
     parser.add_argument('opt', metavar='chasim pastp', type=str, nargs='+', help='Paths to chasim and pastp files are expected')
-    parser.add_argument('--output'  , '-o'  , type=str, default=None, help='output filename. Default is input.nc')
-    parser.add_argument('--variable', '-v'  , type=str, default='CHARGE', help='variable to read, default is CHARGE')
+    parser.add_argument('--output'  , '-o'  , type=str, default=None, help='Output filename. Default is input.nc')
+    parser.add_argument('--variable', '-v'  , type=str, default='CHARGE', help='Variable to read, default is CHARGE')
+    parser.add_argument('--as2d', '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
     args = parser.parse_args()
     if args.output is not None:
         dirout = os.path.dirname(args.output)
@@ -32,6 +33,8 @@ def main():
     """
     args   = parse_args()
     ds     = gm.load_marthe_grid(args.opt[0], fpastp=args.opt[1], drop_nan=True, varname=args.variable.upper())
+    if args.as2d:
+        ds = gm.assign_coords(ds)
     encode = {args.variable.lower(): {'zlib': True, 'complevel': 6}}
     ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
     return 0

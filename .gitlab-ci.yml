@@ -1,75 +1,104 @@
-image: nexus-docker.brgm.fr/brgm/miniconda3:latest
+# Gitlab CI config - Courtesy of T. Janvier
+default: # linux image on linux runnner
+  image: nexus-docker.brgm.fr/brgm/miniconda3:latest
+  tags:
+    - brgm
 
+.windows: # windows image on windows runnner
+  image: nexus-docker.brgm.fr/brgm/miniconda3:windows
+  tags:
+    - windows-2022-docker
 
 before_script:
-  - echo "pyspli ci/cd pipeline"
+  - echo "gridmarthe ci/cd pipeline"
   - python --version
-  - conda install -c conda-forge gcc gfortran ninja
+  - gfortran --version
 
 stages:
-  - test
   - build
-  - deploy
+  - test
+  # - deploy
 
-# trigger pipeline only on tag version
-# T. Janvier courtesy
+
 .version_tag: &version_tag
   only:
-    variables:
-      - $CI_COMMIT_TAG =~ /^v?\d{1}\.(\d{1,2}\.?){1,2}([a-zA-Z]+\d{1,2})?/
-
-pytest:
-  <<: *version_tag
-  stage: test
-  before_script:
-    - python -m pip install pytest
-  script:
-    - pip install -e . # need setup.py on this image (python-build) for edit mode (py3.7.4, pip 20.0.2)
-    - python -m pytest tests
-  allow_failure: true
-  when: manual
+    variables: # see https://peps.python.org/pep-0440/
+      - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
 
 
-wheels:
+.build:
   <<: *version_tag
   stage: build
+  when: manual
   before_script:
-    - rm -rf dist
+    - python -m pip install cibuildwheel
+    # uncomment next line if you need internal dependencies
+    # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
   script:
-    - pip install numpy charset_normalizer meson meson-python
-    - cd src/gridmarthe/lecsem ; CC=gcc FC=gfortran f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
-    - python -m pip wheel . -w ./dist --no-deps
+    # build multiple versions using cibuildwheel
+    - python -m cibuildwheel --output-dir ./dist 
+    # build standalone environment for testing (current package + all dependencies)
+    # - python -m pip wheel -w ./dist/wheelhouse .[test]
+    - python -m pip wheel -w ./dist/wheelhouse .
   artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
     paths:
-      - dist/
-    expire_in: 1 day
+    - dist/
+    expose_as: wheel
+    expire_in: 2 hours
+    
+
+build-linux:
   when: manual
+  extends: .build
 
+build-windows:
+  when: manual
+  extends: 
+    - .windows
+    - .build
 
-publish_release:
+.test:
+  stage: test
+  allow_failure: true
+  before_script:
+    - python -m pip install dist/wheelhouse/*.whl # --no-index --no-deps
+  script:
+    - python -c 'import gridmarthe'
+
+test-linux:
+  extends: .test
+
+test-windows:
+  extends: 
+    - .windows
+    - .test
+
+deploy-nexus:
   <<: *version_tag
   stage: deploy
-  needs: ["wheels"]
+  needs: ["build"]
+  except:
+    - branches
   before_script:
-    - python -m pip install twine
+    - echo $REGISTRY_NEXUS_USER
+    - echo REGISTRY_NEXUS
+    - pip install twine
   script:
-    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-releases/ dist/*
-  when: manual
+    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-releases/ dist/*.whl # dist/wheelhouse/*.whl
+  when:
+    - manual
 
 
-publish_nexus:
+release-public:
   <<: *version_tag
   stage: deploy
-  needs: ["wheels"]
+  needs: ["build"]
+  except:
+    - branches
   before_script:
-    - python -m pip install twine
-    - echo ${NEXUS_URL}
-    - echo ${REGISTRY_NEXUS_USER}
+    - pip install twine
   script:
-    - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-all/ dist/*
-  when: manual
-  # only:
-    # - tags
-  # except:
-    # - branches
+    - twine upload dist/*.whl
+  when:
+    - manual
+
