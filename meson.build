@@ -16,29 +16,50 @@ project('gridmarthe', ['fortran', 'c'],
 
 # add_languages('fortran')
 # subdir('src/gridmarthe')
-
 fortran_sources = files([
     'src/gridmarthe/lecsem/lecsem.f90',
     'src/gridmarthe/lecsem/edsemigl.f90',
     'src/gridmarthe/lecsem/scan_grid.f90'
 ])
+lecsem_install_dir = 'gridmarthe/lecsem/' # in python_install_dir
 
 # ----- Get compiler and build options ------ #
 fc = meson.get_compiler('fortran')
 cc = meson.get_compiler('c')
+deps = []
 
 # Options de compilation Fortran
-# fortran_args = [
-#     '-fdefault-real-8', '-fPIC', '-Wno-error', 
-#     '-static', '-static-libgfortran', '-static-libgcc'
-# ]
+largs = []
+if fc.get_id() == 'gcc'
+  largs += ['-fdefault-real-8', '-fPIC', '-O3', '-ffree-line-length-none']
+  if cc.version().version_compare('>=13.0')
+    largs += ['-fallow-mismatch-argument', '-std=legacy']
+  endif
+  if host_machine.system() == 'windows'
+    largs += ['-static', '-static-libgfortran', '-static-libgcc', '-lquadmath']
+    quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
+    # quadmath = declare_dependency(link_args : ['-lquadmath'])
+    deps += [quadmath_dep] #,quadmath
+  endif
+elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
+  # TODO add options for llvm-flang for conda-forge
+  largs += ['-std=legacy']
+  add_project_link_arguments('-Wl,-rpath=/d/miniforge/envs/llvm/Library/bin/lld')
+  # error('flang not yet supported')
+# elif cc.get_id() in ['msvc', 'intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
+else
+  error('Build is recommended with GCC/gfortran')
+endif
 
-# TODO faire en fonction du compilateur et de la platform
-fortran_args = fc.get_supported_arguments(['-fdefault-real-8', '-fPIC', '-O3', '-ffree-line-length-none'])
+fortran_args = fc.get_supported_arguments(largs)
 
+# ----- Get Python linked ------ #
 py = import('python').find_installation(pure: false)
 py_dep = py.dependency()
 python_install_dir = py.get_install_dir()
+
+deps += [py_dep]
+
 
 incdir_numpy = run_command(py,
   ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
@@ -73,11 +94,10 @@ py.extension_module('lecsem',
     fortranobject_c
   ],
   include_directories: [inc_np,inc_f2py],
-  dependencies: [py_dep],
+  dependencies: deps,
   install: true,
-  install_dir: python_install_dir / 'gridmarthe/lecsem/',
+  install_dir: python_install_dir / lecsem_install_dir,
   fortran_args : fortran_args,
-  # dependencies : [fc],
   # override_options : ['fortran_std=none']
 )
 

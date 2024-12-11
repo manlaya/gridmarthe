@@ -41,12 +41,15 @@ stages:
   # extends: .only-pepver
   when: manual
   before_script:
+    - echo "gridmarthe ci/cd pipeline"
+    - python --version
+    - gfortran --version || mamba install gfortran
     - python -m pip install cibuildwheel build
     # uncomment next line if you need internal dependencies
     # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
   script:
     # build multiple versions using cibuildwheel
-    - python -m cibuildwheel --output-dir ./dist 
+    # - python -m cibuildwheel --output-dir ./dist 
     # build standalone environment for testing (current package + all dependencies)
     # - python -m pip wheel -w ./dist/wheelhouse .[test]
     - python -m pip wheel -w ./dist/wheelhouse .
@@ -73,7 +76,7 @@ build-windows:
 .test:
   stage: test
   # extends: .only-pepver
-  allow_failure: true
+  # allow_failure: true
   when: manual
   before_script:
     - python -m pip install dist/wheelhouse/*.whl # --no-index --no-deps
