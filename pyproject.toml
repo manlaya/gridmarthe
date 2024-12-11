@@ -1,12 +1,13 @@
 # ------------------------------------------------ #
 # --- Setup file for gridmarthe python package --- #
 # ------------------------------------------------ #
-
+# pip install --no-build-isolation --editable .
 [build-system]
 requires = [
     "setuptools",
     "wheel",
     "charset_normalizer",
+    "spin",
     "numpy",
     "meson",
     "meson-python",
@@ -52,11 +53,17 @@ dependencies = [
 gis = ["rioxarray", "rasterio"]
 doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
 
+[project.scripts]
+ncmart = "gridmarthe:scripts.ncmart"
+cleanmgrid = "gridmarthe:scripts.cleanmgrid"
+
+
 [project.urls]
 Homepage = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe"
 Issues = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues"
 Changelog = "https://gitlab.brgm.fr/brgm/codes-hydrogeologiques/others/gridmarthe/changelog.rst"
 Documentation = "https://gridmarthe.readthedocs.io/en/latest/"
+
 
 [tool.setuptools.dynamic]
 version = {attr = "gridmarthe.__version__"}
@@ -70,11 +77,25 @@ include-package-data = true
 [tool.setuptools.package-data]
 "*" = ["*.pyd", "*.dll", "*.so"] # works like a charm
 
-#[tool.meson-python]
-#
-[tool.cibuildwheel]
-skip = "cp36-* cp37-* cp-38* pp37-* *-manylinux_i686 *_ppc64le *_s390x *_universal2"
+# https://mesonbuild.com/meson-python/reference/pyproject-settings.html
+# https://mesonbuild.com/meson-python/how-to-guides/meson-args.html
+# [tool.meson-python.args]
+# setup = ['--default-library=static', "-Dc_link_args='-Wl,-rpath=...'"]
 
-[project.scripts]
-ncmart = "gridmarthe:scripts.ncmart"
-cleanmgrid = "gridmarthe:scripts.cleanmgrid"
+[tool.cibuildwheel]
+# skip = "cp36-* cp37-* cp-38* pp37-* *-manylinux_i686 *_ppc64le *_s390x *_universal2"
+skip = "cp36-* cp37-* cp-38* pp* *musl* *_i686 *_ppc64le *_s390x *_universal2"
+# skip = ["pp*", "*musl*"]
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64"]
+
+#[tool.cibuildwheel.windows]
+#archs = ["AMD64"]
+
+[tool.spin]
+package = 'gridmarthe'
+[tool.spin.commands]
+Build = [
+    'spin.cmds.meson.build',
+]
