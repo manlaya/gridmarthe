@@ -12,6 +12,7 @@ default: # linux image on linux runnner
 before_script:
   - echo "gridmarthe ci/cd pipeline"
   - python --version
+  - mamba install gfortran
   - gfortran --version
 
 stages:
@@ -43,7 +44,8 @@ stages:
   before_script:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
-    - gfortran --version || mamba install gfortran
+    - gfortran --version
+    - python -m pip install --upgrade pip setuptools wheel
     - python -m pip install cibuildwheel build
     # uncomment next line if you need internal dependencies
     # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
@@ -111,7 +113,6 @@ deploy-nexus_snapshot:
     - pip install twine
   script:
     - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-snapshots/ dist/*.whl
-    # - twine upload -u ${REGISTRY_NEXUS_USER} -p ${REGISTRY_NEXUS_PASSWORD} --repository-url ${REGISTRY_NEXUS}/pypi-snapshots/ dist/wheelhouse/*.whl
   when: manual
 
 
@@ -121,6 +122,6 @@ deploy-pip:
   before_script:
     - pip install twine
   script:
-    - twine upload dist/*.whl
+    - twine upload -u ${PYPI_USER} -p ${PYPI_TOKEN} --skip-existing --verbose dist/*.whl
   when: manual
 

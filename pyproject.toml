@@ -1,7 +1,6 @@
 # ------------------------------------------------ #
 # --- Setup file for gridmarthe python package --- #
 # ------------------------------------------------ #
-# pip install --no-build-isolation --editable .
 [build-system]
 requires = [
     "setuptools",
