@@ -4,16 +4,17 @@ default: # linux image on linux runnner
   tags:
     - brgm
 
-
 .windows: # windows image on windows runnner
   image: nexus-docker.brgm.fr/brgm/miniconda3:windows
   tags:
     - windows-2022-docker
 
+
 stages:
   - build
   - test
   - deploy
+
 
 .version_tag:
   only: # see https://peps.python.org/pep-0440/
@@ -65,8 +66,8 @@ build-windows:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
     - gfortran --version
-    - python -m pip install --upgrade pip setuptools wheel
-    - python -m pip install cibuildwheel build
+    - pip install --upgrade pip setuptools wheel
+    - pip install cibuildwheel build
 
 
 # ----- Test config ----- #
@@ -99,8 +100,8 @@ test-windows:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
     - gfortran --version
-    - python -m pip install dist/*none*.whl # --no-index --no-deps
-    - python -m pip install dist/*win*.whl # --no-index --no-deps
+    - pip install dist/*none*.whl # --no-index --no-deps
+    - pip install dist/*win*.whl # --no-index --no-deps
 
 
 
