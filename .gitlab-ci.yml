@@ -15,18 +15,12 @@ stages:
   - test
   - deploy
 
-
-# .version_tag: &version_tag
-  # only:
-    # variables: # see https://peps.python.org/pep-0440/
-      # - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
-
-# .only-pepver:
-  # only: # see https://peps.python.org/pep-0440/
-    # variables:
-      # - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
-  # except:
-    # - branches
+.version_tag:
+  only: # see https://peps.python.org/pep-0440/
+    variables:
+      - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
+  except:
+    - branches
 
 
 # ----- Build ----- #
@@ -34,13 +28,8 @@ stages:
 .build:
   # <<: *version_tag # alias
   stage: build
-  # extends: .only-pepver
+  # extends: .version_tag
   when: manual
-  before_script:
-    - python -m pip install --upgrade pip setuptools wheel
-    - python -m pip install cibuildwheel build
-    # uncomment next line if you need internal dependencies
-    # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
   script:
     # build multiple versions using cibuildwheel
     # - python -m cibuildwheel --output-dir ./dist 
@@ -62,6 +51,10 @@ build-linux:
     - python --version
     - mamba install gfortran
     - gfortran --version
+    - python -m pip install --upgrade pip setuptools wheel
+    - python -m pip install cibuildwheel build
+    # uncomment next line if you need internal dependencies
+    # - python -m pip config set global.index-url ${REGISTRY_NEXUS}/pypi-all/simple
 
 build-windows:
   when: manual
@@ -72,44 +65,55 @@ build-windows:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
     - gfortran --version
+    - python -m pip install --upgrade pip setuptools wheel
+    - python -m pip install cibuildwheel build
 
 
 # ----- Test config ----- #
 
 .test:
   stage: test
-  # extends: .only-pepver
-  # allow_failure: true
+  # extends: .version_tag
   when: manual
+  script:
+    - python -c 'import gridmarthe'
+  # allow_failure: true
+
+
+test-linux:
+  extends: .test
   before_script:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
     - mamba install gfortran
     - gfortran --version
-    - python -m pip install dist/*.whl # --no-index --no-deps
-  script:
-    - python -c 'import gridmarthe'
+    - python -m pip install dist/*none*.whl # --no-index --no-deps
+    - python -m pip install dist/*linux*.whl # --no-index --no-deps
 
-test-linux:
-  extends: .test
 
 test-windows:
   extends: 
     - .windows
     - .test
+  before_script:
+    - echo "gridmarthe ci/cd pipeline"
+    - python --version
+    - gfortran --version
+    - python -m pip install dist/*none*.whl # --no-index --no-deps
+    - python -m pip install dist/*win*.whl # --no-index --no-deps
+
 
 
 # ----- Publish ----- #
 
 .deploy:
-  # extends: .only-pepver
+  extends: .version_tag
   stage: deploy
   except:
     - branches
 
 
 deploy-nexus_snapshot:
-  # <<: *version_tag
   extends: .deploy
   before_script:
     - echo ${NEXUS_URL}
@@ -122,7 +126,6 @@ deploy-nexus_snapshot:
 
 
 deploy-pip:
-  # <<: *version_tag
   extends: .deploy
   before_script:
     - pip install twine
