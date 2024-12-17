@@ -1,4 +1,4 @@
-# Gitlab CI config - Courtesy of T. Janvier
+# Gitlab CI config - Courtesy of T. Janvier (BRGM)
 default: # linux image on linux runnner
   image: nexus-docker.brgm.fr/brgm/miniconda3:latest
   tags:
@@ -27,7 +27,6 @@ stages:
 # ----- Build ----- #
 
 .build:
-  # <<: *version_tag # alias
   stage: build
   # extends: .version_tag
   when: manual
@@ -88,8 +87,8 @@ test-linux:
     - python --version
     - mamba install gfortran
     - gfortran --version
-    - python -m pip install dist/*none*.whl # --no-index --no-deps
-    - python -m pip install dist/*linux*.whl # --no-index --no-deps
+    - python -m pip install --no-index --no-deps dist/*none*.whl # no-index: avoid search pypi index ; no-deps, wheels already build
+    - python -m pip install --no-index --no-deps dist/*linux*.whl
 
 
 test-windows:
@@ -100,8 +99,8 @@ test-windows:
     - echo "gridmarthe ci/cd pipeline"
     - python --version
     - gfortran --version
-    - pip install dist/*none*.whl # --no-index --no-deps
-    - pip install dist/*win*.whl # --no-index --no-deps
+    - pip install --no-index --no-deps dist/*none*.whl
+    - pip install --no-index --no-deps dist/*win*.whl
 
 
 
