@@ -3,21 +3,12 @@ default: # linux image on linux runnner
   image: nexus-docker.brgm.fr/brgm/miniconda3:latest
   tags:
     - brgm
-  before_script:
-    - echo "gridmarthe ci/cd pipeline"
-    - python --version
-    - mamba install gfortran
-    - gfortran --version
+
 
 .windows: # windows image on windows runnner
   image: nexus-docker.brgm.fr/brgm/miniconda3:windows
   tags:
     - windows-2022-docker
-  before_script:
-    - echo "gridmarthe ci/cd pipeline"
-    - python --version
-    - gfortran --version
-  
 
 stages:
   - build
@@ -66,12 +57,21 @@ stages:
 build-linux:
   when: manual
   extends: .build
+  before_script:
+    - echo "gridmarthe ci/cd pipeline"
+    - python --version
+    - mamba install gfortran
+    - gfortran --version
 
 build-windows:
   when: manual
   extends: 
     - .windows
     - .build
+  before_script:
+    - echo "gridmarthe ci/cd pipeline"
+    - python --version
+    - gfortran --version
 
 
 # ----- Test config ----- #
