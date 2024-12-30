@@ -1,0 +1,51 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - ci
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install gfortran (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install gfortran -y
+          # mingw
+          refreshenv
+      
+      - name: Install gfortran (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y gfortran
+
+      - name: Install gfortran (MacOS)
+        if: runner.os == 'macOS'
+        run: brew install gfortran
+
+      - name: Verify gfortran installation
+        run: gfortran --version
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: [3.10, 3.11, 3.12]
+
+      - name: Install cibuildwheel
+        run: pip install cibuildwheel
+        
+      - name: Build wheels with cibuildwheel
+        run: cibuildwheel --output-dir dist
+
+
+
+
