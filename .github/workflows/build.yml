@@ -30,6 +30,10 @@ jobs:
       - name: Install gfortran (MacOS)
         if: runner.os == 'macOS'
         run: brew install gcc
+      
+      - name: Add Homebrew to PATH
+        if: runner.os == 'macOS'
+        run: echo "/usr/local/bin:/opt/homebrew/bin:$PATH" >> $GITHUB_ENV
 
       - name: Verify gfortran installation
         run: gfortran --version
