@@ -19,9 +19,7 @@ jobs:
 
       - name: Install gfortran (Windows)
         if: runner.os == 'Windows'
-        run: |
-          choco install mingw -y
-          refreshenv
+        run: choco install mingw -y
       
       - name: Install gfortran (Linux)
         if: runner.os == 'Linux'
