@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-11]
+        os: [macos-lastest]
 
     steps:
       - name: Checkout code
@@ -32,9 +32,9 @@ jobs:
           brew install gcc
           export PATH="${PATH}:/opt/homebrew/bin"
           # https://github.com/actions/runner-images/issues/3371
-          sudo ln -s /usr/local/bin/gfortran-11 /usr/local/bin/gfortran
+          sudo ln -s /usr/local/bin/gfortran-12 /usr/local/bin/gfortran
           sudo mkdir /usr/local/gfortran
-          sudo ln -s /usr/local/Cellar/gcc@11/*/lib/gcc/11 /usr/local/gfortran/lib
+          sudo ln -s /usr/local/Cellar/gcc@12/*/lib/gcc/12 /usr/local/gfortran/lib
      
       # Check gfortran
       - name: Verify gfortran installation
