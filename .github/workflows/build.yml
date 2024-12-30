@@ -20,17 +20,16 @@ jobs:
       - name: Install gfortran (Windows)
         if: runner.os == 'Windows'
         run: |
-          choco install gfortran -y
-          # mingw
+          choco install mingw -y
           refreshenv
       
       - name: Install gfortran (Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y gfortran
+        run: sudo apt-get install -y gcc gfortran
 
       - name: Install gfortran (MacOS)
         if: runner.os == 'macOS'
-        run: brew install gfortran
+        run: brew install gcc
 
       - name: Verify gfortran installation
         run: gfortran --version
