@@ -34,7 +34,9 @@ jobs:
      
       # Check gfortran
       - name: Verify gfortran installation
-        run: gfortran --version
+        run: |
+          which gcc
+          gfortran --version
 
       # Build wheels
       - name: Set up Python
