@@ -6,7 +6,7 @@
 
 project('gridmarthe', ['fortran', 'c'],
   version : '0.1.1',
-  license: 'MIT',
+  license: 'GNU/GPL-V3',
   meson_version: '>=0.64.0',
   default_options : [
     'warning_level=1',
@@ -23,32 +23,45 @@ fortran_sources = files([
 ])
 lecsem_install_dir = 'gridmarthe/lecsem/' # in python_install_dir
 
+
 # ----- Get compiler and build options ------ #
 fc = meson.get_compiler('fortran')
 cc = meson.get_compiler('c')
 deps = []
+inc_dir = []
 
 # Options de compilation Fortran
 largs = []
+
 if fc.get_id() == 'gcc'
-  largs += ['-fdefault-real-8', '-fPIC', '-O3', '-ffree-line-length-none']
+  
   if cc.version().version_compare('>=13.0')
-    largs += ['-fallow-mismatch-argument', '-std=legacy']
+    largs += ['-fallow-argument-mismatch', '-std=legacy']
   endif
+  
   if host_machine.system() == 'windows'
     largs += ['-static', '-static-libgfortran', '-static-libgcc', '-lquadmath']
     quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
     # quadmath = declare_dependency(link_args : ['-lquadmath'])
     deps += [quadmath_dep] #,quadmath
+  else
+      largs += ['-O2', '-ffree-line-length-none']
+      # largs += ['-fPIC', '-shared'] # not really necessary here
+      # largs += ['-fdefault-real-8'] # EDIT, no, in args: kind=4 / single precision
   endif
+
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
+  
   # TODO add options for llvm-flang for conda-forge
   largs += ['-std=legacy']
-  add_project_link_arguments('-Wl,-rpath=/d/miniforge/envs/llvm/Library/bin/lld')
   # error('flang not yet supported')
+
 # elif cc.get_id() in ['msvc', 'intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
+
 else
+  
   error('Build is recommended with GCC/gfortran')
+
 endif
 
 fortran_args = fc.get_supported_arguments(largs)
@@ -87,13 +100,15 @@ lecsem_interface = custom_target('lecsemmodule.c',
 )
 
 
+inc_dir += [inc_np,inc_f2py]
+
 py.extension_module('lecsem',
   [
     fortran_sources,
     lecsem_interface,
     fortranobject_c
   ],
-  include_directories: [inc_np,inc_f2py],
+  include_directories: inc_dir,
   dependencies: deps,
   install: true,
   install_dir: python_install_dir / lecsem_install_dir,
