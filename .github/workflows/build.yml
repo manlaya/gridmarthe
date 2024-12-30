@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [macos-latest]
 
     steps:
       - name: Checkout code
@@ -35,6 +35,7 @@ jobs:
 
       - name: Verify gfortran installation
         run: gfortran --version
+
 
       - name: Set up Python
         uses: actions/setup-python@v4
