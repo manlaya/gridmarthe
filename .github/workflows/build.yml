@@ -29,6 +29,11 @@ jobs:
       - name: Install gfortran (MacOS)
         if: runner.os == 'macOS'
         run: brew install gcc
+        
+        # macOS: force Link gfortran
+      - name: Link gfortran
+        if: runner.os == 'macOS'
+        run: brew link --overwrite gcc
      
       # Check gfortran
       - name: Verify gfortran installation
