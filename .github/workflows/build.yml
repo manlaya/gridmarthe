@@ -28,10 +28,15 @@ jobs:
 
       - name: Install gfortran (MacOS)
         if: runner.os == 'macOS'
+        run: brew install gcc
+        
+      - name: Symlink gfortran (macOS)
+        if: runner.os == 'macOS'
         run: |
-          brew install gcc
-          export PATH="${PATH}:/opt/homebrew/bin"
-          # https://github.com/actions/runner-images/issues/3371
+          # make sure gfortran is available
+          # https://github.com/actions/runner-images/blob/main/images/macos/macos-15-Readme.md
+          # https://github.com/actions/runner-images/issues/3371export
+          PATH="${PATH}:/opt/homebrew/bin"
           sudo ln -s /usr/local/bin/gfortran-12 /usr/local/bin/gfortran
           sudo mkdir /usr/local/gfortran
           sudo ln -s /usr/local/Cellar/gcc@12/*/lib/gcc/12 /usr/local/gfortran/lib
