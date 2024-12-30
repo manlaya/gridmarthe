@@ -28,11 +28,13 @@ jobs:
 
       - name: Install gfortran (MacOS)
         if: runner.os == 'macOS'
-        run: brew install gcc
+        run: |
+          brew install gcc
+          export PATH="${PATH}:/opt/homebrew/bin"
      
       # Check gfortran
-      #- name: Verify gfortran installation
-      #  run: gfortran --version
+      - name: Verify gfortran installation
+        run: gfortran --version
 
       # Build wheels
       - name: Set up Python
