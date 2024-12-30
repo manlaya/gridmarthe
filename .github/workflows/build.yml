@@ -32,9 +32,9 @@ jobs:
           brew install gcc
           export PATH="${PATH}:/opt/homebrew/bin"
           # https://github.com/actions/runner-images/issues/3371
-          sudo ln -s /usr/local/bin/gfortran-10 /usr/local/bin/gfortran
+          sudo ln -s /usr/local/bin/gfortran-14 /usr/local/bin/gfortran
           sudo mkdir /usr/local/gfortran
-          sudo ln -s /usr/local/Cellar/gcc@10/*/lib/gcc/10 /usr/local/gfortran/lib
+          sudo ln -s /usr/local/Cellar/gcc@14/*/lib/gcc/14 /usr/local/gfortran/lib
      
       # Check gfortran
       - name: Verify gfortran installation
