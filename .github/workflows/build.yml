@@ -59,9 +59,7 @@ jobs:
 
   pypi-publish:
     runs-on: ubuntu-latest
-    needs:
-      - build_wheels:
-    needs: build
+    needs: build_wheels
     runs-on: ubuntu-latest
     steps:
       - name: Upload to PyPI
