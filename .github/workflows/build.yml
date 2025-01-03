@@ -13,6 +13,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          # to access these variables
+          - os: [ubuntu-latest, windows-latest, macos-latest]
     env:
       FC: gfortran
       GCC_V: 12 # only for MACOS
@@ -71,7 +74,7 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: artifact_${{ matrix.config.os }}
+          name: artifact_${{ matrix.os }}
           path: dist/
           overwrite: true
           # if-no-files-found: ignore
