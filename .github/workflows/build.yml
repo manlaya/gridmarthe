@@ -71,9 +71,12 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: release-dists
+          name: ${{ env.RUN_UNIQUE_ID }}_artifact_${{ matrix.step }}
           path: dist/
           overwrite: true
+          # if-no-files-found: ignore
+          # retention-days: 1
+
 
 
 #  pypi-publish:
