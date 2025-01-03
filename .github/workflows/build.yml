@@ -44,7 +44,7 @@ jobs:
           # ln version - new path 'MacOS14'
           sudo ln -fs /opt/homebrew/bin/gfortran-${GCC_V} /usr/local/bin/gfortran
           sudo mkdir -p /usr/local/gfortran
-          ln -sf /opt/homebrew/Cellar/gcc@${GCC_V}/*/lib/gcc/${GCC_V} /usr/local/gfortran/lib
+          sudo ln -sf /opt/homebrew/Cellar/gcc@${GCC_V}/*/lib/gcc/${GCC_V} /usr/local/gfortran/lib
      
       # Check gfortran
       - name: Verify gfortran installation
