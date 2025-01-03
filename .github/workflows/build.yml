@@ -46,9 +46,9 @@ jobs:
           sudo mkdir -p /usr/local/gfortran
           sudo ln -sf /opt/homebrew/Cellar/gcc@${GCC_V}/*/lib/gcc/${GCC_V} /usr/local/gfortran/lib
      
-     - name: Set macOS deployment target
-     # dép de gcc compilées avec macos latest...
-     # TODO compiler avec macos12 et tester sur macos14
+      # dép de gcc compilées avec macos latest...
+      # TODO compiler avec macos12 et tester sur macos14
+      - name: Set macOS deployment target
         if: runner.os == 'macOS'
         run: echo "MACOSX_DEPLOYMENT_TARGET=14.0" >> $GITHUB_ENV
      
