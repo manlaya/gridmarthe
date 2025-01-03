@@ -9,13 +9,12 @@ on:
 
 jobs:
   build_wheels:
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        include:
-          # to access these variables
-          - os: [ubuntu-latest, windows-latest, macos-latest]
+        # mac os 14 at least - runner with Apple Silicon
+        os: [ubuntu-latest, windows-latest, macos-14]
     env:
       FC: gfortran
       GCC_V: 12 # only for MACOS
@@ -74,13 +73,29 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: artifact_${{ matrix.os }}
-          path: dist/
+          name: cibw-bdist_${{ matrix.os }}-${{ strategy.job-index }}
+          path: dist/*.whl
           overwrite: true
           # if-no-files-found: ignore
           # retention-days: 1
 
 
+  # add src dist
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build sdist
+        run: |
+          pip install build
+          python -m build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
 
 #  pypi-publish:
 #    runs-on: ubuntu-latest
@@ -129,7 +144,10 @@ jobs:
     - name: Download all the dists
       uses: actions/download-artifact@v4
       with:
+        pattern: cibw-*
         path: dist/
+        merge-multiple: true
+    
     - name: Publish distribution to TestPyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
