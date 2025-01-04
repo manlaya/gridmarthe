@@ -67,6 +67,10 @@ jobs:
       - name: Install cibuildwheel
         run: pip install cibuildwheel
         
+      - name: Install delvewheel (Windows)
+        if: runner.os == 'Windows'
+        run: pip install delvewheel
+        
       - name: Build wheels with cibuildwheel
         run: cibuildwheel --output-dir dist
       
