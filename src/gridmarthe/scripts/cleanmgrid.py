@@ -161,9 +161,7 @@ def main(frma):
     return 0
 
 
-
-if __name__ == '__main__':
-    
+def cleanmgrid():
     import sys
     if len(sys.argv) < 2:
         print('cleanmgrid NO argument were passed')
@@ -174,4 +172,11 @@ if __name__ == '__main__':
         print_help()
         sys.exit(1)
     status = main(frma)
+    return status
+
+
+
+if __name__ == '__main__':
+    
+    status = cleanmgrid()
     sys.exit(status)
