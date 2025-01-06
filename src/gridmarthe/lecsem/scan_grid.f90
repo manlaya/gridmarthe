@@ -393,9 +393,9 @@ CONTAINS
         !inputs
         integer, intent(in)                          :: NVAL, NGRID, NSTEPS
         integer, intent(in), dimension(NGRID, 3)     :: N_DIMS
-        real   , intent(in), dimension(NSTEPS, NVAL) :: XVAR
-        real   , intent(in), dimension(NVAL)         :: DXLU, DYLU, XCOL, YLIG
-        real   , intent(in), dimension(NSTEPS)       :: DATES
+        real(KIND=4), intent(in), dimension(NSTEPS, NVAL) :: XVAR
+        real(KIND=4), intent(in), dimension(NVAL)         :: DXLU, DYLU, XCOL, YLIG
+        real(KIND=4), intent(in), dimension(NSTEPS)       :: DATES
         character(len=13)  , intent(in)              :: TYP_DON
         character(len=132) , intent(in)              :: TITSEM, XFILE
         logical, optional                            :: DEBUG
@@ -405,8 +405,8 @@ CONTAINS
         !
         ! local
         integer :: ISTEP, TMP_ISTEP, NU_ZOO, NU_GRID, N_COUCH, LEC, INVY, NKOL, NLIG, NTOT, NLAY, NGIG, start_idx, end_idx, shift, i
-        real    :: X0, Y0
-        real, dimension(:), allocatable :: XTEMPVAR, XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
+        real(KIND=4) :: X0, Y0
+        real(KIND=4), dimension(:), allocatable :: XTEMPVAR, XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
         logical :: DEBUGG
         
         INVY   = 0
