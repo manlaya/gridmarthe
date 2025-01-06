@@ -10,13 +10,14 @@ and is available at https://www.brgm.fr/en/software/marthe-modelling-software-gr
 
 ## gridmarthe in a nutshell
 
-Full support of gridmarthe read operations by wrapping MARTHE fortran read/write modules,
-allowing fast reading of marthe grid file (v9, v8, constant_data, etc.), for any MARTHE variable.
-Recent developpments also allow writting MartheGrid_v9.0 file.
+`gridmarthe` allow users to read/write efficiently Marthe Grids (v9, v8, constant_data, etc.)
+for any MARTHE variable.
 
-In python, gridmarthe files are loaded using numpy and xarray libraries.
+With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be manage with
+`xarray` (or `numpy`) functions as with "utils" functions provided by `gridmarthe`.
 
-Some "utils" functions are also provided for users (plotting, interpolations, etc.).
+The package also install a command line tool, `ncmart` to convert Marthe Grid to netCDF format.
+Help can be found with `ncmart -h`.
 
 
 
@@ -25,13 +26,27 @@ Some "utils" functions are also provided for users (plotting, interpolations, et
 ### From pip
 
 
-On pip, `gridmarthe` is available for Linux, macOS and Windows for python >=3.10.
+On pip, `gridmarthe` is available for GNU/Linux, macOS and Windows for python >=3.10.
 Users can install it with:
 
 ```
 pip install gridmarthe
 ```
 
+For GNU/Linux and MacOS, the package needs gfotran/gcc to run.
+
+Linux, example with debian/ubuntu:
+```bash
+sudo apt install gcc gfortran
+```
+
+```
+
+MacOS:
+
+```bash
+brew install gcc gfortran
+```
 
 ### From conda-forge
 
@@ -40,7 +55,7 @@ not yet, see : https://github.com/conda-forge/staged-recipes/pull/28277
 
 ### From sources
 
-`gridmarthe` use Fortran module (partly from marthe source code, plus some specific developpement) which need
+`gridmarthe` use some Fortran modules which need
 to be compiled before local installation.
 
 #### Compilation and installation
@@ -54,7 +69,7 @@ cd gridmarthe
 
 ##### Unix-like OS
 
-On a linux machine, with gfortran, ninja-build, python3, the project `Makefile` will compile Fortran sources and install
+On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile Fortran sources and install
 **in development mode** the package.
 
 ```bash

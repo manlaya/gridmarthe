@@ -31,29 +31,31 @@ deps = []
 inc_dir = []
 
 # Options de compilation Fortran
-largs = []
+fargs = []  # compile args
+largs = []  # arg de link
 
 if fc.get_id() == 'gcc'
   
   if cc.version().version_compare('>=13.0')
-    largs += ['-fallow-argument-mismatch', '-std=legacy']
+    fargs += ['-fallow-argument-mismatch', '-std=legacy']
   endif
   
   if host_machine.system() == 'windows'
-    largs += ['-static', '-static-libgfortran', '-static-libgcc', '-lquadmath']
+    fargs += ['-fPIC', '-Wno-error']
+    largs += ['-static', '-static-libgfortran', '-static-libgcc', '-static-libquadmath']
     quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
-    # quadmath = declare_dependency(link_args : ['-lquadmath'])
-    deps += [quadmath_dep] #,quadmath
+    quadmath = declare_dependency(link_args : ['-lquadmath'])
+    deps += [quadmath_dep,quadmath]
   else
-      largs += ['-O2', '-ffree-line-length-none']
-      # largs += ['-fPIC', '-shared'] # not really necessary here
-      # largs += ['-fdefault-real-8'] # EDIT, no, in args: kind=4 / single precision
+      fargs += ['-O2', '-ffree-line-length-none']
+      # fargs += ['-fPIC', '-shared'] # not really necessary here
+      # fargs += ['-fdefault-real-8'] # EDIT, no, in args: kind=4 / single precision
   endif
 
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
   
   # TODO add options for llvm-flang for conda-forge
-  largs += ['-std=legacy']
+  fargs += ['-std=legacy']
   # error('flang not yet supported')
 
 # elif cc.get_id() in ['msvc', 'intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
@@ -64,7 +66,10 @@ else
 
 endif
 
-fortran_args = fc.get_supported_arguments(largs)
+fortran_args = fc.get_supported_arguments(fargs)
+link_args = fc.get_supported_arguments(largs)
+add_project_arguments(fortran_args, language: 'fortran')
+add_project_link_arguments(link_args, language: 'fortran')
 
 # ----- Get Python linked ------ #
 py = import('python').find_installation(pure: false)
@@ -112,8 +117,7 @@ py.extension_module('lecsem',
   dependencies: deps,
   install: true,
   install_dir: python_install_dir / lecsem_install_dir,
-  fortran_args : fortran_args,
-  # override_options : ['fortran_std=none']
+  # fortran_args : fortran_args
 )
 
 # -------- Install pypackage ----------- #
