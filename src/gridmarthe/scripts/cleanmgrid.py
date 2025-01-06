@@ -173,8 +173,22 @@ def main():
     return 0
 
 
+def cleanmgrid():
+    import sys
+    if len(sys.argv) < 2:
+        print('cleanmgrid NO argument were passed')
+        print_help()
+        sys.exit(1)
+    frma  = sys.argv[1]
+    if frma in ['h', '-h', '--help'] or not frma.endswith('rma'):
+        print_help()
+        sys.exit(1)
+    status = main(frma)
+    return status
+
+
 
 if __name__ == '__main__':
     
-    status = main(frma)
+    status = cleanmgrid()
     sys.exit(status)
