@@ -5,8 +5,15 @@ dependencies:
   - make
   - gfortran
   - gcc
+  - ninja
   - numpy
   - meson
   - meson-python
+  - charset-normalizer
   - netcdf4
+  - h5netcdf
   - xarray
+  - pandas
+  - geopandas
+  - shapely
+  - matplotlib

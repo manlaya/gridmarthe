@@ -40,7 +40,7 @@ stages:
     paths:
     - dist/
     expose_as: wheel
-    expire_in: 2 hours
+    expire_in: 12 hours
     
 
 build-linux:
@@ -81,6 +81,7 @@ build-windows:
 
 
 test-linux:
+  needs: ["build-linux"]
   extends: .test
   before_script:
     - echo "gridmarthe ci/cd pipeline"
@@ -92,6 +93,7 @@ test-linux:
 
 
 test-windows:
+  needs: ["build-windows"]
   extends: 
     - .windows
     - .test
@@ -114,6 +116,7 @@ test-windows:
 
 
 deploy-nexus_snapshot:
+  needs: ["build-linux", "build-windows"]
   extends: .deploy
   before_script:
     - echo ${NEXUS_URL}
@@ -126,6 +129,7 @@ deploy-nexus_snapshot:
 
 
 deploy-pip:
+  needs: ["build-linux", "build-windows"]
   extends: .deploy
   before_script:
     - pip install twine

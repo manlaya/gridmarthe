@@ -8,11 +8,16 @@
 
 import os, sys
 sys.path.insert(0, '../../src')
+from gridmarthe import __version__
 
 project = 'gridmarthe'
 copyright = '2024, Adrien Manlay, Jean-Pierre Vergnes - BRGM'
 author = 'Jean-Pierre Vergnes, Adrien Manlay'
-release = '0.1.1'
+
+release = __version__
+
+html_short_title = project
+html_title = project
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -48,8 +53,6 @@ todo_include_todos = False  # Do not show TODOs in docs
 
 # html_theme = 'furo'
 html_theme = 'pydata_sphinx_theme'
-html_short_title = "gridmarthe"
-html_title = 'gridmarthe'
 html_static_path = ['_static']
 # html_css_files = ['custom.css']
 
