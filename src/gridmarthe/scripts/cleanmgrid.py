@@ -4,7 +4,7 @@
 # objectif, lire l'ensemble des fichiers maillés et les corriger.
 # sinon, a minima le permh
 
-import os, re, shutil
+import os, sys, re, shutil
 from pathlib import Path
 
 
@@ -137,7 +137,19 @@ def write_res(string, fname):
         f.write(string)
     return 0
 
-def main(frma):
+def parse_args():
+    if len(sys.argv) < 2:
+        print('cleanmgrid NO argument were passed')
+        print_help()
+        sys.exit(1)
+    frma  = sys.argv[1]
+    if frma in ['h', '-h', '--help'] or not frma.endswith('rma'):
+        print_help()
+        sys.exit(1)
+    return frma
+
+def main():
+    frma = parse_args()
     # root = os.path.dirname(frma) # edit no, if not ./MONMODEL.rma but MONMODEL.rma, dirname is '' so /bakup => not allowed in linux non root
     root = os.getcwd()
     os.makedirs('{}/bakup'.format(root), exist_ok=True)
@@ -161,22 +173,7 @@ def main(frma):
     return 0
 
 
-def cleanmgrid():
-    import sys
-    if len(sys.argv) < 2:
-        print('cleanmgrid NO argument were passed')
-        print_help()
-        sys.exit(1)
-    frma  = sys.argv[1]
-    if frma in ['h', '-h', '--help'] or not frma.endswith('rma'):
-        print_help()
-        sys.exit(1)
-    status = main(frma)
-    return status
-
-
-
 if __name__ == '__main__':
     
-    status = cleanmgrid()
+    status = main()
     sys.exit(status)
