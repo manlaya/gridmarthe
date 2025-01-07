@@ -28,7 +28,7 @@ stages:
 
 .build:
   stage: build
-  # extends: .version_tag
+  extends: .version_tag
   when: manual
   script:
     # build multiple versions using cibuildwheel
@@ -73,7 +73,7 @@ build-windows:
 
 .test:
   stage: test
-  # extends: .version_tag
+  extends: .version_tag
   when: manual
   script:
     - python -c 'import gridmarthe'
