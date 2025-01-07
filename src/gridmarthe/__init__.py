@@ -8,7 +8,7 @@ from .plot import plot_nested_grid, plot_outcrop
 
 from typing import Union
 
-__version__ = '0.0.1'
+__version__ = '0.1.1'
 
 
 

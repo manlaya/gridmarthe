@@ -173,8 +173,7 @@ def main():
     return 0
 
 
-
 if __name__ == '__main__':
     
-    status = main(frma)
+    status = main()
     sys.exit(status)

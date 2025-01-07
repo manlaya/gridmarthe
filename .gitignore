@@ -145,6 +145,5 @@ cython_debug/
 
 
 *.bak
-bak/
 dev/
-meson/
+*.out

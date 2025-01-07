@@ -76,29 +76,29 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     ).squeeze('columns')
 
     # First, get steady state time
-    idx_0  = pastp.loc[pastp.str.contains(' \*\*\* D.*but de la simulation.*')].index.values[0]
+    idx_0  = pastp.loc[pastp.str.contains(r' \*\*\* D.*but de la simulation.*', regex=True)].index.values[0]
     date_0 = re.findall(r'[0-9]+', pastp.iloc[idx_0] )
     
     # convert as DF
     timesteps = pd.DataFrame([{
-        'TimeStep': 0, 
-        'Date': datetime(int(date_0[2]), int(date_0[1]), int(date_0[0]) ) 
+        'timestep': 0, 
+        'date': datetime(int(date_0[2]), int(date_0[1]), int(date_0[0]) ) 
     }])
 
     # Then, get all ending times for transient state
-    idx  = pastp.loc[pastp.str.contains('^ \*\*\* Le pas.*\d+: se termine.*')]
+    idx  = pastp.loc[pastp.str.contains(r'^ \*\*\* Le pas.*\d+: se termine.*', regex=True)]
     # extract dates from strings
     dates= pd.DataFrame(
         idx.str.findall(r'[0-9]+').to_list(),
-        columns=['TimeStep', 'day', 'month', 'year'],
-        #dtype={'TimeStep':int, 'day':int, 'month':int, 'year':int}
+        columns=['timestep', 'day', 'month', 'year'],
+        #dtype={'timestep':int, 'day':int, 'month':int, 'year':int}
     )
     
     # assign dtype
-    dates['TimeStep'] = pd.to_numeric(dates['TimeStep'])
+    dates['timestep'] = pd.to_numeric(dates['timestep'])
 
     # convert data as datetime object
-    dates['Date'] = pd.to_datetime(dates[['day', 'month', 'year']])
+    dates['date'] = pd.to_datetime(dates[['day', 'month', 'year']])
     dates = dates.drop(['month','year', 'day'], axis=1)
     
     return pd.concat([timesteps, dates], axis=0)
@@ -424,7 +424,7 @@ def load_marthe_grid(
     if fpastp is not None:
         # add dates from a pastp file, case of non-uniform timesteps or edition not set every timestep
         timesteps = read_dates_from_pastp(fpastp)
-        dates = timesteps.loc[timesteps['TimeStep'].isin(isteps), 'Date'].values
+        dates = timesteps.loc[timesteps['timestep'].isin(isteps), 'date'].values
         dates = pd.DatetimeIndex(dates) # only for frequency
     elif dates is None:
         if verbose:
@@ -445,7 +445,7 @@ def load_marthe_grid(
         attrs={
             # attrs must be string, int, float
             'conventions'         :'CF-1.10', # check https://cfconventions.org/
-            'title'               : title,
+            'title'               : title if title is not None else '',
             'marthe_grid_version' : 9.0,
             'original_dimensions' : 'x,y,z [grids]: ' + '; '.join([ ' '.join(map(str, x)) for x in dims]),
             'lon_resolution'      : ', '.join(map(str, np.unique(dxlus))),
@@ -474,9 +474,14 @@ def load_marthe_grid(
     return ds
 
 
-def dropna(ds, varname, nanval):
-    """ Drop nan values for 1D (or 2D (time, zone)) array
+def dropna(ds, varname: str, nanval: Union[list, float]):
+    """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.) 
+    for 1D (or 2D (time, zone)) array
     zone must me a coordinate dimension.
+    
+    Returns
+    -------
+    dataset where variable != nanval
     """
     if isinstance(nanval, (float, int, str)):
         nanval = [nanval]
@@ -485,9 +490,13 @@ def dropna(ds, varname, nanval):
     ds_no_nan = ds.sel(zone=mask['zone'])
     return ds_no_nan
 
-def subset(ds, varname, value):
+def subset(ds, varname: str, value: Union[list, float]):
     """ Subset dataset based on variable name and value.
     --> inverse of :py:func:`dropna`
+    
+    Returns
+    -------
+    dataset where variable = value
     """
     if isinstance(value, (float, int, str)):
         value = [value]
@@ -495,14 +504,14 @@ def subset(ds, varname, value):
     ds_filter = ds.sel(zone=mask['zone'])
     return ds_filter
 
-def replace(ds, varname, value, replace):
+def replace(ds, varname: str, value: float, replace: float):
     """ Replace a value in xr.Dataset for a variable
     """
     ds[varname].data = np.where(ds[varname].data == value, replace, ds[varname].data)
     return ds
     
 def fillna(ds, varname, value):
-    """ Replace nan value in dataset[varname], edge case of :py:func:`replace()`
+    """ Replace real nan (np.nan) value in dataset[varname], edge case of :py:func:`replace()`
     """
     ds[varname].data = np.where(np.isnan(ds[varname].data), value, ds[varname].data)
     return ds
@@ -625,7 +634,10 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
 
 
 def _parse_dims(str_dims):
-    return [list(map(int, x.split(' '))) for x in str_dims.strip('x, y, z [grids]: ').split('; ')]
+    if str_dims is None:
+        return None
+    else:
+        return [list(map(int, x.split(' '))) for x in str_dims.strip('x, y, z [grids]: ').split('; ')]
 
 
 # def sort_data(ds):
@@ -635,7 +647,7 @@ def _parse_dims(str_dims):
     # extraire les x, y, dx, dy selon dims = pas de doublons
     # print('not yet available')
 
-def _extract_zvar(ds, varname, dims=None):
+def _extract_zvar(ds, varname):
     
     zvar    = ds[varname].data
     zdates  = ds.time.data
@@ -643,24 +655,36 @@ def _extract_zvar(ds, varname, dims=None):
     zylig   = ds.y.data
     zdxlu   = ds.dx.data
     zdylu   = ds.dy.data
-    # from pymarthe :         dx, dy = map(abs, map(np.gradient, [xcc,ycc])) # Using the absolute gradient TODO
-    ztitle  = ds.attrs.get('title', '')
-    if dims is None:
-        dims = _parse_dims(ds.attrs.get('original_dimensions', ''))
+    # from pymarthe : dx, dy = map(abs, map(np.gradient, [xcc,ycc])) # Using the absolute gradient TODO
+    ztitle  = ds.attrs.get('title')
     izdates = _datetime64_to_float(zdates)
 
     return (
         zvar, zdates,
         zxcol, zylig, zdxlu, zdylu,
-        ztitle, dims, izdates
+        ztitle, izdates
     )
 
 
-def write_marthe_grid(ds, fileout='toto.out', varname='charge', title='', dims=None, debug=False):
+def write_marthe_grid(ds, fileout='grid.out', varname='charge', file_permh: str = None, title=None, dims=None, debug=False):
     """ Write Dataset as MartheGrid v9 file
     
     ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
     in case of error, please use :py:func:`gm.reset_geometry` first.
+    When providing a path to `file_permh` argument, :py:func:`gm.reset_geometry` is called automatically.
+    
+    A good pratice is to provide the permh file when writing dataset to marthegrid format.
+    
+    >>> gm.write_marthe_grid(ds, 'toto.out', file_permh='./mymodel/model.permh')
+    
+    WARNING: This function was developped to write parameters grids to marthe format.
+    Not to recreate simulation results (hydraulic head at several timesteps for example) as gridmarthe format.
+    This means that this function should not be used for dataset with several timesteps.
+    Example, to create a new initial hydraulic head file based on simulation, select the timestep in dataset before
+    writing.
+    
+    >>> ds = ds_head.isel(time=16) # or do an aggregation (eg mean over a period)
+    >>> gm.write_marthe_grid(ds, 'mymodel.charg')
     
     Parameters
     ----------
@@ -672,6 +696,10 @@ def write_marthe_grid(ds, fileout='toto.out', varname='charge', title='', dims=N
     
     varname: str (Optionnal)
         variable name (key) containing values.
+    
+    file_permh: str (Optionnal)
+        path to the permh file corresponding to current Marthe model.
+        Needed to recreate full dimension if NaN dropped before.
         
     title: str (Optionnal)
         title written in marthe grid file
@@ -687,18 +715,50 @@ def write_marthe_grid(ds, fileout='toto.out', varname='charge', title='', dims=N
     
     debug: bool, Optionnal (default is False).
     
+    Returns
+    -------
+    status: int.
+        0 if everything's ok. 1 otherwise.
+    
     """
-    (
-        zvar, zdates,
-        zxcol, zylig, zdxlu, zdylu,
-        ztitle, dims, izdates
-    ) = _extract_zvar(ds, varname, dims)
-
+    
+    ds2 = ds.copy()
+    
+    if dims is None:
+        dims = _parse_dims(ds2.attrs.get('original_dimensions'))
+    
     if dims is None:
         raise ValueError("""Original dimensions cannot be None.\
 Attributes was not founded in dataset so pleave provide a list with original domain dimensions
 """)
     
+    # --- Check if expected dimensions match variable dimensions
+    # if not, recreate full grid with domain grid (permh file)
+    if np.prod(np.array(dims), axis=1).sum() != np.size(ds2[varname].data):
+        # if dimension differs, file_permh is required
+        error = "Expected size and variable array size differ. Please provide a permh file to recreate original grid."
+        assert file_permh is not None, error
+        
+        _fill_na = True if varname == 'permeab' else False # if permeab, fill_na with permh file (0 and/or -9999.)
+        
+        # reset geometry with full domain (stored in permh file)
+        ds2 = reset_geometry(ds2, path_to_permh=file_permh, variable=varname, fillna=_fill_na)
+        if not _fill_na:
+            # if not permh variable, fill nan with constant values, based on variable
+            NANs = VARS_ATTRS.get(varname, {}).get('missing_value', 9999.)
+            ds2  = fillna(ds2, varname, NANs)
+    
+    # extract variables from dataset
+    (
+        zvar, zdates,
+        zxcol, zylig, zdxlu, zdylu,
+        ztitle, izdates
+    ) = _extract_zvar(ds2, varname)
+    
+    if title is None and ztitle == '':
+        title = 'Marthe Grid ' # dummy arg to set type as string
+    
+    # call fortran module to write marthe grid
     status = lecsem.modgridmarthe.write_grid(
         xvar=zvar,
         xcol=zxcol,
@@ -718,9 +778,9 @@ Attributes was not founded in dataset so pleave provide a list with original dom
 
     if status != 0:
         print("\033[1;31m\nEDISEM Status={}\033[0m\n".format(status))
-        print("""Ooops ! Something bad happen when writting Marthe Grid.
-Please check array consistency (9999. or 0. for nan values
-[ie, do not drop nan val before write or use `gm.reset_geometry()`]) or coordinates order [zyx] """)
+        print("An error occurred while writting Marthe Grid with EDSEMI subroutines.")
+        print("Please check array consistency (9999. or 0. for nan values\
+        [ie, do not drop nan val before write or use `gm.reset_geometry()`]) or coordinates order [zyx]")
     
     return status 
 

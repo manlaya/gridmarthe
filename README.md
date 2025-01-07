@@ -1,63 +1,123 @@
 # Gridmarthe
 
-Python project for (fast) Gridmarthe operations.
+Python project for (fast) Marthe grid operations.
+MARTHE is a hydrogeological modelling code developped at BRGM, French Geological Survey [[1]](#1),
+and is available at https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows
 
-*THIS IS A BETA VERSION, improvements and documentation are needed.*
+
+**THIS IS A BETA VERSION, under development.**
 
 
 ## gridmarthe in a nutshell
 
-Full support of gridmarthe read operations by wrapping MARTHE fortran read/write modules,
-allowing fast reading of marthe grid file (v9, v8, constant_data, etc.), for any variable.
-Recent developpment also allow writting MartheGrid_v9.0 file.
+`gridmarthe` allow users to read/write efficiently Marthe Grids (v9, v8, constant_data, etc.)
+for any MARTHE variable.
 
-In python, gridmarthe files are loaded using numpy and xarray libraries.
+With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be manage with
+`xarray` (or `numpy`) functions as with "utils" functions provided by `gridmarthe`.
 
-Some "utils" functions are also provided (plot_nested_grid, interp, etc.).
+The package also install a command line tool, `ncmart` to convert Marthe Grid to netCDF format.
+Help can be found with `ncmart -h`.
 
-MARTHE is a hydrogeological modelling code developped at BRGM, French Geological Survey [[1]](#1).
 
 
 ## Installation
 
-gridmarthe use Fortran module (partly from marthe source code, plus some specific developpement) which need
+### From pip
+
+
+On pip, `gridmarthe` is available for GNU/Linux, macOS and Windows for python >=3.10.
+Users can install it with:
+
+```
+pip install gridmarthe
+```
+
+For GNU/Linux and MacOS, the package needs gfotran/gcc to run.
+
+Linux, example with debian/ubuntu:
+```bash
+sudo apt install gcc gfortran
+```
+
+```
+
+MacOS:
+
+```bash
+brew install gcc gfortran
+```
+
+### From conda-forge
+
+not yet, see : https://github.com/conda-forge/staged-recipes/pull/28277
+
+
+### From sources
+
+`gridmarthe` use some Fortran modules which need
 to be compiled before local installation.
 
-### Compilation
+#### Compilation and installation
 
-On a linux machine, with gfortran, ninja-build, python3, numpy, meson, meson-python and charset_normalizer:
-
-```bash
-cd src/gridmarthe/lecsem
-f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --fcompiler=gfortran
-```
-
-On a windows machine, with gitbash, gfortran (mingw project https://mingw-w64.org/ ou https://winlibs.com/#download-release),
-python (v3), numpy (version < 2.0) and charset_normalizer:
+Get the sources :
 
 ```bash
+git clone https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe
+cd gridmarthe
+```
+
+##### Unix-like OS
+
+On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile Fortran sources and install
+**in development mode** the package.
+
+```bash
+make
+```
+
+or, without the development mode :
+
+```bash
+pip install .
+```
+
+##### Windows
+
+On a windows machine, it is possible to compile gfortran (mingw project https://mingw-w64.org/ or https://winlibs.com/#download-release).
+Neverless, the simpliest way is to use a conda environment (miniforge with mambalib is recommended) to install gcc/gfortran,
+and install the project :
+
+```bash
+mamba env create -n gm -f environment.yml
+mamba activate gm
+pip install --no-deps .
+```
+
+Here, the development mode is *not* available (yet, with the meson build).
+
+
+For now, to install in development mode, with *Windows/conda*, you can also compile manually :
+```bash
+mamba env create -n gm -f environment.yml
+mamba activate gm
 cd src/gridmarthe/lecsem
-python setup.py build_ext --inplace --compiler=mingw32 --fcompiler=gnu95 -f
+f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
+cd ../../../
+conda develop .
 ```
 
-
-
-### pip install
-
-Install the python package (optionnaly in developper/editable mode), back at package root directory:
-
-```
-pip install [-e] .
-```
 
 ## Usage
 
-A simple example can be found as a
-[notebook](example/gm_example.ipynb).
+Simple examples can be found as 
+[notebook](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
 
 
 ## License
+
 [GNU/GPL-V3 Licensed](LICENSE)
+
 
 ## Authors and acknowledgment
 J.P. Vergnes and A. Manlay
