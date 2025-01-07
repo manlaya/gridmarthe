@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os, sys
-sys.path.insert(0, '../../src')
+# sys.path.insert(0, '../../src')
 from gridmarthe import __version__
 
 project = 'gridmarthe'
@@ -18,6 +18,8 @@ release = __version__
 
 html_short_title = project
 html_title = project
+
+html_baseurl = 'https://gridmarthe.readthedocs.io/'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -53,7 +55,7 @@ todo_include_todos = False  # Do not show TODOs in docs
 
 # html_theme = 'furo'
 html_theme = 'pydata_sphinx_theme'
-html_static_path = ['_static']
+# html_static_path = ['_static']
 # html_css_files = ['custom.css']
 
 # adapted from gardenia/ramo doc:
@@ -80,8 +82,7 @@ html_theme_options = {
     # "footer_end": ["corporate-logo"],
     "header_links_before_dropdown": 6,
     "switcher": {
-    #     "json_url": f"{html_baseurl}/_static/switcher.json",
-        "json_url": "./switcher.json",
+        "json_url": f"{html_baseurl}/en/latest/_static/switcher.json",
         "version_match": release
     },
 }
@@ -133,8 +134,9 @@ bibtex_reference_style = 'author_year'
 intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/master/',  None),
     'python': ('https://docs.python.org/3', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy', None),
+    'numpy' : ('https://docs.scipy.org/doc/numpy', None),
     'pandas': ("https://pandas.pydata.org/docs/", None),
+    # 'xarray': ("https://docs.xarray.dev/", None),
 }
 
 intersphinx_cache_limit = 5

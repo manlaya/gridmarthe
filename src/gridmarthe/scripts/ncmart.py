@@ -39,7 +39,7 @@ def parse_args():
     return args
 
 
-def ncmart():
+def main():
     """
     Convert a Marthe Grid file to NetCDF format, using gridmarthe pymodule
     """
@@ -70,6 +70,6 @@ if __name__ == "__main__":
     Usage
         ncmart $CHASIM $FPASTP
     """
-    status = ncmart()
+    status = main()
     sys.exit(status)
    

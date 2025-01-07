@@ -29,7 +29,7 @@ MARTGRID_FILES = {
     'lon_r' : 'LONG_RIVI',
     'trc_r' : 'TRONC_RIVI',
     'qext_r': 'Q_EXTER_RIVI',
-    'd_ava' : 'DIRECT_AVAL',# Q_AMOINT_RIVI, EPAI_LIT_RIV, RUGOS_RIVI, PENTE_RIVI
+    'd_ava' : 'DIRECT_AVAL',# Q_AMONT_RIVI, EPAI_LIT_RIV, RUGOS_RIVI, PENTE_RIVI
     'meteo' : 'ZONE_METEO',
     'zonep' : 'ZONE_SOL',
     'zgeom' : 'ZONE_GEOM',

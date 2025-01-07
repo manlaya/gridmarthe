@@ -45,7 +45,7 @@ COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem 
 all: clean install bakup_pyproj
 
 
-docs:
+doc:
 	cd docs; $(MAKE) html
 
 setuptools: pyproject.toml
@@ -59,6 +59,9 @@ bakup_pyproj: pyproject.toml
 # install: requirements lecsem.pyf lecsem.so
 install: requirements lecsem.so setuptools
 	$(PY) -m pip install $(PIPFLAGS) .
+
+# only compile with f2py for develop purpose
+lib: requirements lecsem.so
 
 requirements:
 	$(PY) -m pip install charset_normalizer numpy meson meson-python
