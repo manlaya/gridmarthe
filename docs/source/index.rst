@@ -15,7 +15,8 @@ GridMarthe
 
 Gridmarthe is a Python project for (fast) operations on Marthe grid files.
 
-Marthe is a hydrogeological modelling code developped at BRGM, French Geological Survey
+`Marthe <https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows>`_
+is a hydrogeological modelling code developped at BRGM, French Geological Survey
 :cite:`2020:thiery_guidelines`.
 
 This library is open-source and released under the GNU General Public License (v3+).

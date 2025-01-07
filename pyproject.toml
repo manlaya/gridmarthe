@@ -59,8 +59,8 @@ gis = ["rioxarray", "rasterio"]
 doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
 
 [project.scripts]
-ncmart = "gridmarthe:scripts.ncmart"
-cleanmgrid = "gridmarthe:scripts.cleanmgrid"
+ncmart = "gridmarthe:scripts.ncmart.main"
+cleanmgrid = "gridmarthe:scripts.cleanmgrid.main"
 
 
 [project.urls]

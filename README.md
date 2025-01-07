@@ -19,7 +19,7 @@ With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be man
 The package also install a command line tool, `ncmart` to convert Marthe Grid to netCDF format.
 Help can be found with `ncmart -h`.
 
-
+Full documentation can be founded at https://gridmarthe.readthedocs.io
 
 ## Installation
 
@@ -40,7 +40,6 @@ Linux, example with debian/ubuntu:
 sudo apt install gcc gfortran
 ```
 
-```
 
 MacOS:
 
@@ -110,13 +109,13 @@ conda develop .
 
 ## Usage
 
-Simple examples can be found as 
-[notebook](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
+Simple examples can be found in the 
+[documentation](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
 
 
 ## License
 
-[GNU/GPL-V3 Licensed](LICENSE)
+This software is open-source and released under the GNU General Public License (v3+) [GNU/GPL-V3 Licensed](LICENSE).
 
 
 ## Authors and acknowledgment
