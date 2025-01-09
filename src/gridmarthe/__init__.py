@@ -8,8 +8,7 @@ from .plot import plot_nested_grid, plot_outcrop
 
 from typing import Union
 
-__version__ = '0.1.1'
-
+from .__version__ import __version__
 
 
 @xr.register_dataset_accessor('mart')

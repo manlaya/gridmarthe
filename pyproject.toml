@@ -20,8 +20,8 @@ build-backend = "mesonpy"
 name = "gridmarthe"
 dynamic = ["version"]
 authors = [
-    {name = "Jean-Pierre Vergnes", email = "jp.vergnes@brgm.fr"},
     {name = "Adrien Manlay", email = "a.manlay@brgm.fr"},
+    {name = "Jean-Pierre Vergnes", email = "jp.vergnes@brgm.fr"},
 ]
 
 description = "python package to read/write/manage Marthe Grids"
