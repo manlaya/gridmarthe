@@ -32,6 +32,10 @@ These sources need to be compiled in order to use the `lecsem` module in `gridma
 The F90 sources are compiled with `f2py` (so make sure to have a compiler [`gfortran` 
 for example] and `make` installed on your system/python environment).
 
+
+With pip
+^^^^^^^^
+
 Then, for **developper mode** (ie *with editable flag*) just use the Makefile provided to do the compilation process and python installation.
 
 .. code-block:: bash
@@ -45,6 +49,10 @@ Or, for a standard installation (*not with editable flag*):
     
     pip install .
 
+
+With conda (recommended on windows)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Alternatively, you can use a conda environment. For example with miniforge/mamba installed:
 
 .. code-block:: bash
@@ -53,17 +61,25 @@ Alternatively, you can use a conda environment. For example with miniforge/mamba
     mamba activate gm
     pip install --no-deps .
 
-or with developper mode in conda:
+For the editable/developper mode, one can add the `-e` flag in pip command, or use `conda-build`:
 
 .. code-block:: bash
 
     mamba env create -n gm -f environment.yml
     mamba activate gm
-    cd src/gridmarthe/lecsem
-    f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
-    cd ../../../
-    conda develop .
+    mamba install conda-build
+    ## Compile lecsem lib
+    ## manual compilation
+    # cd src/gridmarthe/lecsem
+    # f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
+    # cd ../../../
+    ## or just use the makefile
+    make lib
+    conda develop src/
 
+
+Verification
+~~~~~~~~~~~~
 
 At this point, the following command should not give any error:
 

@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------- #
 
 project('gridmarthe', ['fortran', 'c'],
-  version : '0.1.1',
+  version : run_command('meson_get_version.py').stdout().strip(),
   license: 'GNU/GPL-V3',
   meson_version: '>=0.64.0',
   default_options : [
@@ -42,7 +42,11 @@ if fc.get_id() == 'gcc'
   
   if host_machine.system() == 'windows'
     fargs += ['-fPIC', '-Wno-error']
-    largs += ['-static', '-static-libgfortran', '-static-libgcc', '-static-libquadmath']
+    
+    if not get_option('condabuild')
+        largs += ['-static', '-static-libgfortran', '-static-libgcc', '-static-libquadmath']
+    endif
+    
     quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
     quadmath = declare_dependency(link_args : ['-lquadmath'])
     deps += [quadmath_dep,quadmath]
@@ -55,9 +59,8 @@ if fc.get_id() == 'gcc'
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
   
   # TODO add options for llvm-flang for conda-forge
-  fargs += ['-std=legacy']
-  # error('flang not yet supported')
-
+  fargs += ['-fdefault-real-8', '-ffree-form']
+  
 # elif cc.get_id() in ['msvc', 'intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
 
 else
