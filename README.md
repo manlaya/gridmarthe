@@ -19,7 +19,7 @@ With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be man
 The package also install a command line tool, `ncmart` to convert Marthe Grid to netCDF format.
 Help can be found with `ncmart -h`.
 
-
+Full documentation can be founded at https://gridmarthe.readthedocs.io
 
 ## Installation
 
@@ -40,17 +40,12 @@ Linux, example with debian/ubuntu:
 sudo apt install gcc gfortran
 ```
 
-```
 
 MacOS:
 
 ```bash
 brew install gcc gfortran
 ```
-
-### From conda-forge
-
-not yet, see : https://github.com/conda-forge/staged-recipes/pull/28277
 
 
 ### From sources
@@ -67,7 +62,7 @@ git clone https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmar
 cd gridmarthe
 ```
 
-##### Unix-like OS
+##### With pip (Unix-like OS)
 
 On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile Fortran sources and install
 **in development mode** the package.
@@ -82,11 +77,14 @@ or, without the development mode :
 pip install .
 ```
 
-##### Windows
-
-On a windows machine, it is possible to compile gfortran (mingw project https://mingw-w64.org/ or https://winlibs.com/#download-release).
+On a windows machine, it is possible to compile with gfortran
+(mingw project https://mingw-w64.org/ or https://winlibs.com/#download-release ; or `choco install mingw`).
 Neverless, the simpliest way is to use a conda environment (miniforge with mambalib is recommended) to install gcc/gfortran,
-and install the project :
+and install the project.
+
+##### With conda (recommended on Windows)
+
+It is also possible to install gridmarthe in a conda environment. An environment file is provided (example with mamba):
 
 ```bash
 mamba env create -n gm -f environment.yml
@@ -95,28 +93,26 @@ pip install --no-deps .
 ```
 
 Here, the development mode is *not* available (yet, with the meson build).
+One can add the `-e` flag in pip command, or use `conda-build`:
 
-
-For now, to install in development mode, with *Windows/conda*, you can also compile manually :
 ```bash
 mamba env create -n gm -f environment.yml
 mamba activate gm
-cd src/gridmarthe/lecsem
-f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
-cd ../../../
-conda develop .
+mamba install conda-build
+make lib
+conda develop src/
 ```
 
 
 ## Usage
 
-Simple examples can be found as 
-[notebook](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
+Simple examples can be found in the 
+[documentation](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
 
 
 ## License
 
-[GNU/GPL-V3 Licensed](LICENSE)
+This software is open-source and released under the GNU General Public License (v3+) [GNU/GPL-V3 Licensed](LICENSE).
 
 
 ## Authors and acknowledgment

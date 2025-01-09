@@ -4,11 +4,18 @@
 # --------------------------------- #
 #####################################
 #    ONLY FOR LINUX DEVELOP MODE    #
+#        OR CONDA INSTALL           #
 #####################################
 
 FC := gfortran
 CC := gcc
-PY := python3
+
+ifeq ($(OS), Windows_NT)
+    PY := python
+else
+    PY := python3
+endif
+
 F2PY = $(PY) -m numpy.f2py
 
 ###### SOURCES ########
@@ -45,7 +52,7 @@ COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem 
 all: clean install bakup_pyproj
 
 
-docs:
+doc:
 	cd docs; $(MAKE) html
 
 setuptools: pyproject.toml
@@ -56,12 +63,15 @@ bakup_pyproj: pyproject.toml
 	mv pyproject.bak pyproject.toml
     # format pyproject.{toml,bak} non accepté par make ?
 
+requirements:
+	$(PY) -m pip install charset_normalizer numpy meson meson-python
+
+# only compile with f2py for develop purpose
+lib: lecsem.so
+
 # install: requirements lecsem.pyf lecsem.so
 install: requirements lecsem.so setuptools
 	$(PY) -m pip install $(PIPFLAGS) .
-
-requirements:
-	$(PY) -m pip install charset_normalizer numpy meson meson-python
 
 lecsem.pyf:
 	cd $(F90SRCDIR); echo "******** Generating signature ********"; \
@@ -70,13 +80,13 @@ lecsem.pyf:
 lecsem.so:
 	cd $(F90SRCDIR); echo "******** Building F2PY Library ********"; \
 	$(COMPILE)
-	cd $(MAINDIR)
+	# cd $(MAINDIR)
     # use of `cd` and not $(F90SRCDIR)/lecsem, even if not a good practice in Makefile, 
     # because meson/f2py does not allow path separator in files.
 	# FC="$(FC)" FFLAGS="$(FFLAGS)" python -m numpy.f2py -c lecsem.pyf lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
 
 clean:
 	cd $(F90SRCDIR); \
-	rm -f *.so *.o *.mod *.c *pywrappers* # *.dll *.pyd
+	rm -f *.so *.o *.mod *.c *pywrappers* *.dll *.pyd ; \
 	cd $(MAINDIR)
 

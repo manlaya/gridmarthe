@@ -1,15 +1,20 @@
 Installation
 ------------
 
-From conda
-~~~~~~~~~~
+From pip
+~~~~~~~~
 
-If you are using conda (recommended installation process on Windows), you can 
-install gridmarthe from conda-forge:
+`gridmarthe` is available on PyPi and can be installed with:
 
 .. code-block:: bash
     
-    conda install -c conda-forge gridmarthe
+    pip install gridmarthe
+
+
+From conda-forge (with conda or mamba)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Not yet available.
 
 
 From the source
@@ -25,19 +30,56 @@ Get the sources:
 Gridmarthe uses `Fortran` sources for efficient I/O operations on Marthe grid files.
 These sources need to be compiled in order to use the `lecsem` module in `gridmarthe`.
 The F90 sources are compiled with `f2py` (so make sure to have a compiler [`gfortran` 
-for example], `make`, `python-numpy` and `python-charset_normalizer` installed on your system/python environment).
-then, just use the Makefile provided to do the compilation process.
+for example] and `make` installed on your system/python environment).
+
+
+With pip
+^^^^^^^^
+
+Then, for **developper mode** (ie *with editable flag*) just use the Makefile provided to do the compilation process and python installation.
 
 .. code-block:: bash
     
     make
 
 
-Finally, you can install the package (in development mode if required):
+Or, for a standard installation (*not with editable flag*):
 
 .. code-block:: bash
     
-    pip install [-e] .
+    pip install .
+
+
+With conda (recommended on windows)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Alternatively, you can use a conda environment. For example with miniforge/mamba installed:
+
+.. code-block:: bash
+    
+    mamba env create -n gm -f environment.yml
+    mamba activate gm
+    pip install --no-deps .
+
+For the editable/developper mode, one can add the `-e` flag in pip command, or use `conda-build`:
+
+.. code-block:: bash
+
+    mamba env create -n gm -f environment.yml
+    mamba activate gm
+    mamba install conda-build
+    ## Compile lecsem lib
+    ## manual compilation
+    # cd src/gridmarthe/lecsem
+    # f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
+    # cd ../../../
+    ## or just use the makefile
+    make lib
+    conda develop src/
+
+
+Verification
+~~~~~~~~~~~~
 
 At this point, the following command should not give any error:
 
