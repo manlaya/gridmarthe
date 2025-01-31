@@ -14,7 +14,20 @@ From pip
 From conda-forge (with conda or mamba)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Not yet available.
+`gridmarthe` is also available in the `conda-forge` channel. Conda users can install it with:
+
+.. code-block:: bash
+    
+    conda install gridmarthe
+    # or, with mamba
+    mamba install gridmarthe
+
+It is also possible to search for available versions:
+
+.. code-block:: bash
+
+    mamba search gridmarthe --channel conda-forge
+
 
 
 From the source

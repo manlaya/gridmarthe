@@ -1,3 +1,7 @@
+[![PyPI - Version](https://img.shields.io/pypi/v/gridmarthe)](https://pypi.org/project/gridmarthe/)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/gridmarthe.svg)](https://anaconda.org/conda-forge/gridmarthe)
+[![GitLab License](https://img.shields.io/gitlab/license/brgm%2Fhydrogeological-modelling%2Fmarthe-tools%2Fgridmarthe)](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/blob/dev/LICENSE?ref_type=heads)
+
 # Gridmarthe
 
 Python project for (fast) Marthe grid operations.
@@ -36,6 +40,7 @@ pip install gridmarthe
 For GNU/Linux and MacOS, the package needs gfotran/gcc to run.
 
 Linux, example with debian/ubuntu:
+
 ```bash
 sudo apt install gcc gfortran
 ```
@@ -45,6 +50,16 @@ MacOS:
 
 ```bash
 brew install gcc gfortran
+```
+
+### From conda-forge
+
+`gridmarthe` is also available in the `conda-forge` channel. Conda users can install it with:
+
+```bash
+conda install gridmarthe
+# or, with mamba
+mamba install gridmarthe
 ```
 
 
@@ -112,7 +127,7 @@ Simple examples can be found in the
 
 ## License
 
-This software is open-source and released under the GNU General Public License (v3+) [GNU/GPL-V3 Licensed](LICENSE).
+This software is open-source and released under the [GNU General Public License (v3+)](LICENSE).
 
 
 ## Authors and acknowledgment
