@@ -1,6 +1,6 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/gridmarthe)](https://pypi.org/project/gridmarthe/)
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/gridmarthe.svg)](https://anaconda.org/conda-forge/gridmarthe)
-[![GitLab License](https://img.shields.io/gitlab/license/brgm%2Fhydrogeological-modelling%2Fmarthe-tools%2Fgridmarthe)](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/blob/dev/LICENSE?ref_type=heads)
+[![GitLab License](https://img.shields.io/gitlab/license/brgm%2Fhydrogeological-modelling%2Fmarthe-tools%2Fgridmarthe?color=blue)](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/blob/dev/LICENSE?ref_type=heads)
 
 # Gridmarthe
 
