@@ -1,14 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+#    This file is part of gridmarthe.
+#
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2024  BRGM
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
+import xarray as xr
+from typing import Union
 
 
+from .__version__ import __version__
 from .gridmarthe import *
 from .operasem import *
 from .plot import plot_nested_grid, plot_outcrop
-
-from typing import Union
-
-from .__version__ import __version__
 
 
 @xr.register_dataset_accessor('mart')
@@ -64,9 +84,3 @@ class MartheGrid(object):
         ds = self.obj.copy()
         masque = ds[varname].where(ds[varname] != nanval).dropna(dim='zone') # drop nanval
         return ds.sel(zone=masque['zone'])
-    
-    # def write(self, fmt='mart'):
-        # if fmt.lower() in ['mart', 'marthe']
-            # write_marthe_grid()
-        # else:
-            # self.obj.to_netcdf()

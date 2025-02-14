@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-import os, sys
-from argparse import ArgumentParser
-import gridmarthe as gm
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2024  BRGM
+#    Released under the GNU/GPL-v3 (or later) license <https://www.gnu.org/licenses/gpl-3.0.txt>
 
+import os, sys, textwrap
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import gridmarthe as gm
+from gridmarthe.__version__ import _copyleft #, _show_c, _show_w
 
 # Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]` 
 
@@ -12,15 +17,32 @@ def parse_args():
     """ CLI program """
     parser = ArgumentParser(
         prog='ncmart',
-        description="Convert a Marthe GridFile to netCDF format."
+        formatter_class=RawDescriptionHelpFormatter,
+        description="Convert a Marthe GridFile to netCDF format.",
+        epilog=textwrap.dedent(_copyleft)
     )
     
-    parser.add_argument('opt', metavar='chasim pastp', type=str, nargs='+', help='Paths to chasim and pastp files are expected')
-    parser.add_argument('--output'  , '-o'  , type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--variable', '-v'  , type=str, default=None, help='Variable to read, default is None; i.e variable will be parse from file and ONLY the first variable will be read.')
-    parser.add_argument('--as2d', '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
+    parser.add_argument('opt', metavar='grid timesteps', type=str, nargs='*', help='Paths to grid and timesteps files are expected') # nargs='+'
+    parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
+    parser.add_argument('--variable', '-v', type=str, default=None, help='Variable to read, default is None; i.e variable will be parsed from file and ONLY the first variable will be read.')
+    parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
     parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optionnal, default is 1 (no transformation).')
+    # parser.add_argument('--show', type=str, default='', choices=('c', 'w'), help='Print licensing for warranty (w) and redistribution conditions (c)')
+    parser.add_argument('--version', '-v', action="store_const", const=True, default=False, help='Show version and exit')
+    
     args = parser.parse_args()
+    
+    # if args.show != '':
+        # if args.show == 'c':
+            # _show_c()
+        # if args.show == 'w':
+            # _show_w()
+        # sys.exit(0)
+    if args.version:
+        print('gridmarthe {}'.format(gm.__version__))
+        print(_copyleft)
+        sys.exit(0)
+    
     
     if args.output is not None:
         dirout = os.path.dirname(args.output)
