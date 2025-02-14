@@ -53,6 +53,7 @@ dependencies = [
     "pandas",
     "h5netcdf",
     "xarray",
+    "pyproj",
     "shapely",
     "matplotlib",
     "geopandas",
