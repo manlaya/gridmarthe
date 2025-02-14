@@ -15,6 +15,7 @@ from .utils import _get_scale
 
 def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
+    TODO: remove var arg: should be a xr.DataArray with coords assigned, same as xarray API for plots
     
     Parameters
     ----------

@@ -4,15 +4,21 @@
 # objectif, lire l'ensemble des fichiers maillés et les corriger.
 # sinon, a minima le permh
 
-import os, sys, re, shutil
+import os, sys, re, shutil, textwrap
 from pathlib import Path
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
+from gridmarthe.__version__ import _copyleft
 
 MARTGRID_FILES = {
     # ext: VARIABLE_NAME
     'topog' : 'H_TOPOGR',
     'hsubs' : 'H_SUBSTRAT',
+    'sepon' : 'SUBS_EPONTE',
+    'kepon' : 'PERM_EPONTE',
     'permh' : 'PERMEAB',
+    'poros' : 'POROSITE',
+    'press' : 'PRESSION',
     'perm_r': 'PERM_LIT_RIVI',
     'anisv' : 'ANISO_VERTI',
     'anish' : 'ANISO_HORIZ',
@@ -29,24 +35,72 @@ MARTGRID_FILES = {
     'lon_r' : 'LONG_RIVI',
     'trc_r' : 'TRONC_RIVI',
     'qext_r': 'Q_EXTER_RIVI',
-    'd_ava' : 'DIRECT_AVAL',# Q_AMONT_RIVI, EPAI_LIT_RIV, RUGOS_RIVI, PENTE_RIVI
+    'd_ava' : 'DIRECT_AVAL',
+    # : 'Q_AMONT_RIVI',
+    # : 'EPAI_LIT_RIV',
+    # : 'RUGOS_RIVI',
+    # : 'PENTE_RIVI',
     'meteo' : 'ZONE_METEO',
     'zonep' : 'ZONE_SOL',
     'zgeom' : 'ZONE_GEOM',
     'zoneg2': 'ZONE_2',
     'zoneg3': 'ZONE_3',
-    # 'ZONE_CULTUR'
+    'zonei' : 'ZONE_IRRIG'
 }
 
-def print_help():
-    msg = """ Usage: 
-    `cleanmgrid PATH_TO_RMA`
+# legacy, switch to ArgumentParser
+# def print_help():
+    # msg = """ Usage: 
+    # `cleanmgrid PATH_TO_FILE`
     
-    PATH_TO_RMA can be a relative path, need to end with '.rma'
+    # PATH_TO_FILE can be a relative path, if it ends with '.rma' all grid file in rma project will be processed.
 
-    Only works for marthe grid v9.0 (a check is performed and <v9 are skipped)
-    """
-    print(msg)
+    # Only works for marthe grid v9.0 (a check is performed and <v9 are skipped)
+    
+    # {}
+    # """.format(_copyleft)
+    # print(msg)
+
+# def parse_args():
+    # if len(sys.argv) < 2:
+        # print('cleanmgrid NO argument were passed')
+        # print_help()
+        # sys.exit(1)
+    # finputs  = sys.argv[1]
+    # if finputs in ['h', '-h', '--help']: # or not finputs.endswith('rma'):
+        # print_help()
+        # sys.exit(1)
+    # return finputs
+
+
+def parse_args():
+    """ CLI program """
+    parser = ArgumentParser(
+        prog='cleanmgrid',
+        formatter_class=RawDescriptionHelpFormatter,
+        description="Clean marthe grid file for miswritten attributes. Only works for marthe grid v9.0 (a check is performed and <v9 are skipped)",
+        epilog=textwrap.dedent(_copyleft)
+    )
+    
+    parser.add_argument('opt', metavar='PATH_TO_FILE', type=str, nargs=1, help='PATH_TO_FILE can be a relative path, if it ends with ".rma" all grid file in rma project will be processed.')
+    parser.add_argument('--layer' , '-l', type=int, default=None, help='Number of layer. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
+    parser.add_argument('--grid'  , '-g', type=int, default=None, help='Number of nested grid. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
+    parser.add_argument('--output', '-o', type=str, default=None, help='Output file. Only if PATH_TO_FILE is a single grid file and *NOT* a rma file. Otherwise, all files will be bakup and clean')
+    parser.add_argument(
+        '--no_overwrite' , '-n',
+        action="store_const", const=True, default=False,
+        help='Do no overwrite file, add `.fix` extension. By default file is bakup and then overwrite.'
+    )
+    
+    args = parser.parse_args()
+    
+    if not args.opt[0].endswith('rma') and (args.layer is None or args.grid is None):
+        print('File {} is not a Marthe project ("*.rma"). Please provide `-l` and `-g` argument when using on a single grid file. See `cleanmgrid -h`')
+        sys.exit(1)
+
+    return args
+
+
 
 def fread(file:str):
     with open(file, 'r', encoding='ISO-8859-1') as f:
@@ -137,29 +191,46 @@ def write_res(string, fname):
         f.write(string)
     return 0
 
-def parse_args():
-    if len(sys.argv) < 2:
-        print('cleanmgrid NO argument were passed')
-        print_help()
-        sys.exit(1)
-    frma  = sys.argv[1]
-    if frma in ['h', '-h', '--help'] or not frma.endswith('rma'):
-        print_help()
-        sys.exit(1)
-    return frma
+
 
 def main():
-    frma = parse_args()
-    # root = os.path.dirname(frma) # edit no, if not ./MONMODEL.rma but MONMODEL.rma, dirname is '' so /bakup => not allowed in linux non root
-    root = os.getcwd()
-    os.makedirs('{}/bakup'.format(root), exist_ok=True)
-    files, layers, ngrid = read_files_from_rma(frma)
+    """ CLEANMGRID """
+    
+    args = parse_args()
+    finputs = args.opt[0]
+    
+    root = os.path.dirname(finputs) # edit no, if not ./MONMODEL.rma but MONMODEL.rma, dirname is '' so /bakup => not allowed in linux non root
+    if root == '' or root is None:
+        root = os.getcwd()
+    if args.output is None and not args.no_overwrite:
+        os.makedirs('{}/bakup'.format(root), exist_ok=True)
+    filename = os.path.split(finputs)[-1]
+    
+    # --- get geom
+    if finputs.endswith('rma'):
+        files, layers, ngrid = read_files_from_rma(finputs)
+    else:
+        ext = os.path.splitext(finputs)[-1].replace('.', '')
+        key = MARTGRID_FILES.get(ext)
+        if key is None:
+            print('Unkwnown key field for grid kind {} (file: {})'.format(ext, finputs))
+            sys.exit(1)
+        files, layers, ngrid = [(ext, filename, key)], list(range(1, args.layer + 1)), str(args.grid)
+    
+    
     for ext, file, key in files:
+        
+        # --- treatment of each grid file --- #
+        # --- read and scan var
         fpath = Path(root, file)
-        grid = fread(fpath)
+        grid  = fread(fpath)
         version = scan_vers_semi(grid)
+        fileout = fpath
+        
         if version != 9.0:
             continue
+        
+        # --- clean attributes:
         grid = clean_grid_str(grid, r'\nField=(.?)', key, test=lambda x: len(x) < 1 )
         grid = clean_grid_str(grid, pattern=r'\nLayer=([0-9]*)'  , fillvalue=layers * (int(ngrid)+1)   , test=lambda x: int(x) == 0)
         grid = clean_grid_str(grid, pattern=r'Max_Layer=([0-9]*)', fillvalue=str(max(map(int, layers))), test=lambda x: int(x) == 0)
@@ -168,8 +239,17 @@ def main():
         grid = clean_grid_str(grid, pattern=r'Nest_grid=([0-9]*)', fillvalue=x, test=lambda x: int(x) == 0)
         grid = clean_grid_str(grid, pattern=r'Max_NestG=([0-9]*)', fillvalue=ngrid                     , test=lambda x: int(x) == 0)
         grid = clean_grid_str(grid, pattern=r'Time=([0-9]*\.[0-9]*E[|\-|\+][0-9]*)', fillvalue='0', test=lambda x: float(x) != 0)
-        shutil.copy(fpath, Path(root, 'bakup', file))
-        write_res(grid, fpath)
+        
+        # --- save results
+        if args.no_overwrite:
+            fpath = '{}.fix'.format(str(fpath))
+        elif args.output is not None:
+            fileout = Path(root, args.output)
+        else:
+            shutil.copy(fpath, Path(root, 'bakup', file))
+        
+        write_res(grid, fileout)
+    
     return 0
 
 
