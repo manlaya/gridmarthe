@@ -141,7 +141,8 @@ CONTAINS
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! =============================================================================!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE READ_GRID(XFILE, XTYP_DON, KNBSTEP, KNBTOT, KNU_ZOOMX, PVAR, PDATES, KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM)
+    SUBROUTINE READ_GRID(XFILE, XTYP_DON, KNBSTEP, KNBTOT, KNU_ZOOMX, PVAR, PDATES, &
+        KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM)
         !
         IMPLICIT NONE
         !
@@ -221,7 +222,7 @@ CONTAINS
     ! =============================================================================!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     SUBROUTINE READ_GRID_SHALLOW(XFILE, XTYP_DON, KNBSTEP, KN_COUCHMX, KNBTOT, &
-        KNU_ZOOMX, PVAR, PDATES, KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU)
+        KNU_ZOOMX, PVAR, PDATES, KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM)
         !
         IMPLICIT NONE
         !
@@ -234,6 +235,7 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNBSTEP), INTENT(OUT) :: PDATES
         REAL(KIND=4), DIMENSION(KNBSTEP, KNU_ZOOMX + 1, KNBTOT), INTENT(OUT) :: PVAR
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
+        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
         !
         !
         INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, N_COUCH2
