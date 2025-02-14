@@ -127,7 +127,8 @@ Simple examples can be found in the
 
 ## License
 
-This software is open-source and released under the [GNU General Public License (v3+)](LICENSE).
+This program is free software and released under the terms of the
+[GNU General Public License (version 3 or later)](LICENSE).
 
 
 ## Authors and acknowledgment
