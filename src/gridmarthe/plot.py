@@ -13,6 +13,16 @@ from .utils import _get_scale
 """ Module for visualisation of gridmarthe files
 """
 
+
+def _set_map_lims(ax, xmin, ymin, xmax, ymax, perc=.05):
+    x_range = xmax - xmin
+    y_range = ymax - ymin
+    # and add 5% margin around bounds (2.5% on each side)
+    ax.set_xlim([xmin - (perc * x_range)/2, xmax + (perc * x_range)/2])
+    ax.set_ylim([ymin - (perc * y_range)/2, ymax + (perc * y_range)/2])
+    return None
+
+
 def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
     TODO: remove var arg: should be a xr.DataArray with coords assigned, same as xarray API for plots
@@ -54,6 +64,8 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
         gig = da.where(da['dx'] == dx2, drop=True)
         gig[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, add_colorbar=False, **{k:v for k,v in kwargs.items() if k != 'add_colorbar'})
     grid[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
+    
+    _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
     
     return ax
 
@@ -114,16 +126,18 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
     """
     if isinstance(ds_outcrop, xr.Dataset):
         assert 'z' in ds_outcrop.keys(), "No `z` dimension. Outcrop plot is not possible."
-        maxn = np.max(ds_outcrop['z'].data)
-    elif isinstance(ds_outcrop, gpd.GeoDataframe):
+        maxn = np.nanmax(ds_outcrop['z'].data)
+    elif isinstance(ds_outcrop, gpd.geodataframe.GeoDataFrame):
         assert 'z' in ds_outcrop.columns, "No `z` dimension. Outcrop plot is not possible."
-        maxn = np.max(ds_outcrop['z'].to_numpy())
+        maxn = np.nanmax(ds_outcrop['z'].to_numpy())
 
     # custom cbar to force categories
     cmap = cm.tab10 if maxn <= 10 else cm.tab20
-    cmap = colors.ListedColormap(cmap.colors[:maxn]) # subset on number of colors, if not wrong legend
+    cmap = colors.ListedColormap(cmap.colors[:int(maxn)]) # subset on number of colors, if not wrong legend
     bounds = np.arange(1, maxn+1)
-    norm = colors.BoundaryNorm(bounds, cmap.N,)  # set bins to custom values
+    if len(bounds) == 1:
+        bounds = np.append(bounds, [maxn+1])
+    norm = colors.BoundaryNorm(bounds, cmap.N+1,)  # set bins to custom values
     cbar = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     
     fig, ax = plt.subplots(1, 1)
@@ -131,8 +145,9 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
     cax = divider.append_axes("right", size="5%", pad=0.1)
     
     if engine == 'xr':
-        the_plot = ds_outcrop['z'].plot.pcolormesh(
-            x='x', y='y',
+        the_plot = plot_nested_grid(
+            # x='x', y='y',
+            ds_outcrop, var='z',
             ax=ax,
             cmap=cmap,
             levels=bounds,
@@ -157,7 +172,7 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
         label='Layers',
     )
     ax_cbar.ax.tick_params(size=0)
-    ax_cbar.set_ticklabels(bounds)
+    ax_cbar.set_ticklabels(ax_cbar.set_ticklabels(['{:.0f}'.format(x) for x in bounds]))
     
     if fout is not None:
         plt.savefig(fout, dpi=300)
