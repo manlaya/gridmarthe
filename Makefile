@@ -31,29 +31,30 @@ PIPFLAGS ?= -e
 #Flags are primarily useful for initial check that code compiles correctly
 F2PYOPT =--backend=meson --lower
 
-FFLAGS = 
-# FFLAGS +=-fdefault-real-8 # no
-# already O3 in f2py ? does not seem to force it.
+FFLAGS = -fdefault-real-8
+# already O3 in f2py, change it here
 FFLAGS +=-O2 
 # Position-Independent Code, si shared library, utile
 # FFLAGS +=-fPIC -shared
 FFLAGS +=-ffree-line-length-none
 # FFLAGS +=-fallow-argument-mismatch # only gfortran > 12.0
 FFLAGS +=-std=legacy
-# FFLAGS +=-static
+# FFLAGS +=-static # only windows // and not for dev
 
 COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem $(F2PYOPT)
-# COMPILE = CC=$(CC) FC=$(FC) $(F2PY) -c $(F90FILES) -m lecsem $(F2PYOPT)
 
 
-# ---- Rules ---- #
+# ------------- Rules ------------- #
 
-.PHONY: all docs clean requirements
-all: clean install bakup_pyproj
-
+.PHONY: all docs clean requirements wheel
+# all: clean install bakup_pyproj
+all: clean editm
+# only compile with f2py for develop purpose
+lib: lecsem.so
 
 doc:
 	cd docs; $(MAKE) html
+
 
 setuptools: pyproject.toml
 	cp pyproject.toml pyproject.bak ; sed -i '16s/# //' pyproject.toml ; sed -i '17s/^/# /' pyproject.toml
@@ -65,9 +66,6 @@ bakup_pyproj: pyproject.toml
 
 requirements:
 	$(PY) -m pip install charset_normalizer numpy meson meson-python
-
-# only compile with f2py for develop purpose
-lib: lecsem.so
 
 # install: requirements lecsem.pyf lecsem.so
 install: requirements lecsem.so setuptools
@@ -84,6 +82,15 @@ lecsem.so:
     # use of `cd` and not $(F90SRCDIR)/lecsem, even if not a good practice in Makefile, 
     # because meson/f2py does not allow path separator in files.
 	# FC="$(FC)" FFLAGS="$(FFLAGS)" python -m numpy.f2py -c lecsem.pyf lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
+
+# meson editable for test
+editm: requirements
+	$(PY) -m pip install --no-build-isolation --editable . -vvv
+    # meson version of editable - for future replacement of setuptools
+
+wheel:
+	$(PY) -m pip install build
+	$(PY) -m build .
 
 clean:
 	cd $(F90SRCDIR); \

@@ -36,6 +36,9 @@ largs = []  # arg de link
 
 if fc.get_id() == 'gcc'
   
+  fargs += ['-fdefault-real-8']
+  fargs += ['-O2', '-ffree-line-length-none']
+  
   if cc.version().version_compare('>=13.0')
     fargs += ['-fallow-argument-mismatch', '-std=legacy']
   endif
@@ -51,23 +54,22 @@ if fc.get_id() == 'gcc'
     quadmath = declare_dependency(link_args : ['-lquadmath'])
     deps += [quadmath_dep,quadmath]
   else
-      fargs += ['-O2', '-ffree-line-length-none']
       # fargs += ['-fPIC', '-shared'] # not really necessary here
-      # fargs += ['-fdefault-real-8'] # EDIT, no, in args: kind=4 / single precision
   endif
 
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
-  
   # TODO add options for llvm-flang for conda-forge
   fargs += ['-fdefault-real-8', '-ffree-form']
   
-# elif cc.get_id() in ['msvc', 'intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
+elif cc.get_id() in ['intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
+  fargs += ['-real-size 64', '-stand f95']
 
 else
-  
+  # 'msvc' ?
   error('Build is recommended with GCC/gfortran')
 
 endif
+
 
 fortran_args = fc.get_supported_arguments(fargs)
 link_args = fc.get_supported_arguments(largs)
