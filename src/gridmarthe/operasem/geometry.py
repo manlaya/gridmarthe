@@ -14,7 +14,7 @@ def get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
     return ds.where(~ds[varname].isin(nanval), drop=True)
 
 
-def export_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout: str='mask.shp'):
+def export_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout=None):
     """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
     input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic conductivity)
     """
@@ -22,7 +22,8 @@ def export_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout: 
     mask = ds.sel(zone=mask['zone'])
     gdf  = to_geodataframe(mask)
     gdf  = gdf.dissolve()
-    gdf.to_file(fileout)
+    if fileout is not None:
+        gdf.to_file(fileout)
     return gdf
 
 
@@ -129,7 +130,7 @@ def compute_geometry(topo, hsubs, mask=None):
     return ds
 
 
-def get_min_layer(ds, aquif_layers=None):
+def get_surface_layer(ds, aquif_layers=None):
     """ Compute surface mask of marthe domain
     
     This function return min layer for every zone of a grimarthe dataset with z coords
@@ -147,7 +148,9 @@ def get_min_layer(ds, aquif_layers=None):
     ----------
         ds: xr.Dataset
         aquif_layers: sequence (list, tuple, array) of int
-            representing layers to subset ds
+            representing layers to subset ds. Only active domain must 
+            be passed to function (ie drop nan first)
+            
     Returns
     -------
         surface_mask: xr.Dataset

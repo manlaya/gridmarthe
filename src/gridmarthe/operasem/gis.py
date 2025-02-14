@@ -9,17 +9,16 @@ import geopandas as gpd
 from pyproj import Transformer
 
 
-
-def transf_proj(ds, from_epsg="EPSG:2154", to_epsg="EPSG:27572"):
+def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
     """ Transform coordinates of a dataset using pyproj.
     """
     transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-    x_source, y_source = ds.x.data, ds.y.values
+    x_source, y_source = ds.x.data, ds.y.data
     x_target, y_target = transformer.transform(x_source, y_source)
     ds = ds.copy()
-    ds['x'], ds['y'] = x_target, y_target
+    ds['x'].data, ds['y'].data = x_target, y_target
+    ds.attrs['projection'] = to_epsg
     return ds
-
 
 
 def _mk_cell_polygon(xleft, ylower, xright, yupper):
@@ -52,7 +51,7 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     fmt must be long or wide, default is long
     """
     
-    polygons = _build_polyg(ds.isel(time=0))
+    polygons = _build_polyg(ds) # .isel(time=0) # x,y does not vary in time
     df = ds.to_dataframe() #.to_pandas() # only for 1 dim
     
     if 'time' in ds.dims.keys():
@@ -64,7 +63,7 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
         crs=epsg
     )
     
-    if fmt == "wide":
+    if fmt == "wide" and 'time' in ds.dims.keys():
         # here no wide fmt if no time, so no if 'time' in ds.dims.keys():
         gdf = gdf.unstack('time')
         gdf.columns = [
