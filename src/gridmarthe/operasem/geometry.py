@@ -14,7 +14,7 @@ def get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
     return ds.where(~ds[varname].isin(nanval), drop=True)
 
 
-def export_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout=None):
+def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout=None):
     """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
     input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic conductivity)
     """
