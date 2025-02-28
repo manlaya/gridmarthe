@@ -16,7 +16,7 @@ def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
     x_source, y_source = ds.x.data, ds.y.data
     x_target, y_target = transformer.transform(x_source, y_source)
     ds = ds.copy()
-    ds['x'].data, ds['y'].data = x_target, y_target
+    ds['x'].data, ds['y'].data = np.astype(x_target, np.float32), np.astype(y_target, np.float32)
     ds.attrs['projection'] = to_epsg
     return ds
 
@@ -71,10 +71,22 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
             if x not in ['x', 'y', 'dx', 'dy', 'z', 'geometry'] else x\
             for x, y in gdf.columns
         ]
-        gdf = gdf.loc[:,~gdf.columns.duplicated()].copy() # drop duplicated cols
-        gdf = gdf.set_geometry('geometry') # need to make again geom after drop dupl
+        gdf = gdf.loc[:,~gdf.columns.duplicated()].copy()  # drop duplicated cols
+        gdf = gdf.set_geometry('geometry')  # need to make again geom after drop dupl
     
     return gdf
+
+
+def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
+    """ Clip a xarray Dataset with a gpd.GeoDataFrame
+    Needs rioxarray
+    See: https://corteva.github.io/rioxarray/html/examples/clip_geom.html
+    Todo: shapely version
+    """
+    shp = gdf.to_crs(crs)
+    da = gm.assign_coords(ds.rio.write_crs("EPSG:{}".format(crs)))
+    clipped_da = da.rio.clip(shp.geometry.values, shp.crs, drop=True)
+    return clipped_da
 
 
 def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
