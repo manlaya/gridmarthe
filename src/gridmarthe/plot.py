@@ -105,24 +105,37 @@ def plot_mesh_time_serie(*arg, zone: int, varname='charge', show=False, figsize=
         plt.show(block=False)
     return ax
 
-def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
+def plot_outcrop(ds_outcrop, file_out=None, engine='xr', show=False):
     
     """ Usefull function to plot outcrop layers of a marthe (multilayer) grid
     
-    The Marthe grid must have a `z` dimension.
-    
-    There is two mode implementend yet, using xr.plot or gpd.plot (useful for nested grid)
-    TODO xr version for nested with `plot_nested_grid()`, see func below in src
+    There is two mode implementend yet, using xr.plot or
+    gpd.plot (useful for nested grid)
 
-    if engine == 'xr' => ds_outcrop need to get coords before (use `gm.assign_coords(ds_outcrop, add_lay=False)`)
-    if engine == 'gpd => ds_outcrop need to be a gpd.GeoDataframe (use `gm.to_geodataframe(ds_outcrop)`)
+    if engine == 'xr' => ds_outcrop need to get coords before
+        (use `gm.assign_coords(ds_outcrop, add_lay=False)`)
+    if engine == 'gpd => ds_outcrop need to be a gpd.GeoDataframe
+        (use `gm.to_geodataframe(ds_outcrop)`)
+    
+    nb: The Marthe grid must have a `z` dimension.
     
     Parameters
     ----------
-    TODO docstring
+    ds_outcrop: xr.Dataset
+        output of `gm.get_surface_mask()`
+    
+    file_out: str, Optionnal.
+        If not None (default), file name to write plot
+    
+    engine: str, Optionnal.
+        Engine to use for plotting (default is `xr`).
+    
+    show: bool, Optionnal.
+        Show result (`plt.show()`), default is False.
     
     Returns
     -------
+    fig, ax, ax_cbar if not `show`, otherwise return None
     """
     if isinstance(ds_outcrop, xr.Dataset):
         assert 'z' in ds_outcrop.keys(), "No `z` dimension. Outcrop plot is not possible."
@@ -146,7 +159,6 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
     
     if engine == 'xr':
         the_plot = plot_nested_grid(
-            # x='x', y='y',
             ds_outcrop, var='z',
             ax=ax,
             cmap=cmap,
@@ -174,8 +186,8 @@ def plot_outcrop(ds_outcrop, fout=None, engine='xr', show=False):
     ax_cbar.ax.tick_params(size=0)
     ax_cbar.set_ticklabels(ax_cbar.set_ticklabels(['{:.0f}'.format(x) for x in bounds]))
     
-    if fout is not None:
-        plt.savefig(fout, dpi=300)
+    if file_out is not None:
+        plt.savefig(file_out, dpi=300)
     if show:
         plt.show()
         plt.close()
