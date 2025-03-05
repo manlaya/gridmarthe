@@ -1,4 +1,39 @@
+! Copyright 2024, BRGM
+! 
+! This file is part of Gridmarthe.
+! 
+! Gridmarthe is free software: you can redistribute it and/or modify it under the
+! terms of the GNU General Public License as published by the Free Software
+! Foundation, either version 3 of the License, or (at your option) any later
+! version.
+! 
+! Gridmarthe is distributed in the hope that it will be useful, but WITHOUT ANY
+! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+! PARTICULAR PURPOSE. See the GNU General Public License for more details.
+! 
+! You should have received a copy of the GNU General Public License along with
+! Gridmarthe. If not, see <https://www.gnu.org/licenses/>.
+!
+!
 ! (Provenance MARTHE, Fichier : lecsem.f90, convert utf-8 )
+!
+! MARTHE, Copyright (c) 1990-2024 BRGM
+!
+! Copyright (c) 1990-2025  BRGM
+
+! Permission is granted under the following conditions :
+! The User undertakes:
+! 1.  To use the software only at his own premises.
+! 2.  Not to use the software simultaneously on several computers or through a network or server.
+! 3.  To ensure that the Marthe software is not passed to any third party (subcontractor, client, etc.) and to take every precaution necessary to prevent illegal copying of the software.
+
+! The User is nevertheless permitted:
+! 1.  To make one or more backup copies of the software for his own use.
+! 2.  To install the software on several workstations at his premises (for instance a desktop and a lap top computer) provided that the software will be never used simultaneously on several computers.
+
+! Limitation of liability:
+! The greatest care was taken to the realization of this software, however BRGM will not be held liable for any direct or indirect damage (including lost profits, lost savings, costs, fees, or expenses of any kind) rising from the use or impossibility of using the software.
+!
       SUBROUTINE LECSEM8_0(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
        , IOUCON, LEC, IERLEC, NUMERR, NTOT &
        , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)

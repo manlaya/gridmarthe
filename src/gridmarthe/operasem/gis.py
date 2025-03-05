@@ -4,9 +4,10 @@
 import numpy as np
 
 from shapely.geometry import Polygon
+from pyproj import Transformer
 import geopandas as gpd
 
-from pyproj import Transformer
+from ..utils import assign_coords
 
 
 def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
@@ -84,7 +85,7 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
     Todo: shapely version
     """
     shp = gdf.to_crs(crs)
-    da = gm.assign_coords(ds.rio.write_crs("EPSG:{}".format(crs)))
+    da  = assign_coords(ds.rio.write_crs("EPSG:{}".format(crs)))
     clipped_da = da.rio.clip(shp.geometry.values, shp.crs, drop=True)
     return clipped_da
 

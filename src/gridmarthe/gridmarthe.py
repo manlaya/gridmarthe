@@ -6,10 +6,10 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
-import xarray as xr #needs netcdf4
+import xarray as xr
 
 from .lecsem import (
-    _lecsem,
+    modgridmarthe,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,
@@ -347,7 +347,7 @@ def load_marthe_grid(
         data_vars=dic_data,
         coords={
             'time': dates,
-            'zone': range(1, zvar.shape[1] + 1),
+            'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32),
             # 'xc': (['zone'], xcols), # TODO coordinates directly as coords depending on dims ?
             # 'yc': (['zone'], yligs),
             # 'domain_size': dims, # add non dimension coordinate for info
@@ -526,8 +526,8 @@ Attributes was not founded in dataset so pleave provide a list with original dom
         title = 'Marthe Grid ' # dummy arg to set type as string
     
     # call fortran module to write marthe grid
-    status = _lecsem.modgridmarthe.write_grid(
-        xvar=zvar,
+    status = modgridmarthe.write_grid(
+        zvar=zvar,
         xcol=zxcol,
         ylig=zylig,
         dxlu=zdxlu,

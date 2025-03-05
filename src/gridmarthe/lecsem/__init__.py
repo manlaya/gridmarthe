@@ -1,5 +1,5 @@
 from ._parse_gridmarthe import (
-    _lecsem,
+    modgridmarthe,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,

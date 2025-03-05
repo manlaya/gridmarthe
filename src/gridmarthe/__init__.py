@@ -24,7 +24,6 @@
 import xarray as xr
 from typing import Union
 
-
 from .__version__ import __version__
 from .gridmarthe import *
 from .operasem import *
@@ -73,9 +72,6 @@ class MartheGrid(object):
             write_raster_from_da(self.obj.sel(time=slice(t)), x_dim, y_dim, epsg, "{}_{}.tiff".format(fout_template, t))
         
         return None
-    
-    def get_outcrop(self, subset_layers=None):
-        return get_min_layer(self.obj, subset_layers)
     
     def subset_coords(self, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
         return subset_with_coords(self.obj, dims, gdf, xmin, ymin, xmax, ymax)

@@ -17,22 +17,22 @@
 !
 ! (Provenance MARTHE, file : edsemi.f90, convert utf-8 )
 !
-! MARTHE License:
-!Copyright © 2002-2024 BRGM
+! MARTHE, Copyright (c) 1990-2024 BRGM
 !
+! Copyright (c) 1990-2025  BRGM
+
 ! Permission is granted under the following conditions :
 ! The User undertakes:
 ! 1.  To use the software only at his own premises.
 ! 2.  Not to use the software simultaneously on several computers or through a network or server.
 ! 3.  To ensure that the Marthe software is not passed to any third party (subcontractor, client, etc.) and to take every precaution necessary to prevent illegal copying of the software.
-!
+
 ! The User is nevertheless permitted:
 ! 1.  To make one or more backup copies of the software for his own use.
 ! 2.  To install the software on several workstations at his premises (for instance a desktop and a lap top computer) provided that the software will be never used simultaneously on several computers.
 
 ! Limitation of liability:
 ! The greatest care was taken to the realization of this software, however BRGM will not be held liable for any direct or indirect damage (including lost profits, lost savings, costs, fees, or expenses of any kind) rising from the use or impossibility of using the software.
-!
 !
       SUBROUTINE EDSEMI7_0(FONC, NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
        ,TITSEM, IEREDI, IOUMAI, DXLU, DYLU)
@@ -228,6 +228,7 @@
       ENDDO
       IF ((NLIG <= 0).OR.(NKOL <= 0)) THEN
          IEREDI = 2
+         print *, 'nlig or nkol <= 0'
          GO TO 999
       ENDIF
 !     =========================================================
@@ -245,11 +246,14 @@
          ENDIF
          XP = AUX
       ENDDO
+      if (IEREDI == 2) then
+         print *, 'Writing marthe grid Fortran error: X not sorted'
+         ! GO TO 999
+      endif
 !     ===================================================================
 !      Dans cette version : On continue si X = XP ou Y = YP (IEREDI = 1)
 !                       Mais on sort si si X < XP ou Y < YP (IEREDI = 2)
 !     ===================================================================
-      IF (IEREDI == 2) GO TO 999
       DO I=1,NLIG
          IND = MERGE( I , NLIG-I+1 , (INVY >= 1) )
          AUX = YLIG(IND)
@@ -259,7 +263,10 @@
          ENDIF
          YP = AUX
       ENDDO
-      IF (IEREDI == 2) GO TO 999
+      IF (IEREDI == 2) then
+         print *, 'Writing marthe grid Fortran error: Y not sorted'
+         GO TO 999
+      endif
       NTOT = NLIG * NKOL
 !     =========================================
 !      Vérification si la Grille est constante
