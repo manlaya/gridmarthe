@@ -152,7 +152,7 @@ def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, 
     
     da = da.set_index(zone=dims)
     if not keep_zone:
-        da = da.drop_duplicates(zone_label).unstack(zone_label) # drop duplicates is a security for nested grids, if dropnan was not performed
+        da = da.drop_duplicates(zone_label).unstack(zone_label)  # drop duplicates is a security for nested grids, if dropnan was not performed
     return da.sortby(dims)
 
 

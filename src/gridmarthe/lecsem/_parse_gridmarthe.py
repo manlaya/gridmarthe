@@ -4,15 +4,13 @@
 import re
 import numpy as np
 
-from . import lecsem as _lecsem
-
+from .lecsem import modgridmarthe
 from ..utils import _datetime64_to_float
-
 
 
 def scan_var(xfile):
     """ List all variables stored in a Marthe grid file """
-    var = _lecsem.modgridmarthe.scan_typevar(xfile) # get a list of unique type_var that are in xfile
+    var = modgridmarthe.scan_typevar(xfile) # get a list of unique type_var that are in xfile
     var = np.char.strip(np.char.decode(var, 'ISO-8859-1')) # decode byte array provided by f2py
     var = var[var != ''] # get rid of empty element provided by fortran code
     return var
@@ -51,16 +49,16 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     dims  : np.array
         list of dimensions of grid [maingrid[x, y, z], nestedgrid1[...], ...]
     """
-    nu_zoomx = _lecsem.modgridmarthe.scan_nu_zoomx(xfile) # scan nb of nested grids (gig)
-    dims, nbsteps = _lecsem.modgridmarthe.scan_dim(xfile, varname, nu_zoomx)
+    nu_zoomx = modgridmarthe.scan_nu_zoomx(xfile) # scan nb of nested grids (gig)
+    dims, nbsteps = modgridmarthe.scan_dim(xfile, varname, nu_zoomx)
     nbtot = np.prod(dims, axis=1).sum() # product deprecated => prod // DeprecationWarning: `product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.
     if nbtot == 0:
         raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
     
     if shallow_only:
-        res = list(_lecsem.modgridmarthe.read_grid_shallow( xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx ))
+        res = list(modgridmarthe.read_grid_shallow( xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx ))
     else:
-        res = list(_lecsem.modgridmarthe.read_grid( xfile, varname, nbsteps, nbtot, nu_zoomx))
+        res = list(modgridmarthe.read_grid( xfile, varname, nbsteps, nbtot, nu_zoomx))
     
     res.append(dims)
     return res
@@ -114,7 +112,7 @@ def _set_layers(dims):
         for z in range(dims[igig][-1]):
             zlay.append(np.tile(z+1, dims[igig][0] * dims[igig][1]))
     zlay = np.hstack(zlay)
-    return zlay
+    return zlay.astype(np.int32)
 
 
 def _decode_title(title, encoding='ISO-8859-1'):
@@ -194,7 +192,7 @@ def _extract_zvar_from_ds(ds, varname):
 
 if __name__ == '__main__':
     
-    print(_lecsem.__doc__)
-    print(_lecsem.modgridmarthe.__doc__)
+    # print(_lecsem.__doc__)
+    print(modgridmarthe.__doc__)
     
 
