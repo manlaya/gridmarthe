@@ -24,11 +24,11 @@ def parse_args():
     
     parser.add_argument('opt', metavar='grid timesteps', type=str, nargs='*', help='Paths to grid and timesteps files are expected') # nargs='+'
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--variable', '-v', type=str, default=None, help='Variable to read, default is None; i.e variable will be parsed from file and ONLY the first variable will be read.')
+    parser.add_argument('--variable', '-v', type=str, default=None, help='Variable (field) to read, default is None; i.e variable will be parsed from file and ONLY the first variable will be read.')
     parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
     parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optionnal, default is 1 (no transformation).')
     # parser.add_argument('--show', type=str, default='', choices=('c', 'w'), help='Print licensing for warranty (w) and redistribution conditions (c)')
-    parser.add_argument('--version', '-v', action="store_const", const=True, default=False, help='Show version and exit')
+    parser.add_argument('--version', '-V', action="store_const", const=True, default=False, help='Show version and exit')
     
     args = parser.parse_args()
     
