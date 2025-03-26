@@ -1,6 +1,10 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+""" Interpolation and regridding module
+"""
+
+
 import numpy as np
 import xarray as xr #needs netcdf4, rioxarray
 

@@ -1,25 +1,18 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+""" GIS utility for marthe grids
+"""
+
+
 import numpy as np
 
 from shapely.geometry import Polygon
 from pyproj import Transformer
 import geopandas as gpd
+import xarray as xr
 
 from ..utils import assign_coords
-
-
-def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
-    """ Transform coordinates of a dataset using pyproj.
-    """
-    transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-    x_source, y_source = ds.x.data, ds.y.data
-    x_target, y_target = transformer.transform(x_source, y_source)
-    ds = ds.copy()
-    ds['x'].data, ds['y'].data = np.astype(x_target, np.float32), np.astype(y_target, np.float32)
-    ds.attrs['projection'] = to_epsg
-    return ds
 
 
 def _mk_cell_polygon(xleft, ylower, xright, yupper):
@@ -32,6 +25,7 @@ def _mk_cell_polygon(xleft, ylower, xright, yupper):
             (xleft , ylower)
         )
     )
+
 
 _polygonize = np.vectorize(_mk_cell_polygon)
 
@@ -48,7 +42,8 @@ def _build_polyg(ds):
 
 
 def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
-    """ Convert marthegrid.Dataset to a geodataframe 
+    """ Convert marthegrid.Dataset to a geodataframe
+
     fmt must be long or wide, default is long
     """
     
@@ -78,12 +73,25 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     return gdf
 
 
+def _check_rioxarray():
+    try:
+        import rioxarray
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            'rioxarray is not Found in python env.' + \
+            'Please install it or reinstall gridmarthe with optionnal dependancies: pip install gridmarthe[opt]'
+        )
+    return
+
+
 def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
     """ Clip a xarray Dataset with a gpd.GeoDataFrame
+
     Needs rioxarray
     See: https://corteva.github.io/rioxarray/html/examples/clip_geom.html
     Todo: shapely version
     """
+    _check_rioxarray()
     shp = gdf.to_crs(crs)
     da  = assign_coords(ds.rio.write_crs("EPSG:{}".format(crs)))
     clipped_da = da.rio.clip(shp.geometry.values, shp.crs, drop=True)
@@ -93,6 +101,7 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
 def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
     """
     subset DataArray or Dataset with gpd.GeoDataFrame or bounds
+
     TODO: real shp clip
     """
     if gdf is not None:
@@ -117,11 +126,69 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
     return da.where(mask_lon & mask_lat, drop=True)
 
 
+def _transf_proj_xy(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
+    """ Transform coordinates of a dataset using pyproj.
+
+    /!\ return more unique points than initial due to projection deformation
+    """
+    transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
+    x_source, y_source = ds.x.data, ds.y.data
+    x_target, y_target = transformer.transform(x_source, y_source)
+    ds = ds.copy()
+    ds['x'].data, ds['y'].data = np.astype(x_target, np.float32), np.astype(y_target, np.float32)
+    ds.attrs['projection'] = to_epsg
+    return ds
+
+# def _transf_proj_regrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
+    # """ Recreate a transformed grid based on dx,dy and x0,y0"
+    # transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
+    # nx, ny = len(x), len(y)
+    # x0, y0 = np.nanmin(x), np.nanmin(y)
+    # x1, y1 = np.nanmax(x), np.nanmax(y)
+    # dx, dy = ds['dx'].data, ds['dy'].data
+    # return
+
+def _transf_proj_meshgrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
+    """ Transform grid of a dataset using pyproj,
+    using meshgrid
+    """
+    x, y = np.unique(ds['x'].data), np.unique(ds['y'].data)
+    transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
+    
+    xx, yy = np.meshgrid(x, y)
+    xx_transformed, yy_transformed = transformer.transform(xx, yy)
+    data_transformed = xr.DataArray(
+        assign_coords(ds)['permeab'].data,
+        dims=["y", "x"],
+        coords={"y": yy_transformed[:, 0], "x": xx_transformed[0, :]}
+    )
+    return data_transformed
+
+
+def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarray'):
+    """  Transform grid of a dataset using pyproj
+
+    engine: rioxarray, meshgrid, xy
+
+    Data (ds) needs to be a 2D array with xy as coords dimensions and time sliced.
+    If needed, use :py:func:`gridmarthe.assign_coords` first.
+    """ 
+    if engine == 'rioxarray':
+        _check_rioxarray()
+        ds_transf = ds.rio.write_crs(from_epsg).rio.reproject(to_epsg)
+    elif engine == 'meshgrid':
+        ds_transf = _transf_proj_meshgrid(ds, from_epsg, to_epsg)
+    elif engine == 'xy':
+        ds_transf = _transf_proj_xy(ds, from_epsg, to_epsg)
+    return ds_transf
+
 
 def write_raster_from_da(da, x_dim='x', y_dim='y', epsg=27572, fout='raster.tiff'):
     """ Write a xr.DataArray to a raster file
+    
     need xarray with rioxarray installed
     """
+    _check_rioxarray()
     da = da.copy().rio.write_crs('epsg:{}'.format(epsg))
     da = da.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim)
     da.rio.to_raster(fout)
