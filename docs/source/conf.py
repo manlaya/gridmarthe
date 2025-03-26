@@ -11,8 +11,9 @@ import os, sys
 from gridmarthe import __version__
 
 project = 'gridmarthe'
-copyright = '2024, Adrien Manlay, Jean-Pierre Vergnes - BRGM'
-author = 'Jean-Pierre Vergnes, Adrien Manlay'
+authors = 'Jean-Pierre Vergnes, Adrien Manlay'
+# copyright = '2024,  BRGM.\nAuthors: {}'.format(authors)
+copyright = '2024,  BRGM'
 
 release = __version__
 
@@ -77,14 +78,15 @@ html_theme_options = {
     "show_nav_level": 1,
     "navbar_align": "content",
     "navbar_start": ["navbar-logo"],
-    "navbar_end": ["version-switcher","theme-switcher", "navbar-icon-links"],
+    #"navbar_end": ["version-switcher","theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
     "footer_start": ["copyright", "sphinx-version", "last-updated"],
     # "footer_end": ["corporate-logo"],
     "header_links_before_dropdown": 6,
-    "switcher": {
-        "json_url": f"{html_baseurl}/en/latest/_static/switcher.json",
-        "version_match": release
-    },
+    # "switcher": {
+    #     "json_url": f"{html_baseurl}/en/latest/_static/switcher.json",
+    #     "version_match": release
+    # },
 }
 
 html_last_updated_fmt = '%b %d, %Y'
@@ -97,6 +99,7 @@ html_use_index = True
 # https://www.sphinx-doc.org/en/master/usage/extensions/autosummary.html
 
 autosummary_generate = True
+autosummary_template = 'autosummary/module.rst'  # add template to always show doc in module
 
 
 # ----------------------------------------------------------------------
@@ -105,7 +108,7 @@ autosummary_generate = True
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 
 autodoc_member_order = 'bysource'
-#autodoc_default_options = {"members":True}#, "show-inheritance":True}
+#autodoc_default_options = {"members":True}#, "show-inheritance":True}  # could be enought instead of tpl ?
 autodoc_typehints = 'none' # signature, description, none, both
 autoclass_content = 'class'
 
