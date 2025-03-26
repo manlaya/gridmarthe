@@ -144,7 +144,7 @@ def get_surface_layer(ds, aquif_layers=None):
     
     Examples
     --------
-    >>>    mask = get_min_layer(ds, [6,8,9])
+    >>>    mask = get_surface_layer(ds, [6,8,9])
     >>>    ds_surf = ds.sel(zone=mask.zone.data)
         
     Parameters
