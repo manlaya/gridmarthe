@@ -10,3 +10,5 @@ User Guide
     example/gm_example.ipynb
     example/cli.ipynb
     example/gigogne.ipynb
+    example/preproc.ipynb
+    example/treatments.ipynb
