@@ -15,14 +15,6 @@ project('gridmarthe', ['fortran', 'c'],
 )
 
 # add_languages('fortran')
-# subdir('src/gridmarthe')
-fortran_sources = files([
-    'src/gridmarthe/lecsem/lecsem.f90',
-    'src/gridmarthe/lecsem/edsemigl.f90',
-    'src/gridmarthe/lecsem/scan_grid.f90'
-])
-lecsem_install_dir = 'gridmarthe/lecsem/' # in python_install_dir
-
 
 # ----- Get compiler and build options ------ #
 fc = meson.get_compiler('fortran')
@@ -83,7 +75,6 @@ python_install_dir = py.get_install_dir()
 
 deps += [py_dep]
 
-
 incdir_numpy = run_command(py,
   ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
   check : true
@@ -102,28 +93,12 @@ incdir_f2py = incdir_numpy / '..' / '..' / 'f2py' / 'src'
 inc_f2py = include_directories(incdir_f2py)
 fortranobject_c = incdir_f2py / 'fortranobject.c'
 
-# -------- Building interface ----------- #
-lecsem_interface = custom_target('lecsemmodule.c',
-  input : fortran_sources,
-  output : ['lecsemmodule.c', 'lecsem-f2pywrappers.f', 'lecsem-f2pywrappers2.f90'],
-  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'lecsem', '--lower']
-)
-
-
 inc_dir += [inc_np,inc_f2py]
 
-py.extension_module('lecsem',
-  [
-    fortran_sources,
-    lecsem_interface,
-    fortranobject_c
-  ],
-  include_directories: inc_dir,
-  dependencies: deps,
-  install: true,
-  install_dir: python_install_dir / lecsem_install_dir,
-  # fortran_args : fortran_args
-)
 
+# --------   Compile sources   --------- #
+subdir('src/gridmarthe/lecsem')
+# subdir('src/gridmarthe/rivermod/draindir')
+# subdir('src/gridmarthe/rivermod/rivernet')
 # -------- Install pypackage ----------- #
 install_subdir('src/gridmarthe', install_dir : python_install_dir)

@@ -362,7 +362,7 @@ def load_marthe_grid(
     if drop_nan:
         if nanval is None:
             nanval = vattrs.get('missing_value', 9999.) # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
-        if varname == 'permeab' and is_nested:
+        if (varname == 'permeab' or filename.endswith("permh")) and is_nested:
             nanval = [nanval, -9999.]
         ds = dropna(ds, varname, nanval)
         

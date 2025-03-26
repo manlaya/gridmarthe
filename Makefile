@@ -33,12 +33,12 @@ F2PYOPT =--backend=meson --lower
 
 FFLAGS = -fdefault-real-8
 # already O3 in f2py, change it here
-FFLAGS +=-O2 
+FFLAGS += -O2 
 # Position-Independent Code, si shared library, utile
 # FFLAGS +=-fPIC -shared
-FFLAGS +=-ffree-line-length-none
+FFLAGS += -ffree-line-length-none
 # FFLAGS +=-fallow-argument-mismatch # only gfortran > 12.0
-FFLAGS +=-std=legacy
+# FFLAGS += -std=legacy  # not really necessary
 # FFLAGS +=-static # only windows // and not for dev
 
 COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem $(F2PYOPT)
@@ -51,6 +51,7 @@ COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem 
 all: clean editm
 # only compile with f2py for develop purpose
 lib: lecsem.so
+
 
 doc:
 	cd docs; $(MAKE) html
@@ -68,8 +69,8 @@ requirements:
 	$(PY) -m pip install charset_normalizer numpy meson meson-python
 
 # install: requirements lecsem.pyf lecsem.so
-install: requirements lecsem.so setuptools
-	$(PY) -m pip install $(PIPFLAGS) .
+install: requirements lecsem.so setuptools bakup_pyproj
+	$(PY) -m pip install $(PIPFLAGS) . -vvv
 
 lecsem.pyf:
 	cd $(F90SRCDIR); echo "******** Generating signature ********"; \
@@ -85,7 +86,7 @@ lecsem.so:
 
 # meson editable for test
 editm: requirements
-	$(PY) -m pip install --no-build-isolation --editable . -vvv
+	$(PY) -m pip install --no-build-isolation --config-settings=editable-verbose=true --editable . -vvv
     # meson version of editable - for future replacement of setuptools
 
 wheel:
