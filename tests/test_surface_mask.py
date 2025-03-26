@@ -1,6 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 # import modules
 import gridmarthe as gm
 import matplotlib.pyplot as plt
+
+
+import os;os.chdir('tests')
+
 
 grid = gm.load_marthe_grid('./data/craie_npc.permh', drop_nan=True)
 surf = gm.get_surface_layer(ds=grid)

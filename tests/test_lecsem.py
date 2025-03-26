@@ -8,6 +8,7 @@ import gridmarthe as gm
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     
+    import os;os.chdir('./tests')
     print(gm.lecsem.__doc__)
     print(gm.lecsem.modgridmarthe.__doc__)
     
@@ -45,15 +46,15 @@ if __name__ == '__main__':
         masque = ds[varname.lower()].where(ds[varname.lower()] != 9999.).dropna(dim='zone') # drop nan_val
         ds = ds.sel(zone=masque['zone'])
 
-        if "z" in ds.keys():
-            first_lay = gm.get_min_layer(ds.isel(time=0))
-            gm.plot_outcrop(ds, engine='xr')
-            # plot_outcrop(ds, varname='permeab', nanval=0., engine='xr')
+        # if "z" in ds.keys():
+        #     first_lay = gm.get_min_layer(ds.isel(time=0))
+        #     gm.plot_outcrop(ds, engine='xr')
+        #     # plot_outcrop(ds, varname='permeab', nanval=0., engine='xr')
 
-            # dsbis = gm.assign_coords(ds)
-            # dsbis['charge'].plot.pcolormesh(x='x', y='y', row='z', col='time')
-            # Pour les gigognes, la grille irrégulière créée rend discontinu le graphique
-            # soit interpol, soit geopandas --> polyg.
-            # dsbis['charge'].sel(z=[6,9]).plot.pcolormesh(x='x', y='y', row='z', col='time')
-            plt.show()
-            plt.close()
+        #     # dsbis = gm.assign_coords(ds)
+        #     # dsbis['charge'].plot.pcolormesh(x='x', y='y', row='z', col='time')
+        #     # Pour les gigognes, la grille irrégulière créée rend discontinu le graphique
+        #     # soit interpol, soit geopandas --> polyg.
+        #     # dsbis['charge'].sel(z=[6,9]).plot.pcolormesh(x='x', y='y', row='z', col='time')
+        #     plt.show()
+        #     plt.close()

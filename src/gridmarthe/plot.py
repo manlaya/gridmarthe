@@ -25,6 +25,7 @@ def _set_map_lims(ax, xmin, ymin, xmax, ymax, perc=.05):
 
 def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
+    
     TODO: remove var arg: should be a xr.DataArray with coords assigned, same as xarray API for plots
     
     Parameters
@@ -62,12 +63,19 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     # plots nested then main
     for dx2, dy2 in zip(dx, dy):
         gig = da.where(da['dx'] == dx2, drop=True)
-        gig[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, add_colorbar=False, **{k:v for k,v in kwargs.items() if k != 'add_colorbar'})
+        gig[var].plot.pcolormesh(
+            x='x', y='y',
+            ax=ax, vmin=vmin, vmax=vmax,
+            add_colorbar=False,
+            **{k:v for k,v in kwargs.items() if k != 'add_colorbar'}
+        )
+    
     grid[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
     
     _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
     
     return ax
+
 
 def plot_mesh_time_serie(*arg, zone: int, varname='charge', show=False, figsize=(12,4), **kwargs):
     """ Usefull function to plot time serie from any dataset, by extracting a specific cell timeserie
@@ -104,6 +112,7 @@ def plot_mesh_time_serie(*arg, zone: int, varname='charge', show=False, figsize=
     if show:
         plt.show(block=False)
     return ax
+
 
 def plot_outcrop(ds_outcrop, file_out=None, engine='xr', show=False):
     
@@ -184,7 +193,7 @@ def plot_outcrop(ds_outcrop, file_out=None, engine='xr', show=False):
         label='Layers',
     )
     ax_cbar.ax.tick_params(size=0)
-    ax_cbar.set_ticklabels(ax_cbar.set_ticklabels(['{:.0f}'.format(x) for x in bounds]))
+    ax_cbar.set_ticklabels(['{:.0f}'.format(x) for x in bounds])
     
     if file_out is not None:
         plt.savefig(file_out, dpi=300)

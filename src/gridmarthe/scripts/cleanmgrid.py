@@ -10,67 +10,61 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 from gridmarthe.__version__ import _copyleft
 
+
+# ext: VARIABLE_NAME in FRench
 MARTGRID_FILES = {
-    # ext: VARIABLE_NAME
-    'topog' : 'H_TOPOGR',
-    'hsubs' : 'H_SUBSTRAT',
-    'sepon' : 'SUBS_EPONTE',
-    'kepon' : 'PERM_EPONTE',
     'permh' : 'PERMEAB',
-    'poros' : 'POROSITE',
-    'press' : 'PRESSION',
-    'perm_r': 'PERM_LIT_RIVI',
-    'anisv' : 'ANISO_VERTI',
-    'anish' : 'ANISO_HORIZ',
-    'emmli' : 'EMMAG_LIBR',
-    'emmca' : 'EMMAG_CAPT',
-    'idebo' : 'IND_DEBORD',
+    'debit' : 'DEBIT',
     'charg' : 'CHARGE',
-    'debit' : 'DEBIT', 
-    'aff_r' : 'AFFLU_RIVI',
-    'flo_r' : 'DEBIT_RIVI',
-    'fon_r' : 'FOND_RIVI',
-    'hau_r' : 'HAUTEU_RIVI',
-    'lar_r' : 'LARG_RIVI',
-    'lon_r' : 'LONG_RIVI',
-    'trc_r' : 'TRONC_RIVI',
-    'qext_r': 'Q_EXTER_RIVI',
-    'd_ava' : 'DIRECT_AVAL',
-    # : 'Q_AMONT_RIVI',
-    # : 'EPAI_LIT_RIV',
-    # : 'RUGOS_RIVI',
-    # : 'PENTE_RIVI',
-    'meteo' : 'ZONE_METEO',
-    'zonep' : 'ZONE_SOL',
+    'emmca' : 'EMMAG_CAPT',
+    'emmli' : 'EMMAG_LIBR',
     'zgeom' : 'ZONE_GEOM',
-    'zoneg2': 'ZONE_2',
-    'zoneg3': 'ZONE_3',
-    'zonei' : 'ZONE_IRRIG'
+    'hsubs' : 'H_SUBSTRAT',
+    'equip' : 'Z_EQUIPOT',
+    'topog' : 'H_TOPOGR',
+    'zonep' : 'ZONE_SOL',
+    'zonei' : 'ZONE_IRRIG',
+    'idebo' : 'IND_DEBORD',
+    'sepon' : 'SUBS_EPONTE',
+    'salini': 'SALINITE',
+    'poros' : 'POROSITE',
+    'satur' : 'SATURAT',
+    'salext': 'SALIN_EXT',
+    'conce' : 'CONCENTR',
+    'conex' : 'CONCEN_EXT',
+    'tempe' : 'TEMPERAT',
+    'temex' : 'TEMPER_EXT',
+    'mconc' : 'MASS_CONCEN',
+    'porfx' : 'PORO_FIX',
+    'aff_r' : 'AFFLU_RIVI',
+    'trc_r' : 'TRONC_RIVI',
+    'lon_r' : 'LONG_RIVI',
+    'lar_r' : 'LARG_RIVI',
+    'hau_r' : 'HAUTEU_RIVI',
+    'epai_r': 'EPAI_LIT_RIV',
+    'perm_r': 'PERM_LIT_RIVI',
+    'qext_r': 'Q_EXTER_RIVI',
+    'flo_r' : 'DEBIT_RIVI',
+    'qamon' : 'Q_AMONT_RIVI',
+    'rug_r' : 'RUGOS_RIVI',
+    'pnt_r' : 'PENTE_RIVI',
+    'fon_r' : 'FOND_RIVI',
+    'conc_r': 'CONCEN_RIVI',
+    'cext_r': 'CONC_EXT_RIVI',
+    'qmas_r': 'QMASS_RIVI',
+    'mass_r': 'MASSE_RIVI',
+    'aff_d' : 'AFFLU_DRAIN',
+    'trc_d' : 'TRONC_DRAIN',
+    'lon_d' : 'LONG_DRAIN',
+    'z_dra' : 'ALTIT_DRAIN',
+    'meteo' : 'ZONE_METEO',
+    'd_ava' : 'DIRECT_AVAL',
+    'v_rui' : 'VITESS_RUISS',
+    'ruiss' : 'RUISSEL',
+    'recha' : 'RECHARGE',
+    's_bvext' : 'SUPERF_BV_EXT',
+    'z_bvext' : 'NZON_RIV_EXT',
 }
-
-# legacy, switch to ArgumentParser
-# def print_help():
-    # msg = """ Usage: 
-    # `cleanmgrid PATH_TO_FILE`
-    
-    # PATH_TO_FILE can be a relative path, if it ends with '.rma' all grid file in rma project will be processed.
-
-    # Only works for marthe grid v9.0 (a check is performed and <v9 are skipped)
-    
-    # {}
-    # """.format(_copyleft)
-    # print(msg)
-
-# def parse_args():
-    # if len(sys.argv) < 2:
-        # print('cleanmgrid NO argument were passed')
-        # print_help()
-        # sys.exit(1)
-    # finputs  = sys.argv[1]
-    # if finputs in ['h', '-h', '--help']: # or not finputs.endswith('rma'):
-        # print_help()
-        # sys.exit(1)
-    # return finputs
 
 
 def parse_args():
@@ -85,7 +79,7 @@ def parse_args():
     parser.add_argument('opt', metavar='PATH_TO_FILE', type=str, nargs=1, help='PATH_TO_FILE can be a relative path, if it ends with ".rma" all grid file in rma project will be processed.')
     parser.add_argument('--layer' , '-l', type=int, default=None, help='Number of layer. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
     parser.add_argument('--grid'  , '-g', type=int, default=None, help='Number of nested grid. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
-    parser.add_argument('--output', '-o', type=str, default=None, help='Output file. Only if PATH_TO_FILE is a single grid file and *NOT* a rma file. Otherwise, all files will be bakup and clean')
+    parser.add_argument('--output', '-o', type=str, default=None, help='Output file name (without subdir if any). Only if PATH_TO_FILE is a single grid file and *NOT* a rma file. Otherwise, all files will be bakup and clean')
     parser.add_argument(
         '--no_overwrite' , '-n',
         action="store_const", const=True, default=False,
@@ -101,11 +95,11 @@ def parse_args():
     return args
 
 
-
 def fread(file:str):
     with open(file, 'r', encoding='ISO-8859-1') as f:
         content = f.read()
     return content
+
 
 def scan_vers_semi(str_semi):
     if re.search(r'Marthe_Grid.*Version=9\.0', str_semi):
@@ -117,11 +111,13 @@ def scan_vers_semi(str_semi):
         version = 9999.
     return version
 
+
 def parse_geom(layer_str:str):
     layers = re.findall(r'Cou=\s*(\d+);', layer_str)
     ngrid  = re.findall(r'(\d+)=Nombre.*[g|G]igognes', layer_str)[0]
     # nlay = max(map(int, layers))
     return layers, ngrid
+
 
 def read_rma(frma):
     rma = fread(frma)
@@ -129,6 +125,7 @@ def read_rma(frma):
     files = [ x.group(1).strip().replace('=', '') for x in files]
     files = [ x for x in files if len(x) > 0]
     return files
+
 
 def read_files_from_rma(frma):
     
@@ -150,13 +147,16 @@ def read_files_from_rma(frma):
     layers, ngrid = parse_geom(layer)
     return res, layers, ngrid
 
+
 def insert_str(string, index, insert_str):
     return string[:index] + insert_str + string[index:]
+
 
 def search_index(string, pattern):
     # get research start, match end, research pattern and result
     idx = [(m.start(0), m.end(1), m.group(0).replace(m.group(1), ''), m.group(1)) for m in re.finditer(pattern, string)]
     return idx
+
 
 def clean_grid_str(string: str, pattern: str, fillvalue: str|list, test=lambda x: len(x) < 1):
     """ Search for a pattern and replace with a unique or varying value
@@ -186,11 +186,11 @@ def clean_grid_str(string: str, pattern: str, fillvalue: str|list, test=lambda x
             new_str = re.sub(pattern, '{}{}'.format(matches[0][2], fillvalue), new_str)
     return new_str
 
+
 def write_res(string, fname):
     with open(f'{str(fname)}', 'w', encoding='ISO-8859-1') as f:
         f.write(string)
     return 0
-
 
 
 def main():
