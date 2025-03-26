@@ -1,6 +1,9 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+""" Module to manage geometry attributes of Marthe grids/domain
+"""
+
 import numpy as np
 import xarray as xr
 
@@ -91,21 +94,21 @@ def _get_depth(topo, h_upper):
 
 
 def compute_geometry(topo, hsubs, mask=None):
-    """_summary_
+    """ Compute geometry attributes of Marthe domain
 
     Parameters
     ----------
-    topo : _type_
-        _description_
-    hsubs : _type_
-        _description_
+    topo : xr.Dataset
+        Topgraphy of the domain
+    hsubs : xr.Dataset
+        altitude of all the lower boundary in the domain
     mask : numpy.array
         list of indices (`zone`) to keep, if None (default) not used.
 
     Returns
     -------
-    _type_
-        _description_
+    xr.Dataset
+        A new dataset with layer, depth, thickness, upper/lower altitude.
     """
 
     # compute elements of geometry
@@ -123,8 +126,8 @@ def compute_geometry(topo, hsubs, mask=None):
     # put values in xr.Dataset
     # ds = xr.combine_by_coords([ds, tmp])
     ds = xtopo.copy()
-    ds['h_substrat'] = (('time', 'zone'), tmp['h_substrat'].data)
-    ds['h_upper']    = (('time', 'zone'), tmp['h_upper'].data)
+    ds['z_lower']    = (('time', 'zone'), tmp['h_substrat'].data)
+    ds['z_upper']    = (('time', 'zone'), tmp['h_upper'].data)
     ds['thickness']  = (('time', 'zone'), thick)
     ds['depth']      = (('time', 'zone'), depth)
     return ds
