@@ -132,7 +132,8 @@ This program is free software and released under the terms of the
 
 
 ## Authors and acknowledgment
-J.P. Vergnes and A. Manlay
+
+A. Manlay and J.P. Vergnes, (c) BRGM
 
 
 ## References

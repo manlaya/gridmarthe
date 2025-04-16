@@ -7,7 +7,7 @@
 project('gridmarthe', ['fortran', 'c'],
   version : run_command('meson_get_version.py').stdout().strip(),
   license: 'GNU/GPL-V3',
-  meson_version: '>=0.64.0',
+  meson_version: '>=1.1.0',
   default_options : [
     'warning_level=1',
     'buildtype=release'
@@ -15,8 +15,15 @@ project('gridmarthe', ['fortran', 'c'],
 )
 
 # add_languages('fortran')
+lecsem_sources = files([
+    'src/gridmarthe/lecsem/lecsem.f90',
+    'src/gridmarthe/lecsem/edsemigl.f90',
+    'src/gridmarthe/lecsem/scan_grid.f90'
+])
+lecsem_install_dir = 'gridmarthe/lecsem/'  # in python_install_dir
 
-# ----- Get compiler and build options ------ #
+
+# ------ Get compiler and build options ------ #
 fc = meson.get_compiler('fortran')
 cc = meson.get_compiler('c')
 deps = []
@@ -24,7 +31,7 @@ inc_dir = []
 
 # Options de compilation Fortran
 fargs = []  # compile args
-largs = []  # arg de link
+largs = []  # link args
 
 if fc.get_id() == 'gcc'
   
@@ -80,12 +87,6 @@ incdir_numpy = run_command(py,
   check : true
 ).stdout().strip()
 
-# incdir_f2py = run_command(py,
-#     ['-c', 'import os; os.chdir(".."); import numpy.f2py; print(numpy.f2py.get_include())'],
-#     check : true
-# ).stdout().strip()
-
-# inc_np = include_directories(incdir_numpy, incdir_f2py)
 inc_np = include_directories(incdir_numpy)
 np_dep = declare_dependency(include_directories: inc_np)
 
@@ -95,10 +96,25 @@ fortranobject_c = incdir_f2py / 'fortranobject.c'
 
 inc_dir += [inc_np,inc_f2py]
 
+# ---- Building interface for LECSEM ---- #
+# subdir('src/gridmarthe/lecsem') # not functionnal yet, keep it here for now
+lecsem_interface = custom_target('lecsemmodule.c',
+  input : lecsem_sources,
+  output : ['lecsemmodule.c', 'lecsem-f2pywrappers.f', 'lecsem-f2pywrappers2.f90'],
+  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'lecsem', '--lower']
+)
 
-# --------   Compile sources   --------- #
-subdir('src/gridmarthe/lecsem')
-# subdir('src/gridmarthe/rivermod/draindir')
-# subdir('src/gridmarthe/rivermod/rivernet')
-# -------- Install pypackage ----------- #
+py.extension_module('lecsem',
+  [
+    lecsem_sources,
+    lecsem_interface,
+    fortranobject_c
+  ],
+  include_directories: inc_dir,
+  dependencies: deps,
+  install: true,
+  install_dir: python_install_dir / lecsem_install_dir,
+)
+
+# --------- Install pypackage ----------- #
 install_subdir('src/gridmarthe', install_dir : python_install_dir)
