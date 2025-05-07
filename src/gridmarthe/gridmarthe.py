@@ -303,7 +303,7 @@ def load_marthe_grid(
     xcols, dxlus = _transform_xcoords(zxcol, zylig, zdxlu, nlayer=dims[0][-1], factor=xyfactor)
     yligs, dylus = _transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
     
-    if varname == '': varname = 'variable' # security if force mode
+    if varname == '': varname = 'variable'  # security if force mode
     vattrs = VARS_ATTRS.get(varname.lower(), {})
     vattrs.update(var_attrs)
     dic_data = {
@@ -313,6 +313,10 @@ def load_marthe_grid(
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
+    
+    # dic_coords = {
+    #
+    # }
     
     if keepligcol:
         if is_nested:
@@ -348,10 +352,6 @@ def load_marthe_grid(
         coords={
             'time': dates,
             'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32),
-            # 'xc': (['zone'], xcols), # TODO coordinates directly as coords depending on dims ?
-            # 'yc': (['zone'], yligs),
-            # 'domain_size': dims, # add non dimension coordinate for info
-            # 'domain_origin': [(x0, y0) for igig in grids], # add non dimension coordinate for info
         },
         attrs={
             **_parse_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs),
@@ -359,12 +359,22 @@ def load_marthe_grid(
         }
     )
     
+    # add non-dimensionnal coordinates
+    # 'xc': (['zone'], xcols), # TODO coordinates directly as coords depending on dims ?
+    # 'yc': (['zone'], yligs),
+    # 'domain_size': dims, # add non dimension coordinate for info
+    # 'domain_origin': [(x0, y0) for igig in grids], # add non dimension coordinate for info
+    # ds = ds.assign_coords(
+        # dic_coords
+    # )
+    
     if drop_nan:
         if nanval is None:
             nanval = vattrs.get('missing_value', 9999.) # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
         if (varname == 'permeab' or filename.endswith("permh")) and is_nested:
             nanval = [nanval, -9999.]
         ds = dropna(ds, varname, nanval)
+        ds['zone'] = np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32)  # rearange zone
         
     # FIXME better, prevent bug at write : https://github.com/pydata/xarray/issues/7722 // https://stackoverflow.com/questions/65019301/variable-has-conflicting-fillvalue-and-missing-value-cannot-encode-data-when
     # del ds[varname.lower()].encoding['missing_value']
