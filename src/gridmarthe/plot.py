@@ -50,6 +50,8 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     
     vmin, vmax = da[var].min(), da[var].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
+    if kwargs.get('norm') is not None:
+        vmin, vmax = None, None  # if user set a norm, vmin and vmax are not allowed
     cbar_kwargs = kwargs.pop('cbar_kwargs', {})
     
     # split grids

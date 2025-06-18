@@ -11,26 +11,53 @@ from .gis import to_geodataframe
 from ..utils import _nearest_node, subset
 
 
-def get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
+def _get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
     """ Get mask array of active domain, from permh file (hydraulic conductivity)
     """
     return ds.where(~ds[varname].isin(nanval), drop=True)
 
 
-def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], fileout=None):
+def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_array=False, shp_file=None):
     """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
     input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic conductivity)
+    
+    Parameters
+    ----------
+    
+    ds : xr.Dataset
+    
+    varname: str, optional
+        default is 'permeab'
+    
+    nanval: float or list, optional.
+        default are 'permeab' nan values : 0,-9999.
+    
+    as_array: bool, optional.
+        default is False. Option to get result as a xr.Dataset and not geodataframe.
+        
+    shp_file: str, optional.
+        if set (and not `as_array`), used to stored result in a file.
+    
+    Returns
+    -------
+    either a xr.Dataset filter to mask array or a
+    gpd.GeoDataFrame with active domain.
     """
-    mask = get_mask_array(ds, varname, nanval)
+    mask = _get_mask_array(ds, varname, nanval)
     mask = ds.sel(zone=mask['zone'])
-    gdf  = to_geodataframe(mask)
-    gdf  = gdf.dissolve()
-    if fileout is not None:
-        gdf.to_file(fileout)
+    if not as_array:
+        gdf  = to_geodataframe(mask)
+        gdf  = gdf.dissolve()
+        if shp_file is not None:
+            gdf.to_file(shp_file)
     return gdf
 
 
 def _get_true_topo(topo, key='h_topogr'):
+    # in Marthe, topography is stored in the first layer,
+    # for the whole domain, avoiding duplicates data.
+    # Here, this function tile topography to all layers
+    # to allow vectorized operations.
     ds = topo.copy()
     if 'z' not in list(topo.dims) + list(topo.keys()):
         zdim = 1
@@ -99,7 +126,7 @@ def compute_geometry(topo, hsubs, mask=None):
     Parameters
     ----------
     topo : xr.Dataset
-        Topgraphy of the domain
+        Topgraphy of the domain (stored in the first layer, in Marthe Conventions).
     hsubs : xr.Dataset
         altitude of all the lower boundary in the domain
     mask : numpy.array

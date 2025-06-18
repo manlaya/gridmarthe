@@ -34,6 +34,7 @@ classifiers = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Fortran",
+    "Operating System :: Unix",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows",
@@ -67,6 +68,7 @@ doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 's
 [project.scripts]
 ncmart = "gridmarthe:scripts.ncmart.main"
 cleanmgrid = "gridmarthe:scripts.cleanmgrid.main"
+martshp = "gridmarthe:scripts.martshp.main"
 
 
 [project.urls]
