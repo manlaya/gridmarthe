@@ -83,7 +83,7 @@ python_install_dir = py.get_install_dir()
 deps += [py_dep]
 
 incdir_numpy = run_command(py,
-  ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
+  ['-c', 'import os; import numpy; print(os.path.relpath(numpy.get_include()))'],
   check : true
 ).stdout().strip()
 

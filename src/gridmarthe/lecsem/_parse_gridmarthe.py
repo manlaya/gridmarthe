@@ -10,9 +10,9 @@ from ..utils import _datetime64_to_float
 
 def scan_var(xfile):
     """ List all variables stored in a Marthe grid file """
-    var = modgridmarthe.scan_typevar(xfile) # get a list of unique type_var that are in xfile
-    var = np.char.strip(np.char.decode(var, 'ISO-8859-1')) # decode byte array provided by f2py
-    var = var[var != ''] # get rid of empty element provided by fortran code
+    var = modgridmarthe.scan_typevar(xfile)  # get a list of unique type_var that are in xfile
+    var = np.char.strip(np.char.decode(var, 'ISO-8859-1'))  # decode byte array provided by f2py
+    var = var[var != '']  # get rid of empty element provided by fortran code
     return var
 
 
@@ -163,6 +163,7 @@ def _parse_dims_from_xr_attrs(str_dims):
     else:
         return [list(map(int, x.split(' '))) for x in str_dims.strip('x, y, z [grids]: ').split('; ')]
 
+
 # def sort_data(ds):
     # TODO:
     # s'assurer de l'ordre si ds a été retravaillé :
@@ -179,7 +180,6 @@ def _extract_zvar_from_ds(ds, varname):
     zylig   = ds.y.data
     zdxlu   = ds.dx.data
     zdylu   = ds.dy.data
-    # from pymarthe : dx, dy = map(abs, map(np.gradient, [xcc,ycc])) # Using the absolute gradient TODO
     ztitle  = ds.attrs.get('title')
     izdates = _datetime64_to_float(zdates)
 
