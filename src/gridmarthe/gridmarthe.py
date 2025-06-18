@@ -165,7 +165,7 @@ def load_marthe_grid(
     The gridfile is read as a sequence: the variable for all layer
     for main grid, then all layer for nested grids, is stored in
     a 1D vector for every timestep. A single spatial identifier
-    `zone` is used to map spatial coordinates.
+    ``zone`` is used to map spatial coordinates.
 
     Before plot operations, user can assign coordinates (set x,y
     as dimension coordinates and drop zone) to get 2-D arrays (or
@@ -179,7 +179,7 @@ def load_marthe_grid(
             A path to marthegrid file (*.permh, *.out, etc.)
         
         varname : str, Optionnal
-            variable to access in martgrid file, e.g `CHARGE` for groundwater head. See marthegrid file content.
+            variable to access in martgrid file, e.g ``CHARGE`` for groundwater head. See marthegrid file content.
             if None  is passed (default), function will scan all varnames in filename and keep first only
             if 'all' is passed,  function will scan all varnames in filename and keep all. 
             All datavars are added to dataset, using recursive call to func
@@ -371,8 +371,16 @@ def load_marthe_grid(
     if drop_nan:
         if nanval is None:
             nanval = vattrs.get('missing_value', 9999.)  # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
+        
+        if not isinstance(nanval, (list, tuple)):
+            nanval = [nanval]
+        elif isinstance(nanval, tuple):
+            nanval = list(nanval)
+        
         if (varname.lower() == 'permeab' or filename.endswith("permh")) and is_nested:
-            nanval = [nanval, -9999.]
+            if -9999. not in nanval:
+                nanval += [-9999.]
+        
         ds = dropna(ds, varname, nanval)
         ds['zone'] = np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32)  # rearange zone
         
