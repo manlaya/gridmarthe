@@ -1,0 +1,12 @@
+[
+    {
+        "name": "dev",
+        "version": "latest",
+        "url": "https://gridmarthe.readthedocs.io/en/dev/"
+    },
+    {
+        "name": "0.1.2 (stable)",
+        "version": "v0.1.2",
+        "url": "https://gridmarthe.readthedocs.io/en/stable/"
+    }
+]

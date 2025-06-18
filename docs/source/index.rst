@@ -31,6 +31,7 @@ This library is open-source and released under the GNU General Public License (v
    This documentation and the library itself are under heavy developpement
 
 .. grid:: 1 1 2 2 
+   :gutter: 1
    
    .. grid-item-card:: Getting started
       :link: getting_started/index

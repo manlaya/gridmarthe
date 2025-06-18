@@ -64,12 +64,12 @@ class MartheGrid(object):
         Warning, only functionnal for regular grids
         """
         if time is None:
-            time = self.obj.times # if not defined, get all available times
-        if isinstance(time, str): # make sure to get a iterable for slicing
+            time = self.obj.times  # if not defined, get all available times
+        if isinstance(time, str):  # make sure to get a iterable for slicing
             time = [time]
         
         for t in time:
-            write_raster_from_da(self.obj.sel(time=slice(t)), x_dim, y_dim, epsg, "{}_{}.tiff".format(fout_template, t))
+            to_raster(self.obj.sel(time=slice(t)), x_dim, y_dim, epsg, "{}_{}.tiff".format(fout_template, t))
         
         return None
     

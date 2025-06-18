@@ -8,7 +8,8 @@ User Guide
     :maxdepth: 1
 
     example/gm_example.ipynb
-    example/cli.ipynb
     example/gigogne.ipynb
-    example/preproc.ipynb
     example/treatments.ipynb
+    example/gis.ipynb
+    example/cli.ipynb
+    example/preproc.ipynb
