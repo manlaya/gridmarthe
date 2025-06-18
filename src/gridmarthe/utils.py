@@ -92,7 +92,9 @@ def dropna(ds, varname: str, nanval: Union[list, float]):
     """
     if isinstance(nanval, (float, int, str)):
         nanval = [nanval]
-    nanval = nanval + [1e+20]
+    elif isinstance(nanval, tuple):
+        nanval = list(nanval)  # convert to list to be mutated
+    nanval += [1.e+20]
     mask = ds[varname.lower()].where(~ds[varname.lower()].isin(nanval)).dropna(dim='zone') # drop nanval
     ds_no_nan = ds.sel(zone=mask['zone'])
     return ds_no_nan
