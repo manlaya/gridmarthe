@@ -50,7 +50,7 @@ VARS_ATTRS = {
         'varname': 'CHARGE',
         'units': 'm',
         'missing_value': 9999.,
-        'standard_name': 'water_table_level',#depth
+        'standard_name': 'water_table_level',
         'long_name':
         'groundwater head'
     },
@@ -64,7 +64,7 @@ VARS_ATTRS = {
     'debit'  : {
         'varname': 'DEBIT',
         'units': 'm3/s',
-        'missing_value': 9999.,
+        'missing_value': 0.,
         'standard_name': '',
         'long_name': 'flow'
     },
@@ -370,8 +370,8 @@ def load_marthe_grid(
     
     if drop_nan:
         if nanval is None:
-            nanval = vattrs.get('missing_value', 9999.) # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
-        if (varname == 'permeab' or filename.endswith("permh")) and is_nested:
+            nanval = vattrs.get('missing_value', 9999.)  # if no  user defined nanval, try to get corresponding val in dict then 9999. if not present
+        if (varname.lower() == 'permeab' or filename.endswith("permh")) and is_nested:
             nanval = [nanval, -9999.]
         ds = dropna(ds, varname, nanval)
         ds['zone'] = np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32)  # rearange zone
