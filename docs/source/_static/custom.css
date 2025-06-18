@@ -1,0 +1,87 @@
+/* Main index page overview cards */
+.sd-card-img-top {
+  width: 33% !important;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 10px;
+}
+
+/* customise nbsphinx ----------------------------------------------- */
+div.nbinput.container div.prompt pre,
+div.nbinput.container div.prompt pre > code {
+  color: var(--pst-color-primary);
+}
+
+div.nboutput.container div.prompt pre,
+div.nboutput.container div.prompt pre > code {
+  color: var(--pst-color-secondary);
+}
+
+div.nbinput.container div.input_area {
+    border: 1px solid var(--pst-color-border);
+}
+
+div.rendered_html table {
+    color: var(--pst-color-text-base);
+}
+
+div.rendered_html thead {
+    border-bottom: 1px solid var(--pst-color-border);
+}
+
+div.rendered_html tbody tr:nth-child(odd) {
+    background: var(--pst-color-surface);
+}
+
+div.rendered_html tbody tr:hover {
+    background: var(--pst-color-accent-bg);
+}
+
+html[data-theme="dark"] .bd-content .nboutput .output_area.rendered_html {
+    background-color: transparent;
+}
+
+/* customise footer ------------------------------------------------- */
+.bd-footer .footer-items__end, .bd-footer .footer-items__start {
+    gap: 0;
+}
+
+.navbar-corporate img {
+    margin-bottom: 0;
+    height: 77px;
+}
+
+.navbar-corporate img {
+    margin-bottom: 0;
+    height: 77px;
+}
+a.navbar-corporate, a.navbar-corporate:hover {
+    border-bottom: hidden;
+}
+
+/* customise header ------------------------------------------------- */
+/* Change font size in header */
+.navbar-brand {
+    font-size: 20px;
+}
+
+/* Change elements size (eg switcher) */
+.navbar-nav .nav-item {
+    font-size: 14px;
+}
+
+/* Change link size in navbar */
+.navbar-nav .nav-link {
+    font-size: 16px;
+}
+
+/* Force navbar to use full width */
+.navbar {
+    width: 100%;
+}
+
+/* reduce margin */
+.navbar-nav {
+    margin: 0;
+}

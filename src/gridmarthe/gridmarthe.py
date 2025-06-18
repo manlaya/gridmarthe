@@ -171,12 +171,10 @@ def load_marthe_grid(
     as dimension coordinates and drop zone) to get 2-D arrays (or
     3D arrays if multilayer) for every timesteps.
 
-    
     Parameters
     ----------
-    
         filename: str
-            A path to marthegrid file (*.permh, *.out, etc.)
+            A path to marthegrid file (.permh, .out, etc.)
         
         varname : str, Optionnal
             variable to access in martgrid file, e.g ``CHARGE`` for groundwater head. See marthegrid file content.
@@ -234,7 +232,6 @@ def load_marthe_grid(
             Another option is 'numpy', which return a list of numpy arrays :
             [zvar, zdates, isteps, zxcol, zylig, zdxlu, zdylu, ztitle, dims]
 
-
         verbose: bool, Optionnal
             Print some information about execution in stdout.
             Default is False.
@@ -243,7 +240,6 @@ def load_marthe_grid(
     -------
         ds: xr.Dataset
             A xarray.Dataset object containing values and attributes read from Marthe grid file.
-    
     """
     
     # Fortran error cause sys exit. To avoid this, we add a test on file first
@@ -455,8 +451,8 @@ def write_marthe_grid(ds, fileout='grid.out', varname='charge', file_permh: str 
     """ Write Dataset as MartheGrid v9 file
     
     ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
-    in case of error, please use :py:func:`gm.reset_geometry` first.
-    When providing a path to `file_permh` argument, :py:func:`gm.reset_geometry` is called automatically.
+    in case of error, please use :py:func:`gridmarthe.reset_geometry` first.
+    When providing a path to ``file_permh`` argument, :py:func:`gridmarthe.reset_geometry` is called automatically.
     
     A good pratice is to provide the permh file when writing dataset to marthegrid format.
     
@@ -496,7 +492,7 @@ def write_marthe_grid(ds, fileout='grid.out', varname='charge', file_permh: str 
         if only main grid : `[[x,y,z]]`
         if None (default, dims will be parsed from ds.attrs['original_dimensions'] which is added
         when read with :py:func:`gridmarthe.load_marthe_grid`. If not present (lost in some computation for example),
-        please use py:func:`gridmarthe.reset_geometry(ds)` or provide list of dims manually.
+        please use py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
     
     debug: bool, Optionnal (default is False).
     

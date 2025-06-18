@@ -44,7 +44,19 @@ def _build_polyg(ds):
 def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     """ Convert marthegrid.Dataset to a geodataframe
 
-    fmt must be long or wide, default is long
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset to convert.
+    epsg : str, optional
+        The EPSG code for the coordinate reference system, by default 'EPSG:27572'.
+    fmt : str, optional
+        The format of the output GeoDataFrame, either 'long' or 'wide', by default 'long'.
+    
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        The converted GeoDataFrame.
     """
     
     polygons = _build_polyg(ds) # .isel(time=0) # x,y does not vary in time
@@ -87,9 +99,27 @@ def _check_rioxarray():
 def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
     """ Clip a xarray Dataset with a gpd.GeoDataFrame
 
-    Needs rioxarray
+    Needs rioxarray. If not installed, raise ModuleNotFoundError
+    please install it or reinstall gridmarthe with optionnal dependancies: pip install gridmarthe[opt]
+
     See: https://corteva.github.io/rioxarray/html/examples/clip_geom.html
     Todo: shapely version
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        The dataset to clip.
+    gdf : geopandas.GeoDataFrame
+        The GeoDataFrame containing the geometry to clip with.
+    crs : int, optional
+        The coordinate reference system to use for the clipping, by default 27572.
+    engine : str, optional
+        The engine to use for clipping, by default 'gdf'.
+    
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The clipped dataset.
     """
     _check_rioxarray()
     shp = gdf.to_crs(crs)
@@ -99,10 +129,23 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
 
 
 def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
-    """
-    subset DataArray or Dataset with gpd.GeoDataFrame or bounds
+    """ subset DataArray or Dataset on rectangular shape, with gpd.GeoDataFrame or bounds
 
-    TODO: real shp clip
+    Parameters
+    ----------
+    da : xarray.DataArray or xarray.Dataset
+        The data to subset.
+    dims : list of str, optional
+        The dimensions to use for subsetting, by default ['x', 'y'].
+    gdf : geopandas.GeoDataFrame, optional
+        A GeoDataFrame containing the geometry to use for subsetting, by default None.
+    xmin, ymin, xmax, ymax : float, optional
+        The manual bounds to use for subsetting, by default None.
+    
+    Returns
+    -------
+    xarray.DataArray or xarray.Dataset
+        The subsetted data.
     """
     if gdf is not None:
         # edit, one line with total_bounds attribute instead of bounds
@@ -172,6 +215,8 @@ def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarr
 
     Data (ds) needs to be a 2D array with xy as coords dimensions and time sliced.
     If needed, use :py:func:`gridmarthe.assign_coords` first.
+
+    Warning: IN DEVELOPMENT, not tested yet // USE WITH CAUTION
     """ 
     if engine == 'rioxarray':
         _check_rioxarray()
@@ -183,10 +228,31 @@ def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarr
     return ds_transf
 
 
-def write_raster_from_da(da, x_dim='x', y_dim='y', epsg=27572, fout='raster.tiff'):
+def to_raster(da, x_dim='x', y_dim='y', epsg=27572, fout='raster.tiff'):
     """ Write a xr.DataArray to a raster file
     
-    need xarray with rioxarray installed
+    need xarray with rioxarray installed.
+    Only for regular grids.
+    TODO: add support for irregular grids, using PostMARTHE QGIS plugin code.
+
+    Parameters
+    ----------
+    da : xarray.DataArray
+        The DataArray to write to a raster file (only 2D, i.e. no time dimension, select
+        a variable and timestep before).
+    x_dim : str, optional
+        The name of the x dimension, by default 'x'.
+    y_dim : str, optional
+        The name of the y dimension, by default 'y'.
+    epsg : int, optional
+        The EPSG code for the coordinate reference system, by default 27572.
+    fout : str, optional
+        The output file path for the raster file, by default 'raster.tiff'.
+    
+    Returns
+    -------
+    None
+        The function writes the raster file and returns None.
     """
     _check_rioxarray()
     da = da.copy().rio.write_crs('epsg:{}'.format(epsg))

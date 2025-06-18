@@ -1,5 +1,6 @@
 # Configuration file for the Sphinx documentation builder.
-#
+# Disclaimer: this doc configuration is heavily inspired by rameau's documentation.
+
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
@@ -16,6 +17,7 @@ authors = 'Jean-Pierre Vergnes, Adrien Manlay'
 copyright = '2024,  BRGM'
 
 release = __version__
+language = 'en'
 
 html_short_title = project
 html_title = project
@@ -56,37 +58,47 @@ todo_include_todos = False  # Do not show TODOs in docs
 
 # html_theme = 'furo'
 html_theme = 'pydata_sphinx_theme'
-# html_static_path = ['_static']
-# html_css_files = ['custom.css']
+html_static_path = ['_static']
+html_css_files = ['custom.css']
 
-# adapted from gardenia/ramo doc:
+# version switcher
+json_url = html_baseurl + language + '/latest/_static/switcher.json'
+version_match = os.environ.get("READTHEDOCS_VERSION")
+
+# If READTHEDOCS_VERSION doesn't exist, we're not on RTD
+# If it is an integer, we're in a PR build and the version isn't correct.
+# If it's "latest" → change to "dev" (that's what we want the switcher to call it)
+if not version_match or version_match.isdigit() or version_match in ["latest", "dev"]:
+    # For local development, infer the version to match from the package.
+    version_match = "dev"
+    json_url = "_static/switcher.json"
+elif version_match == "stable":
+    version_match = f"v{release}"
+
+# adapted from gardenia/rameau doc:
 html_permalinks_icon = '<span class="fa fa-link">'
 html_theme_options = {
-    # "logo": {
-    #     "text": 'aquida'
-    # },
     "icon_links": [
         {
             "name": "GitLab",
-            "url": f"https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe.git",
+            "url" : "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe.git",
             "icon": "fa-brands fa-gitlab",
             "type": "fontawesome",
         }
     ],
-    "show_prev_next": False,
-    "show_toc_level": 1,
-    "show_nav_level": 1,
     "navbar_align": "content",
     "navbar_start": ["navbar-logo"],
-    #"navbar_end": ["version-switcher","theme-switcher", "navbar-icon-links"],
-    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
     "footer_start": ["copyright", "sphinx-version", "last-updated"],
-    # "footer_end": ["corporate-logo"],
+    "footer_end": ["brgm-logo-{}".format(language)],
+    "show_toc_level": 1,
+    "show_nav_level": 1,
     "header_links_before_dropdown": 6,
-    # "switcher": {
-    #     "json_url": f"{html_baseurl}/en/latest/_static/switcher.json",
-    #     "version_match": release
-    # },
+    "show_prev_next": False,
+     "switcher": {
+        "json_url": json_url,
+        "version_match": version_match,
+    },
 }
 
 html_last_updated_fmt = '%b %d, %Y'
