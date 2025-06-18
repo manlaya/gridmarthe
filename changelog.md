@@ -9,6 +9,7 @@ Released on 2025-XX-XX
 * code refactoring (lecsem module and global organization)
 * minor fixes in plot method
 * change: zone index is reset when the `drop_nan` option is used in `load_grid_marthe()`
+* change: rename function to write raster: `to_raster()` instead of `write_raster_from_da()` 
 
 
 v0.1.2
