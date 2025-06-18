@@ -50,7 +50,8 @@ def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_ar
         gdf  = gdf.dissolve()
         if shp_file is not None:
             gdf.to_file(shp_file)
-    return gdf
+        return gdf
+    return mask
 
 
 def _get_true_topo(topo, key='h_topogr'):
