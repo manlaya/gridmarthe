@@ -244,10 +244,10 @@ def load_marthe_grid(
             by default, gis attrs are added and can be modified
             
             >>> {
-    ...    'resolution_units': 'm',
-    ...    'projection'      : 'epsg:27572',
-    ...    'domain'          : 'FR-France'
-    ... }
+            ...    'resolution_units': 'm',
+            ...    'projection'      : 'epsg:27572',
+            ...    'domain'          : 'FR-France'
+            ... }
         
         engine: str, Optionnal
             Engine to use for returned object. Default is 'xarray', which return xarray.Dataset object.

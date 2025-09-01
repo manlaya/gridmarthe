@@ -12,4 +12,6 @@ and can be manage with `xarray <https://docs.xarray.dev/en/stable/>`_ (or `numpy
 functions as with "utils" functions provided by ``gridmarthe``.
 
 The package also install a command line tool, ``ncmart`` to convert Marthe Grid to netCDF format.
-Help can be found with ``ncmart -h``. A tutorial is available in the :ref:`userguide` section.
+Help can be found with ``ncmart -h``.
+
+Tutorials are available in the :ref:`userguide` section.
