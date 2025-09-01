@@ -1,5 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#    This file is part of gridmarthe.
+#
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2025  BRGM
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 # Configuration file for the Sphinx documentation builder.
-# Disclaimer: this doc configuration is heavily inspired by rameau's documentation.
+# Disclaimer: this doc configuration is heavily inspired by rameau's documentation,
+# and pandas, pastas, scikit-learn. Huge thanks are due to all their contributors.
 
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -8,13 +32,17 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os, sys
-# sys.path.insert(0, '../../src')
+
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath("sphinxext"))
+
+from sphinxext.git_link import make_linkcode_resolve
 from gridmarthe import __version__
 
 project = 'gridmarthe'
-authors = 'Jean-Pierre Vergnes, Adrien Manlay'
+authors = 'Adrien Manlay, Jean-Pierre Vergnes'
 # copyright = '2024,  BRGM.\nAuthors: {}'.format(authors)
-copyright = '2024,  BRGM'
+copyright = '2024-2025,  BRGM'
 
 release = __version__
 language = 'en'
@@ -22,6 +50,7 @@ language = 'en'
 html_short_title = project
 html_title = project
 
+git_repo_url = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/"
 html_baseurl = 'https://gridmarthe.readthedocs.io/'
 
 # -- General configuration ---------------------------------------------------
@@ -36,7 +65,8 @@ extensions = [
     'sphinx.ext.autosummary',       # Create neat summary tables, by importing code. autoapi just parse the code
     'sphinx.ext.mathjax',
     'sphinx.ext.doctest',
-    'sphinx.ext.viewcode',
+    # 'sphinx.ext.viewcode',        # view source code in doc
+    'sphinx.ext.linkcode',          # link source code (file:Line in git repo)
     'sphinx.ext.napoleon',          # allow different style of docstrings
     'sphinx.ext.intersphinx',
     'sphinx_design',                # grid layout
@@ -72,6 +102,11 @@ if not version_match or version_match.isdigit() or version_match in ["latest", "
     # For local development, infer the version to match from the package.
     version_match = "dev"
     json_url = "_static/switcher.json"
+    # -------------------------------- #
+    # *** TMP for dev/faster build *** #
+    # comment before release/CI
+    # nbsphinx_execute = 'never'
+    # -------------------------------- #
 elif version_match == "stable":
     version_match = f"v{release}"
 
@@ -99,6 +134,8 @@ html_theme_options = {
         "json_url": json_url,
         "version_match": version_match,
     },
+    "show_version_warning_banner": True,
+    "announcement": None,
 }
 
 html_last_updated_fmt = '%b %d, %Y'
@@ -140,6 +177,19 @@ napoleon_use_rtype = False
 bibtex_bibfiles = ['refs.bib']
 bibtex_reference_style = 'author_year'
 
+# ----------------------------------------------------------------------
+# Options for *linkcode* extension - from scikit-learn doc
+# ----------------------------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/linkcode.html#module-sphinx.ext.linkcode
+# CREDITS: https://github.com/scikit-learn/scikit-learn/blob/c5497b7f7eacfaff061cf68e09bcd48aa93d4d6b/doc/sphinxext/github_link.py
+linkcode_resolve = make_linkcode_resolve(
+    "gridmarthe",
+    (
+        git_repo_url +
+        "-/blob/{revision}/"
+        "src/{package}/{path}#L{lineno}"
+    ),
+)
 
 # ----------------------------------------------------------------------
 # Options for *sphinx.ext.intersphinx* extension

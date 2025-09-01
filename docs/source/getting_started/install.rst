@@ -4,7 +4,8 @@ Installation
 From pip
 ~~~~~~~~
 
-`gridmarthe` is available on PyPi and can be installed with:
+``gridmarthe`` is available on `PyPi <https://pypi.org/project/gridmarthe/>`_
+and can be installed with:
 
 .. code-block:: bash
     
@@ -14,7 +15,8 @@ From pip
 From conda-forge (with conda or mamba)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`gridmarthe` is also available in the `conda-forge` channel. Conda users can install it with:
+``gridmarthe`` is also available in the `conda-forge <https://anaconda.org/conda-forge/gridmarthe>`_ channel.
+Conda users can install it with:
 
 .. code-block:: bash
     
@@ -41,15 +43,16 @@ Get the sources:
     cd gridmarthe
 
 Gridmarthe uses `Fortran` sources for efficient I/O operations on Marthe grid files.
-These sources need to be compiled in order to use the `lecsem` module in `gridmarthe`.
-The F90 sources are compiled with `f2py` (so make sure to have a compiler [`gfortran` 
-for example] and `make` installed on your system/python environment).
+These sources need to be compiled in order to use the `lecsem` module in ``gridmarthe``.
+The F90 sources are compiled with ``f2py`` (so make sure to have a compiler [``gfortran`` 
+for example] and ``make`` installed on your system/python environment).
 
 
 With pip
 ^^^^^^^^
 
-Then, for **developper mode** (ie *with editable flag*) just use the Makefile provided to do the compilation process and python installation.
+Then, for **developper mode** (ie *with editable flag*) just use the Makefile provided to do
+the compilation process and python installation.
 
 .. code-block:: bash
     
@@ -74,20 +77,16 @@ Alternatively, you can use a conda environment. For example with miniforge/mamba
     mamba activate gm
     pip install --no-deps .
 
-For the editable/developper mode, one can add the `-e` flag in pip command, or use `conda-build`:
+For the editable/developper mode, one can add the `-e` flag in pip command, or use ``conda-build``:
 
 .. code-block:: bash
 
     mamba env create -n gm -f environment.yml
     mamba activate gm
     mamba install conda-build
-    ## Compile lecsem lib
-    ## manual compilation
-    # cd src/gridmarthe/lecsem
-    # f2py -c lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
-    # cd ../../../
-    ## or just use the makefile
+    # Compile lecsem lib
     make lib
+    # add develop path
     conda develop src/
 
 
