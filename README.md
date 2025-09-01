@@ -4,26 +4,26 @@
 
 # Gridmarthe
 
-Python project for (fast) Marthe grid operations.
-MARTHE is a hydrogeological modelling code developped at BRGM, French Geological Survey [[1]](#1),
-and is available at https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows
+`gridmarthe` is a Python project for (fast) Marthe grid operations.
 
-
-**THIS IS A BETA VERSION, under development.**
+MARTHE is a hydrogeological modelling code developped at BRGM, French Geological
+Survey [(Thiery, 2020)](#references), and is available at
+https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows
 
 
 ## gridmarthe in a nutshell
 
 `gridmarthe` allow users to read/write efficiently Marthe Grids (v9, v8, constant_data, etc.)
-for any MARTHE variable.
+with python, for any MARTHE variable.
 
 With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be manage with
-`xarray` (or `numpy`) functions as with "utils" functions provided by `gridmarthe`.
+`xarray` functions (or `numpy`). Specific treatments/functions are also provided by `gridmarthe`.
 
-The package also install a command line tool, `ncmart` to convert Marthe Grid to netCDF format.
-Help can be found with `ncmart -h`.
+The package also install different command line tools: `ncmart` to convert Marthe Grid to netCDF format,
+`martshp` to convert in shapefile/geopackage, `cleanmgrid` to fix marthe grid format.
 
-Full documentation can be founded at https://gridmarthe.readthedocs.io
+Full documentation and tutorials can be founded at https://gridmarthe.readthedocs.io
+
 
 ## Installation
 
@@ -33,7 +33,7 @@ Full documentation can be founded at https://gridmarthe.readthedocs.io
 On pip, `gridmarthe` is available for GNU/Linux, macOS and Windows for python >=3.10.
 Users can install it with:
 
-```
+```bash
 pip install gridmarthe
 ```
 
@@ -138,9 +138,6 @@ A. Manlay and J.P. Vergnes, (c) BRGM
 
 ## References
 
-<a id="1">[1]</a> 
 Thiery, D. (2020). Guidelines for MARTHE v7.8 computer code for
 hydro-systems modelling (English version) (Report BRGM/RP-69660-FR; p. 246 p.)
  <http://ficheinfoterre.brgm.fr/document/RP-69660-FR>
-
-
