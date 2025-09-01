@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 #    This file is part of gridmarthe.
 #
@@ -59,7 +60,7 @@ class MartheGrid(object):
         df = self.obj.to_dataframe()
         return df.to_records()
     
-    def to_raster(self, x_dim='x', y_dim='y', time=None, epsg=27572, fout_template='raster'):
+    def to_raster(self, x_dim='x', y_dim='y', time=None, epsg=27572, filename_tpl='raster'):
         """ Write raster file for a specific timestep (or all) from dataset 
         Warning, only functionnal for regular grids
         """
@@ -69,7 +70,7 @@ class MartheGrid(object):
             time = [time]
         
         for t in time:
-            to_raster(self.obj.sel(time=slice(t)), x_dim, y_dim, epsg, "{}_{}.tiff".format(fout_template, t))
+            to_raster(self.obj.sel(time=slice(t)), x_dim, y_dim, epsg, "{}_{}.tiff".format(filename_tpl, t))
         
         return None
     

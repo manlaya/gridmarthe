@@ -1,6 +1,26 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#    This file is part of gridmarthe.
+#
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2024-2025  BRGM
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 """ GIS utility for marthe grids
 """
 
@@ -172,7 +192,7 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
 def _transf_proj_xy(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
     """ Transform coordinates of a dataset using pyproj.
 
-    /!\ return more unique points than initial due to projection deformation
+    **!** return more unique points than initial due to projection deformation
     """
     transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
     x_source, y_source = ds.x.data, ds.y.data
@@ -233,6 +253,7 @@ def to_raster(da, x_dim='x', y_dim='y', epsg=27572, fout='raster.tiff'):
     
     need xarray with rioxarray installed.
     Only for regular grids.
+    
     TODO: add support for irregular grids, using PostMARTHE QGIS plugin code.
 
     Parameters

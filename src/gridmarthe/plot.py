@@ -1,3 +1,27 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#    This file is part of gridmarthe.
+#
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2024  BRGM
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+
 from matplotlib import pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib import (colors, cm)
@@ -23,21 +47,19 @@ def _set_map_lims(ax, xmin, ymin, xmax, ymax, perc=.05):
     return None
 
 
-def plot_nested_grid(da, ax=None, var='charge', **kwargs):
+def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
-    
-    TODO: remove var arg: should be a xr.DataArray with coords assigned, same as xarray API for plots
     
     Parameters
     ----------
-    da: xr.Dataset
+    ds: xr.Dataset
         the dataset MUST be a 2D array, with dims = x,y.
         In other words, you may need to sel z and time before plot, and you need to apply `assign_coord()`
     
     ax: matplotlib axe, Optionnal.
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
     
-    var: str, Optionnal
+    varname: str, Optionnal
         the variable to plot in dataset. Default is 'charge'.
     
     kwargs: optionnal.
@@ -47,8 +69,12 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     -------
     ax: matplotlib axis.
     """
+    da = ds.copy()
+    if 'var' in kwargs.keys():
+        # legacy, previous arg name was only var, harmonize between functions/methods
+        varname = kwargs.pop('var')
     
-    vmin, vmax = da[var].min(), da[var].max()
+    vmin, vmax = da[varname].min(), da[varname].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
     if kwargs.get('norm') is not None:
         vmin, vmax = None, None  # if user set a norm, vmin and vmax are not allowed
@@ -65,14 +91,14 @@ def plot_nested_grid(da, ax=None, var='charge', **kwargs):
     # plots nested then main
     for dx2, dy2 in zip(dx, dy):
         gig = da.where(da['dx'] == dx2, drop=True)
-        gig[var].plot.pcolormesh(
+        gig[varname].plot.pcolormesh(
             x='x', y='y',
             ax=ax, vmin=vmin, vmax=vmax,
             add_colorbar=False,
             **{k:v for k,v in kwargs.items() if k != 'add_colorbar'}
         )
     
-    grid[var].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
+    grid[varname].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
     
     _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
     
