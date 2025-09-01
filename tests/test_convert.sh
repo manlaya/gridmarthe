@@ -5,8 +5,10 @@
 
 mkdir -p nc
 # ncmart -h
-# ncmart ./data/chasim_hallue.out ./data/hallue.pastp
-# ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o hallue.nc
-ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o nc/hallue.nc
+# ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o nc/hallue.nc
 ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o nc/hallue.nc -x 1000
-ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o nc/hallue.nc -x 1000 -v all
+# ncmart ./data/chasim_hallue.out ./data/hallue.pastp -o nc/hallue.nc -x 1000 -v all
+if [[ $? -ne 0 ]]; then
+    echo "Test for ncmart script failed"
+    exit 1
+fi
