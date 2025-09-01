@@ -1,5 +1,26 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#    This file is part of gridmarthe.
+#
+#    gridmarthe is a python library to manage grid files for 
+#    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
+#    Copyright (C) 2024  BRGM
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 import os
 from datetime import datetime
@@ -129,7 +150,7 @@ def _parse_attrs(
     
     epilogue = {
         'creation_date' : 'Created on {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ UTC')),
-        'institution'   : 'BRGM, French Geological Survey, Orléans, France',
+        'institution'   : 'BRGM, French Geological Survey, Orléans, France',  # TODO: make it optional
         'comment'       : 'Hydrogeological model created with MARTHE code '\
                           '(Thiery, D. 2020. Guidelines for MARTHE v7.8 computer code'\
                           'for hydro-systems modelling. report BRGM/RP-69660-FR).'
@@ -221,11 +242,12 @@ def load_marthe_grid(
         model_attrs: dict, Optionnal
             Dictionnary of attributes to add to Dataset.
             by default, gis attrs are added and can be modified
+            
             >>> {
-            >>>    'resolution_units': 'm',
-            >>>    'projection'      : 'epsg:27572',
-            >>>    'domain'          : 'FR-France'
-            >>> }
+    ...    'resolution_units': 'm',
+    ...    'projection'      : 'epsg:27572',
+    ...    'domain'          : 'FR-France'
+    ... }
         
         engine: str, Optionnal
             Engine to use for returned object. Default is 'xarray', which return xarray.Dataset object.
@@ -360,7 +382,7 @@ def load_marthe_grid(
     # 'yc': (['zone'], yligs),
     # 'domain_size': dims, # add non dimension coordinate for info
     # 'domain_origin': [(x0, y0) for igig in grids], # add non dimension coordinate for info
-    # ds = ds.assign_coords(
+    # ds = ds.assign_coords(  # or toto.set_coords(['time', 'zone', 'x', 'y', 'z', 'dx', 'dy'])
         # dic_coords
     # )
     
@@ -378,6 +400,7 @@ def load_marthe_grid(
                 nanval += [-9999.]
         
         ds = dropna(ds, varname, nanval)
+        ds['zone_all'] = ('zone', ds['zone'].data)  # keep old zone as variable for write method // memo: remove tuple to keep as dim
         ds['zone'] = np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32)  # rearange zone
         
     # FIXME better, prevent bug at write : https://github.com/pydata/xarray/issues/7722 // https://stackoverflow.com/questions/65019301/variable-has-conflicting-fillvalue-and-missing-value-cannot-encode-data-when
@@ -387,11 +410,20 @@ def load_marthe_grid(
 
 def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     """ Reset a Marthe grid geometry based on permh dataset
-    All values (nan, nested grid margins) should be included in
-    permh dataset.
+
+    This function is useful/used, to reconstruct the geometry of the dataset
+    (if NaN were dropped for example), before writting marthe grid, where the full
+    domain is needed (including non active cells).
+    
+    Note
+    ----
+    
     Join is performed with xy[z] (if xy are present in coords) or zone
-    to get zone back in full domain (if dropped, or nan were dropped, etc.)
-    Useful before writting marthe grid (full domain is needed)
+    to get zone back in full domain (if dropped, or nan were dropped, etc.).
+
+    If nan were dropped during :py:func:`gridmarthe.load_grid_marthe()`, 'zone_all'
+    was added and will be used (this variable store the zone index before the reindexing
+    during :py:func:`gridmarthe.dropna`).
     
     Parameters
     ----------
@@ -413,11 +445,17 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
         xr.Dataset containing original variables and geometry read from permh file
     """
     da = ds.copy()
+    # All values (nan, nested grid margins) should be included in permh dataset.
     permh = load_marthe_grid(path_to_permh, drop_nan=False, add_id_grid=True, keepligcol=True, verbose=False)
-
+    
+    
     if 'x' in da.coords.keys():
         da = stack_coords(da, dropna=True)
         coords = [x for x in da.coords.keys() if x in ['x', 'y', 'z']] # if xy assert only existing coords in xyz
+    elif 'zone_all' in da.keys():
+        da['zone'] = da['zone_all'].data  # restore zone_all (zone before reorder after dropnan) for merge
+        da = da.drop('zone_all')
+        coords = ['zone']
     else:
         coords = ['zone']
 
