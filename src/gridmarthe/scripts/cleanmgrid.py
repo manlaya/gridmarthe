@@ -116,7 +116,7 @@ def parse_args():
     return args
 
 
-def fread(file:str):
+def fread(file):
     with open(file, 'r', encoding='ISO-8859-1') as f:
         content = f.read()
     return content

@@ -5,8 +5,8 @@
         "url": "https://gridmarthe.readthedocs.io/en/dev/"
     },
     {
-        "name": "0.1.2 (stable)",
-        "version": "v0.1.2",
+        "name": "0.1.3 (stable)",
+        "version": "stable",
         "url": "https://gridmarthe.readthedocs.io/en/stable/"
     }
 ]
