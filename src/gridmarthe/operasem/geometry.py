@@ -223,7 +223,12 @@ def get_surface_layer(ds, aquif_layers=None):
 def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     """ search zone number in marthe grid,
     based on xy or ij (col, lig)
-    
+
+    This function can be used to search zone number from coordinates or indices.
+    You must provide either (i,j) or (x,y).
+
+    Note
+    ----
     if ds is multilayered, you need to provide the layer you want (int)
     ds should contains dx and dy
     ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
