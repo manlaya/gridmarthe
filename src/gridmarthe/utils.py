@@ -186,7 +186,7 @@ def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
     # create zone index
     coords = [d for d in coords if d in ds.coords.keys()] # make sure to drop coords that are not present
     dims = np.prod( [len(ds[d]) for d in coords] ) # create new zone dim
-    zone = np.arange(dims)
+    zone = np.arange(1, dims + 1)
     
     # stack coords
     ds2 = ds.copy().stack(zone=coords) # multiindex zone grouping coords key

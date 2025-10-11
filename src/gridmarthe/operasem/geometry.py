@@ -39,8 +39,10 @@ def _get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
 
 
 def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_array=False, shp_file=None):
-    """ Filter dataset on non-nan values, and dissolve results to get a mask shape 
-    input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic conductivity)
+    """ Filter dataset on non-nan values, and dissolve results to get a mask shape
+    
+    Input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic
+    conductivity).
     
     Parameters
     ----------
@@ -229,9 +231,13 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
     Note
     ----
-    if ds is multilayered, you need to provide the layer you want (int)
-    ds should contains dx and dy
-    ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
+    
+    - if ds is multilayered, you need to provide the layer you want (z arg., int type)
+    
+    - ds should contains dx and dy
+    
+    - ds should not have assigned coords (x and y are variables, zone is the dimension
+    coordinates (with time))
 
     Parameters
     ----------

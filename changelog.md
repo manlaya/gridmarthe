@@ -1,5 +1,17 @@
 <!-- gridmarthe changelog -->
 
+v0.1.4
+------
+
+* fix: error when writing grid with time slice (cf. [issue #3](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/3))
+* fix: REVERT change from 0.1.3 : zone index is NOT reset (as in 0.1.2 and previous versions).
+    when the `drop_nan` option is used in `load_grid_marthe()`.
+    A new variable 'izone' store the reset form.
+    See [issue #4](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/4)
+* change: `nanval` argument in `load_marthe_grid` is rename to `nan_value` as in `write_marthe_grid`
+* change: `xr.Dataset.mart` class accessor is removed. It will be included as wrapper in future marthe python library.
+
+
 v0.1.3
 ------
 
