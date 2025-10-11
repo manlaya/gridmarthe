@@ -111,7 +111,7 @@ def _check_rioxarray():
     except ModuleNotFoundError:
         raise ModuleNotFoundError(
             'rioxarray is not Found in python env.' + \
-            'Please install it or reinstall gridmarthe with optionnal dependancies: pip install gridmarthe[opt]'
+            'Please install it or reinstall gridmarthe with optional dependancies: pip install gridmarthe[opt]'
         )
     return
 
@@ -120,7 +120,7 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
     """ Clip a xarray Dataset with a gpd.GeoDataFrame
 
     Needs rioxarray. If not installed, raise ModuleNotFoundError
-    please install it or reinstall gridmarthe with optionnal dependancies: pip install gridmarthe[opt]
+    please install it or reinstall gridmarthe with optional dependancies: pip install gridmarthe[opt]
 
     See: https://corteva.github.io/rioxarray/html/examples/clip_geom.html
     Todo: shapely version
@@ -248,36 +248,72 @@ def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarr
     return ds_transf
 
 
-def to_raster(da, x_dim='x', y_dim='y', epsg=27572, fout='raster.tiff'):
+def _single_grid_to_raster(da, x_dim, y_dim, epsg, fout):
+    da = da.copy().rio.write_crs('epsg:{}'.format(epsg))
+    da = da.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim)
+    da.rio.to_raster(fout)
+    return None
+
+
+def to_raster(
+    ds,
+    varname=None,
+    x_dim='x',
+    y_dim='y',
+    time=None,
+    epsg=27572,
+    filename_tpl='raster'
+):
     """ Write a xr.DataArray to a raster file
     
-    need xarray with rioxarray installed.
-    Only for regular grids.
-    
-    TODO: add support for irregular grids, using PostMARTHE QGIS plugin code.
+    Notes
+    -----
+    - Warning, only functionnal for regular grids
+    - Requires rasterio/rioxarray packages
+    - TODO: add support for irregular grids, using PostMARTHE QGIS plugin code.
 
     Parameters
     ----------
-    da : xarray.DataArray
-        The DataArray to write to a raster file (only 2D, i.e. no time dimension, select
-        a variable and timestep before).
+    ds : xarray.Dataset, xarray.DataArray
+        The dataset/dataArray to write to a raster file
     x_dim : str, optional
         The name of the x dimension, by default 'x'.
     y_dim : str, optional
         The name of the y dimension, by default 'y'.
+    time : str, list
+        time or list of time from `da.time`
     epsg : int, optional
         The EPSG code for the coordinate reference system, by default 27572.
-    fout : str, optional
-        The output file path for the raster file, by default 'raster.tiff'.
+    filename_tpl : str, optional
+        The output file template for the raster file, by default 'raster'.
+        Final name will be '{filename_tpl}_{time}.tiff'
     
     Returns
     -------
     None
         The function writes the raster file and returns None.
     """
+    
     _check_rioxarray()
-    da = da.copy().rio.write_crs('epsg:{}'.format(epsg))
-    da = da.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim)
-    da.rio.to_raster(fout)
+    
+    if isinstance(ds, xr.Dataset):
+        assert varname is not None, \
+            'You need to provide a variable name to export when using a Dataset'
+        da = ds[varname].copy()
+    elif isinstance(ds, xr.DataArray):
+        da = ds.copy()
+    else:
+        raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
+    
+    if time is None:
+        time = da.times  # if not defined, get all available times
+    elif isinstance(time, str):  # make sure to get a iterable for slicing
+        time = [time]
+    
+    for t in time:
+        _single_grid_to_raster(
+            da.sel(time=slice(t)),
+            x_dim, y_dim, epsg,
+            "{}_{}.tiff".format(filename_tpl, t)
+        )
     return None
-
