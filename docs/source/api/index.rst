@@ -12,5 +12,6 @@ left-hand menu you will find the different categories of the API documentation.
     :maxdepth: 2
     
     io_operations
+    utils_func
     operasem
     plotting

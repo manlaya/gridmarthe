@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
-# DISCLAIMER: This module is taken from scikit-learn sources
+# DISCLAIMER: This module is taken/slighlty modified from scikit-learn sources
 # all credits to the sklearn authors and contributors.
 # and huge thanks to them.
 # source: https://github.com/scikit-learn/scikit-learn/blob/c5497b7f7eacfaff061cf68e09bcd48aa93d4d6b/doc/sphinxext/github_link.py
 # License: BSD-3 Clause
 # See the COPYING file from this directory: ./COPYING
+# other inspiration: https://github.com/pandas-dev/pandas/blob/20fc7447f5b14de805a0b751217ab39e5114c7f6/doc/source/conf.py#L690
 
 
 import inspect
@@ -37,14 +38,16 @@ def _linkcode_resolve(domain, info, package, url_fmt, revision):
     ...                          'fullname': 'setraw'},
     ...                   package='tty',
     ...                   url_fmt='https://hg.python.org/cpython/file/'
-    ...                           '{revision}/Lib/{package}/{path}#L{lineno}',
+    ...                           '{revision}/Lib/{package}/{path}#L{lineno}-L{linenb}',
     ...                   revision='xxxx')
     'https://hg.python.org/cpython/file/xxxx/Lib/tty/tty.py#L18'
     """
 
     if revision is None:
+        print('No revision for link code')
         return
     if domain not in ("py", "pyx"):
+        print('source is not python')
         return
     if not info.get("module") or not info.get("fullname"):
         return
@@ -71,10 +74,11 @@ def _linkcode_resolve(domain, info, package, url_fmt, revision):
 
     fn = os.path.relpath(fn, start=os.path.dirname(__import__(package).__file__))
     try:
-        lineno = inspect.getsourcelines(obj)[1]
+        source, lineno = inspect.getsourcelines(obj)  # AM: get source too, to make range of line
     except Exception:
-        lineno = ""
-    return url_fmt.format(revision=revision, package=package, path=fn, lineno=lineno)
+        source, lineno = "", ""  # AM: same
+    linenb = lineno + len(source) - 1  # AM: based on numpy/pandas docs
+    return url_fmt.format(revision=revision, package=package, path=fn, lineno=lineno, linenb=linenb)
 
 
 def make_linkcode_resolve(package, url_fmt):
@@ -86,7 +90,7 @@ def make_linkcode_resolve(package, url_fmt):
 
     url_fmt is along the lines of ('https://github.com/USER/PROJECT/'
                                    'blob/{revision}/{package}/'
-                                   '{path}#L{lineno}')
+                                   '{path}#L{lineno}-L{linenb}')
     """
     revision = _get_git_revision()
     return partial(

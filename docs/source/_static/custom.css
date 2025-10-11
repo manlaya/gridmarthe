@@ -1,47 +1,24 @@
 /* Main index page overview cards */
-.sd-card-img-top {
-  width: 33% !important;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 10px;
+
+/* More prominent card borders */ 
+.sd-card {
+  border: 2px solid var(--pst-color-border) !important;
+  border-radius: 3px !important;
 }
 
-/* customise nbsphinx ----------------------------------------------- */
-div.nbinput.container div.prompt pre,
-div.nbinput.container div.prompt pre > code {
-  color: var(--pst-color-primary);
+/* fly you fool ! survol */
+.sd-card:hover {
+    border-color: var(--bs-purple) !important;
+    /* sinon voir les couleurs de _static/pydata-sphinx-theme.css à la build */
 }
 
-div.nboutput.container div.prompt pre,
-div.nboutput.container div.prompt pre > code {
-  color: var(--pst-color-secondary);
+/* from xarray's doc */
+html[data-theme="dark"] div.cell_output .text_html:has(div.xr-wrap) {
+  background-color: var(--pst-color-on-background) !important;
+  color: var(--pst-color-text-base) !important;
 }
 
-div.nbinput.container div.input_area {
-    border: 1px solid var(--pst-color-border);
-}
-
-div.rendered_html table {
-    color: var(--pst-color-text-base);
-}
-
-div.rendered_html thead {
-    border-bottom: 1px solid var(--pst-color-border);
-}
-
-div.rendered_html tbody tr:nth-child(odd) {
-    background: var(--pst-color-surface);
-}
-
-div.rendered_html tbody tr:hover {
-    background: var(--pst-color-accent-bg);
-}
-
-html[data-theme="dark"] .bd-content .nboutput .output_area.rendered_html {
-    background-color: transparent;
-}
-
+/* Modified from Rameau's doc */
 /* customise footer ------------------------------------------------- */
 .bd-footer .footer-items__end, .bd-footer .footer-items__start {
     gap: 0;
