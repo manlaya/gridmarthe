@@ -21,11 +21,22 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
+
 import re
 import numpy as np
 
 from .lecsem import modgridmarthe
 from ..utils import _datetime64_to_float
+
+
+class FortranError(Exception):
+    def __init__(self, message, iostat):
+        self.message = message
+        super().__init__(self.message)
+        self.iostat = iostat
+    
+    def __str__(self):
+        return f"Error Code: {self.iostat}: {self.message}"
 
 
 def scan_var(xfile):
@@ -132,7 +143,7 @@ def _set_layers(dims):
         for z in range(dims[igig][-1]):
             zlay.append(np.tile(z+1, dims[igig][0] * dims[igig][1]))
     zlay = np.hstack(zlay)
-    return zlay.astype(np.int32)
+    return zlay #.astype(np.int32)
 
 
 def _decode_title(title, encoding='ISO-8859-1'):

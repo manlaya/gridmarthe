@@ -10,5 +10,6 @@ from ._parse_gridmarthe import (
     _extract_zvar_from_ds,
     _parse_dims_from_xr_attrs,
     scan_var,
+    FortranError
 )
 
