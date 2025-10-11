@@ -39,7 +39,7 @@ def parse_args():
     parser.add_argument('opt', metavar='grid timesteps', type=str, nargs='*', help='Paths to grid [and timesteps if result] files are expected') # nargs='+'
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
     parser.add_argument('--variable', '-v', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
-    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optionnal, default is 1 (no transformation).')
+    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
     parser.add_argument('--gpkg', '-g', action="store_const", const=True, default=False, help='Use GPKG format instead of shapefile')
     parser.add_argument('--mask', '-m', action="store_const", const=True, default=False, help='Only get a mask of active domain')
     parser.add_argument('--version', '-V', action="store_const", const=True, default=False, help='Show version and exit')

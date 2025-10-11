@@ -74,7 +74,7 @@ martshp = "gridmarthe:scripts.martshp.main"
 [project.urls]
 Homepage = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe"
 Issues = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues"
-Changelog = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/blob/main/changelog.rst"
+Changelog = "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/blob/main/changelog.md"
 Documentation = "https://gridmarthe.readthedocs.io/en/latest/"
 
 

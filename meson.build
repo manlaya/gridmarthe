@@ -43,17 +43,19 @@ if fc.get_id() == 'gcc'
   endif
   
   if host_machine.system() == 'windows'
-    fargs += ['-fPIC', '-Wno-error']
+    fargs += ['-Wno-error']
     
     if not get_option('condabuild')
         largs += ['-static', '-static-libgfortran', '-static-libgcc', '-static-libquadmath']
+    else
+        fargs += ['-fPIC']
     endif
     
     quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
     quadmath = declare_dependency(link_args : ['-lquadmath'])
     deps += [quadmath_dep,quadmath]
   else
-      # fargs += ['-fPIC', '-shared'] # not really necessary here
+      fargs += ['-fPIC'] # , '-shared' not really necessary here
   endif
 
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']

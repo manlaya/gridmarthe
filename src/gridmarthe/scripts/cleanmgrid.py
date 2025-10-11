@@ -32,7 +32,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from gridmarthe.__version__ import _copyleft
 
 
-# ext: VARIABLE_NAME in FRench
+# ext: VARIABLE_NAME in French
 MARTGRID_FILES = {
     'permh' : 'PERMEAB',
     'debit' : 'DEBIT',
@@ -68,6 +68,7 @@ MARTGRID_FILES = {
     'flo_r' : 'DEBIT_RIVI',
     'qamon' : 'Q_AMONT_RIVI',
     'rug_r' : 'RUGOS_RIVI',
+    'seuil_r': 'SEUIL_RIVI',
     'pnt_r' : 'PENTE_RIVI',
     'fon_r' : 'FOND_RIVI',
     'conc_r': 'CONCEN_RIVI',
@@ -79,7 +80,7 @@ MARTGRID_FILES = {
     'lon_d' : 'LONG_DRAIN',
     'z_dra' : 'ALTIT_DRAIN',
     'meteo' : 'ZONE_METEO',
-    'd_ava' : 'DIRECT_AVAL',
+    #'d_ava' : 'DIRECT_AVAL', d_ava file does not follow grid conventions with layers
     'v_rui' : 'VITESS_RUISS',
     'ruiss' : 'RUISSEL',
     'recha' : 'RECHARGE',
@@ -150,8 +151,8 @@ def read_rma(frma):
 
 def read_files_from_rma(frma):
     
-    # root = os.path.dirname(frma)
-    root = os.getcwd()
+    root = os.path.dirname(frma)
+    # root = os.getcwd()
     files = read_rma(frma)
     
     # get all gridded files
@@ -237,7 +238,6 @@ def main():
             print('Unkwnown key field for grid kind {} (file: {})'.format(ext, finputs))
             sys.exit(1)
         files, layers, ngrid = [(ext, filename, key)], list(range(1, args.layer + 1)), str(args.grid)
-    
     
     for ext, file, key in files:
         

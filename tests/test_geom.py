@@ -37,3 +37,6 @@ def test_compute_geometry():
 
     print("test_compute_geometry passed")
 
+
+if __name__ == "__main__":
+    test_compute_geometry()

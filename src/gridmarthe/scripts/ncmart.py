@@ -41,7 +41,7 @@ def parse_args():
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
     parser.add_argument('--variable', '-v', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
     parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
-    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optionnal, default is 1 (no transformation).')
+    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
     # parser.add_argument('--show', type=str, default='', choices=('c', 'w'), help='Print licensing for warranty (w) and redistribution conditions (c)')
     parser.add_argument('--version', '-V', action="store_const", const=True, default=False, help='Show version and exit')
     
@@ -57,7 +57,6 @@ def parse_args():
         print('gridmarthe {}'.format(gm.__version__))
         print(_copyleft)
         sys.exit(0)
-    
     
     if args.output is not None:
         dirout = os.path.dirname(args.output)

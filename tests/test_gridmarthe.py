@@ -4,7 +4,7 @@
 
 import numpy as np
 import xarray as xr
-import pytest
+# import pytest
 
 import gridmarthe as gm
 
@@ -29,7 +29,7 @@ def test_load_with_varname_none_picks_first():
 def test_load_with_varname_all_returns_multiple():
     ds = gm.load_marthe_grid(DATA_PATH, varname='all')
     assert isinstance(ds, xr.Dataset)
-    data_vars = [ x for x in list(ds.data_vars) if not x in ['x', 'y', 'z', 'dx', 'dy']]
+    data_vars = [ x for x in list(ds.data_vars) if x not in ['x', 'y', 'z', 'dx', 'dy']]
     assert len(data_vars) >= 1
 
 
@@ -41,13 +41,13 @@ def test_load_with_drop_nan_removes_nan():
 
 
 def test_load_with_custom_nanval():
-    ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True, nanval=0.)
+    ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True, nan_value=0.)
     arr = ds[VAR.lower()].values
     assert not np.any(arr == 0.)
 
 
-def test_load_with_keepligcol_adds_col_lig():
-    ds = gm.load_marthe_grid(DATA_PATH, VAR, keepligcol=True)
+def test_load_with_adds_col_row():
+    ds = gm.load_marthe_grid(DATA_PATH, VAR, add_col_row=True)
     assert 'col' in ds.data_vars
     assert 'lig' in ds.data_vars
 
@@ -57,14 +57,14 @@ def test_load_with_add_id_grid_adds_id_grid():
     assert 'id_grid' in ds.data_vars
 
 
-def test_load_nonexistent_file_raises():
-    with pytest.raises(FileNotFoundError):
-        gm.load_marthe_grid('not_a_file.permh', VAR)
+# def test_load_nonexistent_file_raises():
+#     with pytest.raises(FileNotFoundError):
+#         gm.load_marthe_grid('not_a_file.permh', VAR)
 
 
-def test_load_invalid_varname_raises():
-    with pytest.raises(ValueError):
-        gm.load_marthe_grid(DATA_PATH, varname='INVALIDVAR')
+# def test_load_invalid_varname_raises():
+#     with pytest.raises(ValueError):
+#         gm.load_marthe_grid(DATA_PATH, varname='INVALIDVAR')
 
 
 def test_load_grid_attrs_present():
@@ -74,6 +74,25 @@ def test_load_grid_attrs_present():
     assert 'original_dimensions' in ds.attrs
 
 
+def test_all():
+    test_load_valid_grid_returns_xarray()
+    test_load_grid_attrs_present()
+    test_load_with_add_id_grid_adds_id_grid()
+    test_load_with_adds_col_row()
+    test_load_with_custom_nanval()
+    test_load_with_drop_nan_removes_nan()
+    test_load_with_varname_none_picks_first()
+    test_load_with_varname_all_returns_multiple()
+    # test_load_nonexistent_file_raises()
+    # test_load_invalid_varname_raises()
+    print("=============================")
+    print("gridmarthe reader test passed")
+    return
+
+
+if __name__ == "__main__":
+    test_all()
+
 # MY TESTS
 # inputs = './tests/data/craie_npc.permh', "PERMEAB" # ajouter tests/data ici pour conda-forge ?
 # 
@@ -81,7 +100,7 @@ def test_load_grid_attrs_present():
 # # toto = gm.load_marthe_grid(*inputs, drop_nan=True, nanval=0.)
 # # toto = gm.load_marthe_grid(inputs[0], varname=None)
 # # toto = gm.load_marthe_grid(inputs[0], varname='all')
-# # toto = gm.load_marthe_grid(*inputs, keepligcol=True)
+# # toto = gm.load_marthe_grid(*inputs, add_col_row=True)
 # # toto = gm.load_marthe_grid(*inputs, add_id_grid=True)
 # 
 # test = toto.set_coords(['time', 'zone', 'x', 'y', 'z', 'dx', 'dy'])

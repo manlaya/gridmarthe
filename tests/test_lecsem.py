@@ -54,3 +54,15 @@ def test_lecsem_read_marthe_grid():
 def test_lecsem_transform_coords():
     # TODO
     pass
+
+
+def test():
+    test_lecsem_read_marthe_grid()
+    test_lecsem_scan_dim()
+    test_lecsem_scan_typevar()
+    print('==================')
+    print('lecsem test passed')
+
+
+if __name__ == "__main__":
+    test()
