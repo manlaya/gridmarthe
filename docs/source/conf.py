@@ -110,32 +110,54 @@ if not version_match or version_match.isdigit() or version_match in ["latest", "
 elif version_match == "stable":
     version_match = f"v{release}"
 
+
+# required for edit-button
+html_context = {
+    "default_mode": "light",
+    "gitlab_url": "https://gitlab.com/",  # or your self-hosted GitLab
+    "gitlab_user": "brgm/hydrogeological-modelling/marthe-tools",  # "<your-gitlab-org>",
+    "gitlab_repo": "gridmarthe",  #"<your-gitlab-repo>",
+    "gitlab_version": "main",     # "<your-branch>",
+    "doc_path": "docs/source",    # "<path-from-root-to-your-docs>",
+}
+
+
 # adapted from gardenia/rameau doc:
 html_permalinks_icon = '<span class="fa fa-link">'
 html_theme_options = {
     "icon_links": [
         {
+            "name": "Report Bug/Contribute",
+            "url" : "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues",
+            "icon": "fa-solid fa-bug",
+            #"icon": "fa-solid fa-hammer",  #gavel ?
+            "type": "fontawesome",
+        },
+        {
             "name": "GitLab",
             "url" : "https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe.git",
             "icon": "fa-brands fa-gitlab",
             "type": "fontawesome",
-        }
+        },
     ],
     "navbar_align": "content",
+    # "navbar_start": ["navbar-logo", "version-switcher"],
     "navbar_start": ["navbar-logo"],
-    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    "navbar_end": ["theme-switcher", "navbar-icon-links"],
+    "navbar_persistent": ["search-button"],  # reduce search bar to button
     "footer_start": ["copyright", "sphinx-version", "last-updated"],
     "footer_end": ["brgm-logo-{}".format(language)],
     "show_toc_level": 1,
     "show_nav_level": 1,
     "header_links_before_dropdown": 6,
     "show_prev_next": False,
-     "switcher": {
-        "json_url": json_url,
-        "version_match": version_match,
-    },
+    # "switcher": {
+    #     "json_url": json_url,
+    #     "version_match": version_match,
+    # },  # keep working version, deactivate for readthedocs (useless)
     "show_version_warning_banner": True,
     "announcement": None,
+    "use_edit_page_button": True
 }
 
 html_last_updated_fmt = '%b %d, %Y'
@@ -187,7 +209,7 @@ linkcode_resolve = make_linkcode_resolve(
     (
         git_repo_url +
         "-/blob/{revision}/"
-        "src/{package}/{path}#L{lineno}"
+        "src/{package}/{path}#L{lineno}-L{linenb}"
     ),
 )
 

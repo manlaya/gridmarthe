@@ -51,8 +51,10 @@ This library is open-source and released under the GNU General Public License (v
  ..  to add image => :img-top: _static/index_getting_started.svg
 
 
-.. grid:: 1 1 2 2 
-   :gutter: 1
+.. :padding: 2 2 0 0
+
+.. grid:: 1 1 2 2
+   :gutter: 2
    
    .. grid-item-card:: Getting started
       :link: getting_started/index
@@ -86,6 +88,7 @@ This library is open-source and released under the GNU General Public License (v
    Getting Started <getting_started/index>
    User guide <user_guide/index>
    API Reference <api/index>
+   Release history <changelog> 
    About <references>
 
 .. .. include:: ../../README.md

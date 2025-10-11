@@ -65,6 +65,18 @@ def _nearest_node(node, nodes):
 
 def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     """Read simulation timesteps from a .pastp file
+
+    Parameters
+    ----------
+    fpastp : str
+        Path to pastp file (Marthe Timestep)
+    encoding : str, optional
+        encoding of file, default ISO-8859-1
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with columns timestep, date
     """
     # reading file as raw df - not str ; faster with pandas func
     pastp = pd.read_csv(
@@ -106,6 +118,17 @@ def dropna(ds, varname: str, nanval: Union[list, float]):
     """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.) 
     for 1D (or 2D (time, zone)) array
     zone must me a coordinate dimension.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset of marthe variable(s)
+    
+    varname : str
+        variable name in dataset to treat
+    
+    nanval : list or float
+        value to consider as NaN
     
     Returns
     -------
@@ -125,6 +148,17 @@ def subset(ds, varname: str, value: Union[list, float]):
     """ Subset dataset based on variable name and value.
     --> inverse of :py:func:`dropna`
     
+    Parameters
+    ----------
+    ds : xr.Dataset
+       dataset of marthe variable(s)
+
+    varname : str
+      variable name in dataset to treat
+
+    value: list or float
+      value to keep
+
     Returns
     -------
     dataset where variable = value
@@ -138,23 +172,80 @@ def subset(ds, varname: str, value: Union[list, float]):
 
 def replace(ds, varname: str, value: float, replace: float):
     """ Replace a value in xr.Dataset for a variable
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset of marthe variable(s)
+    
+    varname : str
+        variable name
+    
+    value: float
+        value to replace
+
+    replace: float
+        value to replace with
+    
+    Returns
+    -------
+    dataset with replaced value
     """
     ds[varname].data = np.where(ds[varname].data == value, replace, ds[varname].data)
     return ds
 
 
 def fillna(ds, varname, value):
-    """ Replace real nan (np.nan) value in dataset[varname], edge case of :py:func:`replace()`
+    """ Replace real nan (np.nan) value in dataset[varname],
+    edge case of :py:func:`gridmarthe.replace`
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset of marthe variable(s)
+    
+    varname : str
+       variable name
+
+    value: float
+       value to replace NaN with
     """
     ds[varname].data = np.where(np.isnan(ds[varname].data), value, ds[varname].data)
     return ds
 
 
-def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zone_label='zone'):
-    """ assign coords to transform a 1D or 2D (time, zone) array to 3D or 4D
+def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zone_label='zone'):
+    """ Assign coordinates from variables to dimensions
+    
+    This function transform a 1D or 2D (time, zone dimensions) array to 3D or 4D
+    with time, x,y [,z] as dimensions.
+
+    Useful for plot functions/methods.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset of Marthe variable(s)
+
+    add_lay : bool, optional
+        Boolean to treat `z` (layer) as a dimension (True) or a variable (False)
+
+    coords : list, optional
+        list of coordinates to add as dimensions. Default is `['x', 'y', 'z']`
+
+    keep_zone : bool, optional
+        keep zone as dimension (will make multiindex). Default is False.
+    
+    zone_label : str, optional
+        label of current index. Default is `zone` as read by :py:func:`gridmarthe.load_marthe_grid`
+    
+    Returns
+    -------
+    xr.Dataset
+        Dataset with coordinates as dimension.
     """
     if len(coords) == 3:
-        z_coords = da_in.get(coords[2], None) # assert z is here, or bypass
+        z_coords = ds.get(coords[2], None) # assert z is here, or bypass
     else:
         z_coords = None
     
@@ -162,15 +253,15 @@ def assign_coords(da_in, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, 
         # in some case, even if z is included it should not be treated as coord (ex. plot outcrop)
         z_coords = None
     
-    da = da_in.assign_coords(
+    da = ds.assign_coords(
         #x=(zone_label, np.around(da_in[coords[0]].data, 1) ),
-        x=(zone_label, da_in[coords[0]].data ),
-        y=(zone_label, da_in[coords[1]].data ),
+        x=(zone_label, ds[coords[0]].data ),
+        y=(zone_label, ds[coords[1]].data ),
     )
     dims = ['y', 'x']
     
     if z_coords is not None:
-        da = da.assign_coords(z=(zone_label, da_in[coords[2]].data))
+        da = da.assign_coords(z=(zone_label, ds[coords[2]].data))
         dims.insert(0, 'z')
     
     da = da.set_index(zone=dims)

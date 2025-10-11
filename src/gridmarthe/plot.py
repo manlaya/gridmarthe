@@ -198,10 +198,12 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
     Example
     -------
     xarray version:
+
     >>> ds_surf = gm.get_surface_layer(ds)
     >>> gm.plot_outcrop(gm.assign_coords(ds_surf, add_lay=False))
 
     geopandas version:
+
     >>> ds_surf = gm.get_surface_layer(ds)
     >>> gm.plot_outcrop(gm.to_geodataframe(ds_surf))
     """
