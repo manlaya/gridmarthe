@@ -575,7 +575,15 @@ Attributes was not founded in dataset so pleave provide a list with original dom
     ) = _extract_zvar_from_ds(ds2, varname)
     
     if title is None and ztitle == '':
-        title = 'Marthe Grid ' # dummy arg to set type as string
+        title = 'Marthe Grid '  # dummy arg to set type as string
+    
+    # assert valid shapes before passing args to fortran edsem
+    # fix bug if .isel(time=X) and no permh file
+    _shape_var = np.shape(zvar)
+    if len(_shape_var) < 2:
+        zvar = np.expand_dims(zvar, axis=0)
+    if len(np.shape(zdates)) == 0:
+        zdates = np.array([zdates])
     
     # call fortran module to write marthe grid
     status = modgridmarthe.write_grid(
