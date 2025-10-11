@@ -171,9 +171,11 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNBSTEP), INTENT(OUT) :: PDATES
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
         REAL(KIND=8), DIMENSION(KNBSTEP, KNBTOT), INTENT(OUT) :: PVAR
-        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM             ! Modifs AM: ajout TITSEM dans les sorties de la subroutine (+ ajout en `dummy argument` càd réf dans la list d'arg de la procedure)
+        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
+        ! Modifs AM: ajout TITSEM dans les sorties de la subroutine (+ ajout en `dummy argument`
+        ! càd réf dans la list d'arg de la procedure)
         !
-        INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP
+        INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, i_ncouch
         ! LOGICAL    :: debug
         !
         LIRE_DXDY =  1
@@ -197,7 +199,8 @@ CONTAINS
         ISTEP_TEMP = -1
         INTOT_TEMP =  1
         !
-        ! debug = .FALSE.               
+        i_ncouch= 0  ! integer to check if coordinates already read
+        ! debug = .FALSE.
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
         !
         DO WHILE (IERLEC == 0)
@@ -220,11 +223,12 @@ CONTAINS
                     KSTEPS(ISTEPINC) = ISTEP
                     PDATES(ISTEPINC) = real(DATE, 4)
                 ENDIF
-                IF (ISTEPINC == 1 .AND. N_COUCH == 1) THEN
+                IF (ISTEPINC == 1 .AND. (N_COUCH == 1 .OR. i_ncouch ==0)) THEN
                     PXCOL(NU_ZOO + 1, :NKOL) = real(XCOL(:NKOL), 4)
                     PYLIG(NU_ZOO + 1, :NLIG) = real(YLIG(:NLIG), 4)
                     PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
                     PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
+                    i_ncouch = i_ncouch + 1
                 ENDIF
                 PVAR(ISTEPINC, INTOT_TEMP:INTOT_TEMP + NTOT -1) = FONC(:NTOT)
                 INTOT_TEMP = INTOT_TEMP + NTOT
