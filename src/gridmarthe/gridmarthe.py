@@ -399,9 +399,9 @@ def load_marthe_grid(
             if -9999. not in nanval:
                 nanval += [-9999.]
         
-        ds = dropna(ds, varname, nanval)
-        ds['zone_all'] = ('zone', ds['zone'].data)  # keep old zone as variable for write method // memo: remove tuple to keep as dim
-        ds['zone'] = np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32)  # rearange zone
+        ds = dropna(ds, varname, nan_value)
+        # ds['zone_all'] = ('zone', ds['zone'].data)  # keep old zone as variable for write method // memo: remove tuple to keep as dim
+        ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))  # rearange zone  
         
     # FIXME better, prevent bug at write : https://github.com/pydata/xarray/issues/7722 // https://stackoverflow.com/questions/65019301/variable-has-conflicting-fillvalue-and-missing-value-cannot-encode-data-when
     # del ds[varname.lower()].encoding['missing_value']
@@ -452,10 +452,10 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     if 'x' in da.coords.keys():
         da = stack_coords(da, dropna=True)
         coords = [x for x in da.coords.keys() if x in ['x', 'y', 'z']] # if xy assert only existing coords in xyz
-    elif 'zone_all' in da.keys():
-        da['zone'] = da['zone_all'].data  # restore zone_all (zone before reorder after dropnan) for merge
-        da = da.drop('zone_all')
-        coords = ['zone']
+    # elif 'zone_all' in da.keys():
+        # da['zone'].data = da['zone_all'].data  # restore zone_all (zone before reorder after dropnan) for merge
+        # da = da.drop('zone_all')
+        # coords = ['zone']
     else:
         coords = ['zone']
 
