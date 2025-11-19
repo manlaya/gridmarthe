@@ -56,7 +56,7 @@ def test_lecsem_transform_coords():
     pass
 
 
-def test():
+def main():
     test_lecsem_read_marthe_grid()
     test_lecsem_scan_dim()
     test_lecsem_scan_typevar()
@@ -65,4 +65,4 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    main()
