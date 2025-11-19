@@ -106,7 +106,7 @@ def _get_upper_alt(topo, hsubs):
     -------
     dataset with only (time,zone), (h_topogr, h_substr, h_upper)
     """
-    ds = xr.combine_by_coords([topo, hsubs], combine_attrs='override')
+    ds = xr.combine_by_coords([topo, hsubs], combine_attrs='override', compat='override')
     
     df = ds.isel(time=0).to_dataframe().reset_index()  # time is constant! TODO change this/ check if working
     df = df.sort_values(by=['x', 'y', 'z']).copy()  # assure data are sort in this way
@@ -221,7 +221,6 @@ def get_surface_layer(ds, aquif_layers=None):
     return first_aquif_lay.to_xarray()
 
 
-
 def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     """ search zone number in marthe grid,
     based on xy or ij (col, lig)
@@ -233,11 +232,8 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     ----
     
     - if ds is multilayered, you need to provide the layer you want (z arg., int type)
-    
     - ds should contains dx and dy
-    
-    - ds should not have assigned coords (x and y are variables, zone is the dimension
-    coordinates (with time))
+    - ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
 
     Parameters
     ----------
@@ -259,7 +255,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     zone : xr.Dataset
         dataset with zone variable, containing the zone number(s) corresponding to the provided coordinates.
         If no zone is found, an empty dataset is returned.
-    If multiple zones are found, all of them are returned.
+        If multiple zones are found, all of them are returned.
     """
     ds_search = ds.copy()
     
