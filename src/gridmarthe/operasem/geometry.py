@@ -279,7 +279,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
     if i is not None:
         assert j is not None, 'if i is provided, j cannot be None'
-        mask = (ds_search['col'] == i) & (ds_search['lig'] == j)
+        mask = (ds_search['col'] == i) & (ds_search['row'] == j)
 
     # zone = ds.where(mask, drop=True)['zone'].data
     zone = ds_search.where(mask, drop=True)

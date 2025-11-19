@@ -359,7 +359,7 @@ def load_marthe_grid(
             add_id_grid = True  # force to add id_grid if nested grid
         cols, ligs   = _get_col_and_lig(dims)
         dic_data['col'] = ("zone", cols)
-        dic_data['lig'] = ("zone", ligs)
+        dic_data['row'] = ("zone", ligs)
     
     if add_id_grid:
         dic_data['id_grid'] = ("zone", _get_id_grid(dims))
