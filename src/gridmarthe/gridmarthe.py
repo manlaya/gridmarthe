@@ -23,11 +23,12 @@
 #
 
 import os
-from datetime import datetime
+from datetime import datetime, UTC
 
 import pandas as pd
 import numpy as np
 import xarray as xr
+import pyproj
 
 from .lecsem import (
     modgridmarthe,
@@ -50,7 +51,8 @@ from .utils import (
     assign_coords,
     stack_coords,
     dropna,
-    fillna
+    fillna,
+    replace
 )
 
 from typing import Union
@@ -117,23 +119,32 @@ def _parse_attrs(
     dxlus=None,
     dylus=None,
     xcols=None,
-    yligs=None
+    yligs=None,
+    epsg=27572,
+    reference=None,
 ):
     """ Parse attributes for xarray.Dataset
     nb: attrs must be string, int, float
+    # TODO: check https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/apa.html
+    # Memo:
+    #   - for gridmapping https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch05s06.html
+    #   - for reduced-horizontal-grid https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.html
+    #   - for timeseries https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch09s05.html
     """
     prologue = {
-        'conventions'         :'CF-1.10', # check https://cfconventions.org/
+        'conventions'         :'CF-1.10',  # check https://cfconventions.org/
         'title'               : title if title is not None else '',
         'marthe_grid_version' : 9.0,
         'original_dimensions' : 'x,y,z [grids]: ' + '; '.join(
             [ ' '.join(map(str, x)) for x in dims]
         ),
     }
-
+    crs = pyproj.CRS(epsg)
     grid_attrs = {
+        'crs': str(crs.to_cf()),
         'lon_resolution': ', '.join(map(str, np.unique(dxlus))),
         'lat_resolution': ', '.join(map(str, np.unique(dylus))),
+        'resolution_units': crs.coordinate_system.to_cf()[0].get('units', ''),
         'scale_factor'  : xyfactor,
         'nested_grid'   : str(is_nested),
         'extend'        : "xymin : {} {}; xymax: {} {}".format(
@@ -150,10 +161,10 @@ def _parse_attrs(
         }
     
     epilogue = {
-        'creation_date' : 'Created on {}'.format(datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ UTC')),
-        'institution'   : 'BRGM, French Geological Survey, Orléans, France',  # TODO: make it optional
+        'creation_date' : 'Created on {}'.format(datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ UTC')),
+        # comment or source ? https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch02s06.html
         'comment'       : 'Hydrogeological model created with MARTHE code '\
-                          '(Thiery, D. 2020. Guidelines for MARTHE v7.8 computer code'\
+                          '(Thiery, D. 2020. Guidelines for MARTHE v7.8 computer code '\
                           'for hydro-systems modelling. report BRGM/RP-69660-FR).'
     }
 
@@ -173,10 +184,11 @@ def load_marthe_grid(
     add_id_grid: bool = False,
     title: Union[str, None] = None,
     var_attrs: dict = {},
+    epsg: int = 27572,
+    full_3d: bool = False,
     model_attrs: dict = {
-        'resolution_units': 'm',
-        'projection'      : 'epsg:27572',
-        'domain'          : 'FR-France',
+        'domain' : 'FR-France',
+        'institution': 'BRGM, French Geological Survey, Orléans, France'
     },
     engine: str = 'xarray',
     verbose: bool=False,
@@ -239,7 +251,7 @@ def load_marthe_grid(
         Boolean to read only the first layer. Default is False.
     
     add_col_row: bool, optional
-        Add columns (col) and rows (lig) index (from 1 to n), Default is False.
+        Add columns (col) and rows (row, formerly lig (v<=0.1.3)) index (from 1 to n), Default is False.
     
     add_id_grid: bool, optional
         Add grid id (from 0 to n), useful for nested grids.
@@ -251,14 +263,26 @@ def load_marthe_grid(
     var_attrs: dict, optional
         Dictionnary of attributes to add to variable DataArray.
     
+    epsg: int, optional
+        EPSG code for projection. Default is 27572 for legacy reasons (Lambert 2 Etendu, for France).
+        Used to write CRS information in attributes. Useful for GUI (eg visualisation in QGIS).
+    
+    full_3d: bool, optional
+        Is z dimension an aquifer layer or real Z axis (in meters for exemple)
+        Default is False (z is aquifer layer number)
+    
     model_attrs: dict, optional
         Dictionnary of attributes to add to Dataset.
         by default, gis attrs are added and can be modified
         
         >>> {
-        ...    'resolution_units': 'm',
-        ...    'projection'      : 'epsg:27572',
-        ...    'domain'          : 'FR-France'
+        ...    'domain': 'FR-France',
+        ...    'institution': 'BRGM, French Geological Survey, Orléans, France'
+        ... }
+        
+        For example, if your data is associated with a reference (report, paper, etc.):
+        >>> {
+        ...    'references': 'https://doi.org/...'
         ... }
     
     engine: str, optional
@@ -276,7 +300,7 @@ def load_marthe_grid(
         A xarray.Dataset object containing values and attributes read from Marthe grid file.
     """
     legacy_tmp = kwargs.get('nanval')
-    if legacy_tmp:
+    if legacy_tmp is not None:
         print('Warning: nanval argument is deprecated, use nan_value instead')
         nan_value = legacy_tmp
 
@@ -301,11 +325,12 @@ def load_marthe_grid(
         # -- recursive call
         arrays = []
         for var in varname:
-            arrays.append( load_marthe_grid(
-                filename, var, fpastp, dates, nan_value, drop_nan, xyfactor, shallow_only,
-                add_col_row, add_id_grid, title, var_attrs, model_attrs, engine, verbose
-            ) )
-        return xr.merge(arrays)
+            arrays.append(load_marthe_grid(
+                filename, var, fpastp, dates, nan_value, drop_nan, xyfactor,
+                shallow_only, add_col_row, add_id_grid, title, var_attrs, epsg,
+                full_3d, model_attrs, engine, verbose
+            ))
+        return xr.merge(arrays, compat='no_conflicts')
         
     elif varname.islower():
         varname = varname.upper() # in marthegridfiles, varnames are always uppercase; if user pass lowercase, this avoid error/empty array
@@ -344,8 +369,21 @@ def load_marthe_grid(
     vattrs.update(var_attrs)
     dic_data = {
         varname.lower() : (["time", "zone"], zvar, vattrs), #dict(**vattrs, **var_attrs)
-        'x'  : ("zone", xcols, {'units': 'm', 'axis': 'X',  'coverage_content_type' : "coordinate"}), #'standard_name': 'longitude',
-        'y'  : ("zone", yligs, {'units': 'm', 'axis': 'Y',  'coverage_content_type' : "coordinate"}), #'standard_name': 'latitude' ,
+        'x'  : ("zone", xcols, {
+            'units': 'meters',  # 'm', degrees_east
+            # TODO: use pyproj here too ? crs.coordinate_system.to_cf()[0].get('units', '') ?
+            'axis': 'X', 
+            # 'standard_name': 'longitude',
+            'standard_name': 'projection_x_coordinate',
+            'coverage_content_type' : "coordinate"
+        }),
+        'y'  : ("zone", yligs, {
+            'units': 'meters', # m, degrees_north
+            'axis': 'Y',
+            #'standard_name': 'latitude' ,
+            'standard_name': 'projection_y_coordinate',
+            'coverage_content_type' : "coordinate"
+        }),
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
@@ -364,11 +402,17 @@ def load_marthe_grid(
     if add_id_grid:
         dic_data['id_grid'] = ("zone", _get_id_grid(dims))
     
-    # if pseudo2D => add z dimension
-    # TODO assert valid if real3D
-    if dims[0][-1] > 1:
+    # if z z dimension exists (multilayer/3D model)
+    _has_z_dim = dims[0][-1] > 1
+    if _has_z_dim:
         zlus = _set_layers(dims)
-        zattrs = {'units': '-', 'axis': 'Z', 'positive': 'down', 'standard_name': 'depth', 'long_name': 'aquifer_layer'} # not if full 3D ! TODO better
+        zattrs = {
+            'units': '-' if not full_3d else 'm',
+            'axis': 'Z',
+            'positive': 'down',
+            'standard_name': 'depth',
+            'long_name': 'aquifer_layer' if not full_3d else 'depth'
+        }
         dic_data['z'] = ("zone", zlus, zattrs) # add lay
         
     if fpastp is not None:
@@ -390,10 +434,14 @@ def load_marthe_grid(
             'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32)
         },
         attrs={
-            **_parse_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs),
+            **_parse_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs, epsg),
             **model_attrs
         }
     )
+    
+    # add attributes for Reduced horizontal grid
+    # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#reduced-horizontal-grid
+    ds['zone'].attrs['compress'] = "z y x" if _has_z_dim else "y x"
     
     # add non-dimensionnal coordinates
     # 'xc': (['zone'], xcols), # TODO coordinates directly as coords depending on dims ?
@@ -439,7 +487,7 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     Join is performed with xy[z] (if xy are present in coords) or zone
     to get zone back in full domain (if dropped, or nan were dropped, etc.).
 
-    If nan were dropped during :py:func:`gridmarthe.load_grid_marthe()`, 'zone_all'
+    If nan were dropped during :py:func:`gridmarthe.load_grid_marthe`, 'zone_all'
     was added and will be used (this variable store the zone index before the reindexing
     during :py:func:`gridmarthe.dropna`).
     
@@ -526,6 +574,7 @@ def write_marthe_grid(
     A good pratice is to provide the permh file when writing dataset to marthegrid format.
     
     >>> gm.write_marthe_grid(ds, 'toto.out', file_permh='./mymodel/model.permh')
+
     
     WARNING: This function was developped to write parameters grids to marthe format.
     Not to recreate simulation results (hydraulic head at several timesteps for example)
@@ -537,6 +586,7 @@ def write_marthe_grid(
     >>> ds = ds_head.isel(time=16) # or do an aggregation (eg mean over a period)
     >>> gm.write_marthe_grid(ds, 'mymodel.charg')
     
+    
     Parameters
     ----------
     ds: xr.Dataset
@@ -545,26 +595,31 @@ def write_marthe_grid(
     fileout: str
         filename to write
     
-    varname: str (optional)
+    varname: str, optional
         variable name (key) containing values.
     
-    file_permh: str (optional)
+    file_permh: str, optional
         path to the permh file corresponding to current Marthe model.
         Needed to recreate full dimension if NaN dropped before.
+    
+    nan_value: float, optional
+        custom value to fillna, when using a `permh` field to reset geometry
         
-    title: str (optional)
+    title: str, optional
         title written in marthe grid file
     
-    dims: list of array
+    dims: list of array, optional
         list containing array of dimension for every grid (ie len(dims) > 1 if nested grid)
-        format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
+        
+        - format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
         eg. `[[354,252,2], [182,156,2]]`
-        if only main grid : `[[nx,ny,nz]]`
-        if None (default, dims will be parsed from ds.attrs['original_dimensions'] which is added
+        - if only main grid : `[[nx,ny,nz]]`
+        - if None (default, dims will be parsed from ds.attrs['original_dimensions'] which is added
         when read with :py:func:`gridmarthe.load_marthe_grid`. If not present (lost in some computation for example),
         please use py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
     
-    debug: bool, optional (default is False).
+    debug: bool, optional
+        print debug informations. Default is False
     
     Returns
     -------
