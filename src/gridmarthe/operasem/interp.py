@@ -55,7 +55,7 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
         the new y-axis coordinate to use
     method: str, optional (default='nearest')
         `xr.Dataset.interp` method to use. Default is 'nearest'
-    **kwargs: dict, optional.
+    **kwargs
         Any keywords argument to pass to `xr.Dataset.interp`.
     
     Returns

@@ -11,3 +11,5 @@ Plotting
     plot_nested_grid
     
     plot_outcrop
+
+    plot_veloc_quiver
