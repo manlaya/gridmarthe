@@ -36,7 +36,8 @@ largs = []  # link args
 if fc.get_id() == 'gcc'
   
   fargs += ['-fdefault-real-8']
-  fargs += ['-O2', '-ffree-line-length-none']
+  # fargs += ['-O2']  # fix warning 'use builtin O3, deactivate this line"
+  fargs += ['-ffree-line-length-none']
   
   if cc.version().version_compare('>=13.0')
     fargs += ['-fallow-argument-mismatch', '-std=legacy']
@@ -84,11 +85,19 @@ python_install_dir = py.get_install_dir()
 
 deps += [py_dep]
 
-incdir_numpy = run_command(py,
-  # ['-c', 'import os; import numpy; print(os.path.relpath(numpy.get_include()))'],
-  ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
-  check : true
-).stdout().strip()
+if get_option('pip_edit_mode')
+  # editable version, bug in CI build...
+  incdir_numpy = run_command(py,
+    ['-c', 'import os; import numpy; print(os.path.relpath(numpy.get_include()))'],
+    check : true
+  ).stdout().strip()
+else
+  # classical, not functionnal in editable mode...
+  incdir_numpy = run_command(py,
+    ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'], 
+    check : true
+  ).stdout().strip()
+endif
 
 inc_np = include_directories(incdir_numpy)
 np_dep = declare_dependency(include_directories: inc_np)
