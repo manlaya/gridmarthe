@@ -22,8 +22,12 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
-from datetime import datetime, UTC
+import os, sys
+
+if sys.version_info >= (3, 11):
+    from datetime import datetime, UTC
+else:
+    from datetime import datetime
 
 import pandas as pd
 import numpy as np
@@ -160,8 +164,13 @@ def _parse_attrs(
             'frequency' : '{} day(s)'.format(str(dates.to_series().diff().mean().days)),
         }
     
+    if sys.version_info >= (3, 11):
+        _date_now = datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ UTC')
+    else:
+        _date_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ UTC')
+    
     epilogue = {
-        'creation_date' : 'Created on {}'.format(datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ UTC')),
+        'creation_date' : 'Created on {}'.format(_date_now),
         # comment or source ? https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch02s06.html
         'comment'       : 'Hydrogeological model created with MARTHE code '\
                           '(Thiery, D. 2020. Guidelines for MARTHE v7.8 computer code '\
