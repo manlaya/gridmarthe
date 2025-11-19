@@ -49,7 +49,7 @@ def test_load_with_custom_nanval():
 def test_load_with_adds_col_row():
     ds = gm.load_marthe_grid(DATA_PATH, VAR, add_col_row=True)
     assert 'col' in ds.data_vars
-    assert 'lig' in ds.data_vars
+    assert 'row' in ds.data_vars
 
 
 def test_load_with_add_id_grid_adds_id_grid():
