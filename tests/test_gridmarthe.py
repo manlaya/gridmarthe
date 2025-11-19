@@ -4,7 +4,8 @@
 
 import numpy as np
 import xarray as xr
-# import pytest
+
+import pytest
 
 import gridmarthe as gm
 
@@ -57,14 +58,14 @@ def test_load_with_add_id_grid_adds_id_grid():
     assert 'id_grid' in ds.data_vars
 
 
-# def test_load_nonexistent_file_raises():
-#     with pytest.raises(FileNotFoundError):
-#         gm.load_marthe_grid('not_a_file.permh', VAR)
+def test_load_nonexistent_file_raises():
+    with pytest.raises(FileNotFoundError):
+        gm.load_marthe_grid('not_a_file.permh', VAR)
 
 
-# def test_load_invalid_varname_raises():
-#     with pytest.raises(ValueError):
-#         gm.load_marthe_grid(DATA_PATH, varname='INVALIDVAR')
+def test_load_invalid_varname_raises():
+    with pytest.raises(ValueError):
+        gm.load_marthe_grid(DATA_PATH, varname='INVALIDVAR')
 
 
 def test_load_grid_attrs_present():
@@ -74,7 +75,7 @@ def test_load_grid_attrs_present():
     assert 'original_dimensions' in ds.attrs
 
 
-def test_all():
+def run_all():
     test_load_valid_grid_returns_xarray()
     test_load_grid_attrs_present()
     test_load_with_add_id_grid_adds_id_grid()
@@ -83,35 +84,12 @@ def test_all():
     test_load_with_drop_nan_removes_nan()
     test_load_with_varname_none_picks_first()
     test_load_with_varname_all_returns_multiple()
-    # test_load_nonexistent_file_raises()
-    # test_load_invalid_varname_raises()
+    test_load_nonexistent_file_raises()
+    test_load_invalid_varname_raises()
     print("=============================")
     print("gridmarthe reader test passed")
     return
 
 
 if __name__ == "__main__":
-    test_all()
-
-# MY TESTS
-# inputs = './tests/data/craie_npc.permh', "PERMEAB" # ajouter tests/data ici pour conda-forge ?
-# 
-# toto = gm.load_marthe_grid(*inputs, drop_nan=True)
-# # toto = gm.load_marthe_grid(*inputs, drop_nan=True, nanval=0.)
-# # toto = gm.load_marthe_grid(inputs[0], varname=None)
-# # toto = gm.load_marthe_grid(inputs[0], varname='all')
-# # toto = gm.load_marthe_grid(*inputs, add_col_row=True)
-# # toto = gm.load_marthe_grid(*inputs, add_id_grid=True)
-# 
-# test = toto.set_coords(['time', 'zone', 'x', 'y', 'z', 'dx', 'dy'])
-# print(toto.attrs)
-# test.mart.assign_coords()
-# 
-# # for pymarthe compat'
-# # to recarray
-# df = toto.to_dataframe()
-# df.to_records()
-# 
-# toto2 = toto.mart.assign_coords()
-# toto3 = toto.mart.to_recarray()
-# 
+    run_all()

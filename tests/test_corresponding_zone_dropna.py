@@ -33,6 +33,8 @@ def test_corresponding_zone_dropna():
     np.allclose(df1.x.values, df.x.values)
 
     assert not np.all(np.isnan(df['h_substrat'].values)), "Join error, might come from dtype / round / Wrong merge field"
+    print("=============================")
+    print("corresponding_zone_dropna test passed")
     return
 
 

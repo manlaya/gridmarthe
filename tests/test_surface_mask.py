@@ -8,7 +8,7 @@ import gridmarthe as gm
 
 def test_surf_mask(plot=False):
     
-    grid = gm.load_marthe_grid('./tests/data/craie_npc.permh', drop_nan=True)
+    grid = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', drop_nan=True)
     surf = gm.get_surface_layer(ds=grid)
     
     assert np.allclose(np.unique(surf.z.data), np.array([1, 2, 4, 5, 6, 8, 9])), \
