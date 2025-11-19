@@ -23,54 +23,71 @@
 #
 import os, sys, textwrap
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+
+import xarray as xr
+
 import gridmarthe as gm
-from gridmarthe.__version__ import _copyleft #, _show_c, _show_w
+from gridmarthe.__version__ import _copyleft
+
 
 # Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]` 
-
 def parse_args():
     """ CLI program """
     parser = ArgumentParser(
         prog='ncmart',
+        # usage='%(prog)s [options]',
         formatter_class=RawDescriptionHelpFormatter,
-        description="Convert a Marthe GridFile to netCDF format.",
+        description="Convert a Marthe grid file to netCDF format.",
         epilog=textwrap.dedent(_copyleft)
     )
     
-    parser.add_argument('opt', metavar='grid timesteps', type=str, nargs='*', help='Paths to grid and timesteps files are expected') # nargs='+'
+    # TODO split `dump` into subcommand ?
+    # https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser.add_subparsers
+    # subparsers = parser.add_subparsers(help='subcommand help')  
+    # parser_a = subparsers.add_parser('a', help='a help')
+    # parser_a.add_argument('bar', type=int, help='bar help')
+    
+    # option 0 or two: gridfile, timestep
+    parser.add_argument(
+        'opt',
+        metavar='grid [timesteps]',
+        type=str,
+        nargs='*',# nargs='+'
+        help=(
+            'Paths to marthe grid and, optionally, timesteps files. '
+            'If gridfile is already a netCDF file, ncmart allows you to modify it (with xyfactor, attrs, etc.).'
+        )
+    )
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--variable', '-v', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
-    parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension') #choices=('True','False'), dest='monnomdevariable'
+    parser.add_argument('--varname' , '-n', type=str, default=None, help='Variable Name (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
+    parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension, ie reduced horizontal grid') #choices=('True','False'), dest='monnomdevariable'
     parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
-    # parser.add_argument('--show', type=str, default='', choices=('c', 'w'), help='Print licensing for warranty (w) and redistribution conditions (c)')
-    parser.add_argument('--version', '-V', action="store_const", const=True, default=False, help='Show version and exit')
+    parser.add_argument('--dump'    , '-H', action="store_const", const=True, default=False, help='Dump variables names, like ncdump -h FILE.')
+    parser.add_argument('--attrs'   , '-a', type=str, default=None, help='Add global attributes. Comma separated for multiple attrs, = is the separator for key, value. Example: `-a "references=RP-XXXXX-FR,toto=tata"`')
+    parser.add_argument('--version' , '-v', action="store_const", const=True, default=False, help='Show version and exit')
     
     args = parser.parse_args()
     
-    # if args.show != '':
-        # if args.show == 'c':
-            # _show_c()
-        # if args.show == 'w':
-            # _show_w()
-        # sys.exit(0)
     if args.version:
         print('gridmarthe {}'.format(gm.__version__))
         print(_copyleft)
         sys.exit(0)
+    
+    fname, ext = os.path.splitext(args.opt[0])
+    args.fname, args.ext = fname, ext
     
     if args.output is not None:
         dirout = os.path.dirname(args.output)
         if dirout != '':
             os.makedirs(dirout, exist_ok=True)
     else:
-        fname, ext = os.path.splitext(args.opt[0])
         args.output = '{}.nc'.format(fname)
     
     if os.path.exists(args.output):
         os.remove(args.output)
 
-    if args.variable is not None:
-        args.variable = args.variable.upper()
+    if args.varname is not None:
+        args.varname = args.varname.upper()
 
     return args
 
@@ -82,16 +99,39 @@ def main():
     args   = parse_args()
     fpastp = args.opt[1] if len(args.opt) > 1 else None
     
-    ds = gm.load_marthe_grid(
-        args.opt[0],
-        fpastp=fpastp,
-        drop_nan=True,
-        varname=args.variable,
-        xyfactor=args.xyfactor
-    )
+    if args.dump:
+        _var = gm.scan_var(args.opt[0])
+        print('Variable found in file:', _var)
+        sys.exit(0)
+
+    if not args.ext.endswith('nc'): 
+        ds = gm.load_marthe_grid(
+            args.opt[0],
+            fpastp=fpastp,
+            drop_nan=True,
+            varname=args.varname,
+            xyfactor=args.xyfactor
+        )
+    else:
+        # allow transformation of existing netcdf
+        ds = xr.open_dataset(args.opt[0])
+        if args.xyfactor > 1:
+            ds['x'].data *= args.xyfactor
+            ds['y'].data *= args.xyfactor
+            ds['dx'].data *= args.xyfactor
+            ds['dy'].data *= args.xyfactor
+            ds.attrs['scale_factor'] = args.xyfactor
 
     if args.as2d:
         ds = gm.assign_coords(ds)
+        # ds = ds.isel(Y=slice(None, None, -1))  # inverse Y-axis, eg for QGIS view
+    
+    # add user attrs
+    if args.attrs is not None:
+        _attrs = args.attrs.split(',')
+        _attrs = [x.split('=') for x in _attrs]
+        _attrs = {k.strip(): v.strip() for k, v in _attrs}
+        ds.attrs = {**ds.attrs, **_attrs}
 
     encode = {
         x: {'zlib': True, 'complevel': 6} for x in ds.keys()
