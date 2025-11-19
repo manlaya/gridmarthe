@@ -23,7 +23,13 @@
 #
 
 from .__version__ import __version__
+
 from .gridmarthe import *
 from .operasem import *
-from .plot import plot_nested_grid, plot_outcrop
+
+from .velocity import read_velocity
+from .plot import (
+    plot_nested_grid, plot_outcrop,
+    plot_veloc_quiver, plot_cross_section
+)
 
