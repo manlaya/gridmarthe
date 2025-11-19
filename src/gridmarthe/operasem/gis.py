@@ -27,27 +27,13 @@
 
 import numpy as np
 
-from shapely.geometry import Polygon
 from pyproj import Transformer
 import geopandas as gpd
 import xarray as xr
 
 from ..utils import assign_coords
+from .gutils import _polygonize
 
-
-def _mk_cell_polygon(xleft, ylower, xright, yupper):
-    return Polygon(
-        (
-            (xleft , ylower),
-            (xright, ylower),
-            (xright, yupper),
-            (xleft , yupper),
-            (xleft , ylower)
-        )
-    )
-
-
-_polygonize = np.vectorize(_mk_cell_polygon)
 
 
 def _build_polyg(ds):
