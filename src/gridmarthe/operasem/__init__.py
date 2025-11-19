@@ -12,3 +12,4 @@ Some useful functions to manage MartheGrid in python
 from .geometry import *
 from .interp import *
 from .gis import *
+from .xsection import slice_cross_section
