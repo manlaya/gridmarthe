@@ -23,6 +23,9 @@
 #
 import os, sys, textwrap
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+
+import xarray as xr
+
 import gridmarthe as gm
 from gridmarthe.__version__ import _copyleft
 
@@ -36,13 +39,22 @@ def parse_args():
         epilog=textwrap.dedent(_copyleft)
     )
     
-    parser.add_argument('opt', metavar='grid timesteps', type=str, nargs='*', help='Paths to grid [and timesteps if result] files are expected') # nargs='+'
+    parser.add_argument(
+        'opt',
+        metavar='grid timesteps',
+        type=str,
+        nargs='*',
+        help=(
+            'Paths to marthe grid [and timesteps if result] files are expected.'
+            'If input is already a netcdf file, this script allow the conversion to shapefile/gpkg.'
+        )
+    )
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--variable', '-v', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
+    parser.add_argument('--varname' , '-n', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
     parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
-    parser.add_argument('--gpkg', '-g', action="store_const", const=True, default=False, help='Use GPKG format instead of shapefile')
-    parser.add_argument('--mask', '-m', action="store_const", const=True, default=False, help='Only get a mask of active domain')
-    parser.add_argument('--version', '-V', action="store_const", const=True, default=False, help='Show version and exit')
+    parser.add_argument('--gpkg'    , '-g', action="store_const", const=True, default=False, help='Use GPKG format instead of shapefile')
+    parser.add_argument('--mask'    , '-m', action="store_const", const=True, default=False, help='Only get a mask of active domain')
+    parser.add_argument('--version' , '-v', action="store_const", const=True, default=False, help='Show version and exit')
     parser.add_argument('--wide_fmt', '-w', action="store_const", const=True, default=False, help='Use wide format (columns) for time')
     
     args = parser.parse_args()
@@ -52,12 +64,13 @@ def parse_args():
         print(_copyleft)
         sys.exit(0)
     
+    fname, ext = os.path.splitext(args.opt[0])
+    args.fname, args.ext = fname, ext
     if args.output is not None:
         dirout = os.path.dirname(args.output)
         if dirout != '':
             os.makedirs(dirout, exist_ok=True)
     else:
-        fname, ext = os.path.splitext(args.opt[0])
         args.output = '{}.shp'.format(fname)
     
     if args.gpkg:
@@ -67,8 +80,8 @@ def parse_args():
     if os.path.exists(args.output):
         os.remove(args.output)
 
-    if args.variable is not None:
-        args.variable = args.variable.upper()
+    if args.varname is not None:
+        args.varname = args.varname.upper()
 
     return args
 
@@ -80,14 +93,23 @@ def main():
     args   = parse_args()
     fpastp = args.opt[1] if len(args.opt) > 1 else None
     
-    ds = gm.load_marthe_grid(
-        args.opt[0],
-        fpastp=fpastp,
-        drop_nan=True,
-        varname=args.variable,
-        xyfactor=args.xyfactor
-    )
-    
+    if not args.ext.endswith('nc'): 
+        ds = gm.load_marthe_grid(
+            args.opt[0],
+            fpastp=fpastp,
+            drop_nan=True,
+            varname=args.varname,
+            xyfactor=args.xyfactor
+        )
+    else:
+        ds = xr.open_dataset(args.opt[0])
+        if args.xyfactor > 1:
+            ds['x'].data *= args.xyfactor
+            ds['y'].data *= args.xyfactor
+            ds['dx'].data *= args.xyfactor
+            ds['dy'].data *= args.xyfactor
+            ds.attrs['scale_factor'] = args.xyfactor
+
     if args.mask:
         mask = gm.get_active_mask(ds)
         mask.to_file(args.output)
