@@ -25,7 +25,7 @@
 import re
 import numpy as np
 
-from .lecsem import modgridmarthe
+from .functions import modgridmarthe
 from ..utils import _datetime64_to_float
 
 
@@ -220,6 +220,9 @@ def _extract_zvar_from_ds(ds, varname):
         ztitle, izdates
     )
 
+def _calc_flow_directions(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top):
+    modgridmarthe.calc_flow_direct(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top )
+    
 
 if __name__ == '__main__':
     
