@@ -5,7 +5,7 @@
 import numpy as np
 
 import gridmarthe as gm
-from gridmarthe.lecsem import (
+from gridmarthe.functions import (
     _extract_zvar_from_ds,
     _parse_dims_from_xr_attrs,
     # modgridmarthe

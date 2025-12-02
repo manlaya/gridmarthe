@@ -26,6 +26,7 @@ from .__version__ import __version__
 
 from .gridmarthe import *
 from .operasem import *
+from .flowdirections import *
 
 from .velocity import read_velocity
 from .plot import (

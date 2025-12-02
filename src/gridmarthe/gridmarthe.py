@@ -34,7 +34,7 @@ import numpy as np
 import xarray as xr
 import pyproj
 
-from .lecsem import (
+from .functions import (
     modgridmarthe,
     _read_marthe_grid,
     _transform_xcoords,
