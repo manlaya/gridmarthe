@@ -44,13 +44,28 @@ def calc_flow_directions(
         
     Returns
     -------
+    No retruns. Three files are saved automatically.
+        A calculated flow directions file named ``ddr_dir_aval.d_ava``
+        A corrected topography file named ``ddr_topo_corr.topog``
+        A listing file named ``ddr_calc_flow_direction.listing``
+    
+    TODO: return two xr.Dataset containing the calculated flow directions and corrected totography data ?
+        While it seems gridmarthe.load_marthe_grid cannot load ``.d_ava`` file since layer and
+        max_layer are set to 0 in the file ``ddr_dir_aval.d_ava`` !!!
         
+    Example:
+        >>> import gridmarthe as gm
+        ... gm.calc_flow_directions(ftopo='./tests/data/craie_npc.topog', 
+        ...                         fpresence='./tests/data/craie_npc.topog',
+        ...                         flow_dirs_type='marthe',
+        ...                         eps_topo=0.1
+        ... )
     """
     if fpresence is None:
         fpresence = ftopo
         
     fout_dir=os.path.abspath(os.path.join(os.path.dirname(ftopo), "ddr_dir_aval.d_ava"))
-    fout_topo=os.path.abspath(os.path.join(os.path.dirname(ftopo), "ddr_topo_corr.topop"))
+    fout_topo=os.path.abspath(os.path.join(os.path.dirname(ftopo), "ddr_topo_corr.topog"))
     flisting=os.path.abspath(os.path.join(os.path.dirname(ftopo), "ddr_calc_flow_direction.listing"))
     
     if flow_dirs_type.lower() == "marthe":
