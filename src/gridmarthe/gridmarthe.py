@@ -29,6 +29,8 @@ if sys.version_info >= (3, 11):
 else:
     from datetime import datetime
 
+from typing import Union
+
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -49,7 +51,6 @@ from .lecsem import (
     FortranError
 )
 
-
 from .utils import (
     read_dates_from_pastp,
     assign_coords,
@@ -59,59 +60,7 @@ from .utils import (
     replace
 )
 
-from typing import Union
-
-
-# http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
-# pas vraiment, pour respecter la convention, le nom de variable le plus proche est : water_table_depth / mais on parle de charge pas prof
-# proposition à faire dans https://github.com/cf-convention/discuss/issues
-# water_table_altitude or level?
-VARS_ATTRS = {
-    'permeab': {
-        'varname': 'PERMEAB',
-        'units': 'm/s',
-        'missing_value': 0.,
-        'standard_name': '',
-        'long_name': 'aquifer_hydraulic_conductivity'
-    },
-    'charge' : {
-        'varname': 'CHARGE',
-        'units': 'm',
-        'missing_value': 9999.,
-        'standard_name': 'water_table_level',
-        'long_name':
-        'groundwater head'
-    },
-    'saturat': {
-        'varname': 'SATURAT',
-        'units': '%'   ,
-        'missing_value': 9999.,
-        'standard_name': 'water_table_saturation',
-        'long_name': 'groundwater_saturation'
-    },
-    'debit'  : {
-        'varname': 'DEBIT',
-        'units': 'm3/s',
-        'missing_value': 0.,
-        'standard_name': '',
-        'long_name': 'flow'
-    },
-    'debit_rivi'    : {
-        'varname': 'DEBIT_RIVI',
-        'units': 'm3/s',
-        'missing_value': 9999.,
-        'standard_name': 'water_volume_transport_in_river_channel',
-        'long_name': 'river_discharge_flow'
-    },
-    'qech_riv_napp' : {
-        'varname': 'QECH_RIV_NAPP',
-        'units': 'm3/s',
-        'missing_value': 9999.,
-        'standard_name': '',
-        'long_name': 'surface_groundwater_exchange_flow'
-    },
-}
-
+from .variable_attrs import VARS_ATTRS
 
 
 def _parse_attrs(
@@ -308,11 +257,23 @@ def load_marthe_grid(
     ds: xr.Dataset
         A xarray.Dataset object containing values and attributes read from Marthe grid file.
     """
+    # Temporary
+    import warnings
     legacy_tmp = kwargs.get('nanval')
     if legacy_tmp is not None:
-        print('Warning: nanval argument is deprecated, use nan_value instead')
+        warnings.warn(
+            'Warning: nanval argument is deprecated, use nan_value instead',
+            DeprecationWarning,
+        )
         nan_value = legacy_tmp
-
+    legacy_tmp = kwargs.get('keepligcol')
+    if legacy_tmp is not None:
+        warnings.warn(
+            'Warning: keepligcol argument is deprecated, use add_col_row instead',
+            DeprecationWarning
+        )
+        add_col_row = legacy_tmp
+    
     # Fortran error cause sys exit. To avoid this, we add a test on file first
     if not os.path.exists(filename):
         raise FileNotFoundError("File : `{}` does not exist. Please check syntax/path.".format(filename))
@@ -637,6 +598,7 @@ def write_marthe_grid(
     """
     # TODO: infer nx, ny, nz, ngrid from ds ? --> allow to create a custom grid
     ds2 = ds.copy()
+    nan_value = VARS_ATTRS.get(varname, {}).get('missing_value', 9999.) if nan_value is None else nan_value
 
     if file_permh is not None:
         # if permeab, fill_na with permh file (because either 0 or -9999.)
