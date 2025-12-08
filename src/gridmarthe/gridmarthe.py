@@ -110,6 +110,12 @@ VARS_ATTRS = {
         'standard_name': '',
         'long_name': 'surface_groundwater_exchange_flow'
     },
+    'direct_val' : {
+        'varname': 'DIRECT_AVAL',
+        'units': '-',
+        'missing_value': 0.,
+        'standard_name': 'Flow direction'
+    },
 }
 
 

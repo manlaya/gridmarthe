@@ -20,7 +20,8 @@
 !
 ! MARTHE, Copyright (c) 1990-2024 BRGM
 !      
-      SUBROUTINE Cal_Direct_Drainage(ITYP_DIRECT, EPS_TOP, FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING)
+      SUBROUTINE Cal_Direct_Drainage(ITYP_DIRECT, EPS_TOP, FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING, &
+         CHAMP_AUX, NKOL, NLIG, X0 , Y0, TITSEM, DX_LU,DY_LU)
 !=========================================================================================
 !   *********************
 !   *Cal_Direct_Drainage*              BRGM     B.P. 36009
@@ -41,13 +42,14 @@
 !=========================================================================================
       IMPLICIT NONE
       
-      INTEGER, PARAMETER :: NKOLMA=900, NLIGMA=900, NTOTMA=NKOLMA * NLIGMA
-      REAL, DIMENSION(NKOLMA) :: XCOL, DX_LU
-      REAL, DIMENSION(NLIGMA) :: YLIG, DY_LU
+      INTEGER, PARAMETER :: NKOLMA=999, NLIGMA=999, NTOTMA=NKOLMA * NLIGMA
+      REAL(KIND=8), DIMENSION(NKOLMA) :: XCOL, DX_LU
+      REAL(KIND=8), DIMENSION(NLIGMA) :: YLIG, DY_LU 
+      REAL(KIND=8), DIMENSION(NTOTMA) :: CHAMP_AUX
       REAL, DIMENSION(NTOTMA) :: PRESEN
       INTEGER, DIMENSION(:,:), ALLOCATABLE :: NUM_VOIS
       INTEGER, DIMENSION(:), ALLOCATABLE :: IDIRAVA, IDOMAIN, I_TROU, IDEN_LAC, NBRE_EGAL
-      REAL   , DIMENSION(:), ALLOCATABLE :: CHAMP_AUX, TOPO, TOPO_INIT
+      REAL   , DIMENSION(:), ALLOCATABLE :: TOPO, TOPO_INIT
       CHARACTER (LEN=132) :: TITSEM
       ! CHARACTER (LEN=401) :: FICH_401
       CHARACTER (LEN=20) :: CHARA20
@@ -65,7 +67,7 @@
       INTEGER, PARAMETER :: NITER_MAX = 100
       INTEGER, DIMENSION(0:4 , 0:NITER_MAX) :: NB_TYP_TROU
       INTEGER, DIMENSION(0:NITER_MAX) :: NBRE_VARIAT, NON_RESOLU, NEW_MINI
-      REAL                :: X0 , Y0
+      REAL(KIND=8)                :: X0 , Y0
       REAL, INTENT(IN)    :: EPS_TOP
       INTEGER, INTENT(IN) :: ITYP_DIRECT
 !     =======
@@ -96,7 +98,7 @@
 
       TITGEN = "Calculation of Flow Directions based on Topography"
 
-      OPEN(UNIT=LISTIN, FILE=TRIM(FICH_LISTING), STATUS="replace", IOSTAT=IERR)
+      OPEN(UNIT=LISTIN, FILE=FICH_LISTING, STATUS="replace", ACTION="write", IOSTAT=IERR)
       IF (IERR /= 0) THEN
          NATUR_FICH = "listing file "
          WRITE(*,*) "Problem when opening file: ", TRIM(NATUR_FICH), TRIM(FICH_LISTING)
@@ -122,7 +124,6 @@
 !      Fichier Présence
 !     ==================
       NATUR_FICH = "Présence domaine de surface"
-      ! CALL WRIT_STATUS_BAR("Lecture"//TRIM(NATUR_FICH), 0, 0)
 !        OPEOLD dans WinMarthe/src/Open_Fich_WinMart.f90
 !        Ouverture (Open) "Old" du fichier IUL, de nom = FIC
 !        IERLEC = 0 si normal
@@ -142,6 +143,7 @@
       LU_DXDY = 1
       DX_LU(:) = -9999.
       DY_LU(:) = -9999.
+      CHAMP_AUX(:) = -9999.
       ! LECSEM8_0 et LECSEM_3 dans WinMarthe/src/Lecsem.f90 
       ! gridmarthe/modgridmarth dans lecsem/READ_GRID qui utilise LECSEM_3
       ! here use gridmarthe/lecsem/Lecsem.f90 
@@ -149,6 +151,7 @@
          , IOUCON_NUL, LEC, IERLEC, NUMERR, NTOT &
          , LIRE_DXDY, LU_DXDY, LU_XY, DX_LU, DY_LU)
       CLOSE (LEC)
+      ! WRITE(*,*) "X0 Y0", X0, Y0
       IF (IERLEC == 0) THEN
          WRITE (LISTIN, 9007, IOSTAT=IERRAUX) TRIM(NATUR_FICH), TRIM(TITSEM(1:68)), NKOL, NLIG
          IF (LU_DXDY <= 0) THEN
@@ -171,7 +174,7 @@
 !      Initialisations car on connait maintenant NTOT
 !     ================================================
       ALLOCATE (NUM_VOIS(8,NTOT), STAT=IERRAUX)
-      ALLOCATE (CHAMP_AUX(NTOT), TOPO(NTOT), TOPO_INIT(NTOT) &
+      ALLOCATE (TOPO(NTOT), TOPO_INIT(NTOT) &
              , IDIRAVA(NTOT), IDOMAIN(NTOT), I_TROU(NTOT), IDEN_LAC(NTOT) &
              , NBRE_EGAL(NTOT), STAT=IERRAUX)
       IDOMAIN(1:NTOT) = 0
@@ -251,7 +254,7 @@
             WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13) , 1
             TITSEM(71:) = TRIM(CHARA20)
             ! EDSEMI7_0 dans WinMarthe/src/Edsemigl.f90 (ncouch = 0, max_couche = 0 etc.)
-            CALL EDSEMI7_0(CHAMP_AUX, NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
+            CALL EDSEMI7_0(CHAMP_AUX(1:NTOT), NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
                , TITSEM, IEREDI, IOUMAI, DX_LU, DY_LU)
             CLOSE (IOUMAI)
             IF (IEREDI == 0) THEN
@@ -586,13 +589,14 @@
 
             TITSEM(71:) = TRIM(CHARA20) 
 
-            CALL EDSEMI7_0(CHAMP_AUX, NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
+            CALL EDSEMI7_0(CHAMP_AUX(1:NTOT), NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
                , TITSEM, IEREDI, IOUMAI, DX_LU, DY_LU)
             CLOSE (IOUMAI)
-
+            ! WRITE(*,*) "X0 Y0", X0, Y0
             IF (IEREDI == 0) THEN
                WRITE (LISTIN, *)
                WRITE (LISTIN, *) " Directions Aval  sauvegardée : ", TRIM(FICH_SOR_DIRECT)
+               CLOSE (LISTIN)
            ENDIF
          ENDIF
       ENDIF
@@ -611,12 +615,6 @@
 !     ======
 !      Fini
 !     ======
-      ! WRITE (WINT_200_BUFF, 9017, IOSTAT=IERRAUX) NB_TYP_TROU(0:2 , NB_ITER_CAL) &
-      !                                       , NB_TYP_TROU(4 , NB_ITER_CAL) &
-      !                                       , NB_TYP_TROU(3 , NB_ITER_CAL) &
-      !                                       , NON_RESOLU(NB_ITER_CAL) &
-      !                                       , POURCENT
-      ! CALL Dial_Message_Wait(WINT_200_BUFF, 0 ,900)
  9001 FORMAT (" Impossible d'ouvrir un fichier ",A," :" &
              /" de nom : ",A)
  9002 FORMAT (" Fichiers d'entr�e :" &
