@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         # mac os 14 at least - runner with Apple Silicon
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [ubuntu-latest, windows-latest]  # macos-14, drop mac-os build
     env:
       FC: gfortran
       GCC_V: 12 # only for MACOS
@@ -61,7 +61,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install cibuildwheel
         run: pip install cibuildwheel
