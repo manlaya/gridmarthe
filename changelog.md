@@ -1,22 +1,13 @@
 <!-- gridmarthe changelog -->
 
-v0.1.4
+v0.3.0
 ------
 
-<!-- Released on 2025-XX-XX -->
-Unreleased yet.
+Released on 2025-12-09
 
 * add: beta support for vtk export, based on [vtkwriters](https://gitlab.com/brgm/geomodelling/io/vtkwriters) from ComPass code python ecosystem
 * add: support for reading/plotting velocity field : `gm.read_velocity`, `gm.plot_veloc_quiver`
 * add: beta support for cross section
-* fix: error when writing grid with time slice (cf. [issue #3](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/3))
-* fix: REVERT change from 0.1.3 : zone index is NOT reset (as in 0.1.2 and previous versions).
-    when the `drop_nan` option is used in `load_grid_marthe()`.
-    A new variable 'izone' store the reset form.
-    See [issue #4](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/4)
-* change: `nanval` argument in `load_marthe_grid` is rename to `nan_value` as in `write_marthe_grid`
-* change: `keepligcol` argument in `load_marthe_grid` is rename to `add_col_row` to be more coherent with `add_id_grid`
-* change: `xr.Dataset.mart` class accessor is removed. It will be included as wrapper in future marthe python library.
 * change: attributes in netcdf to be more CF-Conventions compliant:
     - add crs attributes using `pyrpoj.CRS().to_cf()` for QGIS view compatibilty --> add argument `epsg` in `gm.load_grid_marthe`
     - add `compress` attribute for zone [https://cfconventions.org](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#reduced-horizontal-grid),
@@ -26,7 +17,23 @@ Unreleased yet.
     - `--dump` (`-H`) to mimic `ncdump -H` command (netcdf CLI tools).
     - `--attrs` (`-a`) to add global attributes
     - treat input if already in netcdf fmt (modify it, with scale factor or attrs, to 2D, etc)
-    
+ 
+
+v0.2.0
+------
+
+<!-- Released on 2025-XX-XX -->
+Unreleased - dev version.
+
+* fix: error when writing grid with time slice (cf. [issue #3](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/3))
+* fix: REVERT change from 0.1.3 : zone index is NOT reset (as in 0.1.2 and previous versions).
+    when the `drop_nan` option is used in `load_grid_marthe()`.
+    A new variable 'izone' store the reset form.
+    See [issue #4](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/4)
+* change: `nanval` argument in `load_marthe_grid` is rename to `nan_value` as in `write_marthe_grid`
+* change: `keepligcol` argument in `load_marthe_grid` is rename to `add_col_row` to be more coherent with `add_id_grid`
+* change: `xr.Dataset.mart` class accessor is removed. It will be included as wrapper in future marthe python library.
+
 
 v0.1.3
 ------
