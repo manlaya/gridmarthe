@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from gridmarthe import lecsem
+from gridmarthe import functions
 
 
 XFILE, VAR = './tests/data/chasim_hallue_2var.out', "CHARGE"
@@ -10,8 +10,8 @@ XFILE, VAR = './tests/data/chasim_hallue_2var.out', "CHARGE"
 
 def test_lecsem_scan_dim():
 
-    nu_zoomx = lecsem.modgridmarthe.scan_nu_zoomx(XFILE) # scan nb of nested grids (gig)
-    dims, nbsteps = lecsem.modgridmarthe.scan_dim(XFILE, VAR, nu_zoomx)
+    nu_zoomx = functions.modgridmarthe.scan_nu_zoomx(XFILE) # scan nb of nested grids (gig)
+    dims, nbsteps = functions.modgridmarthe.scan_dim(XFILE, VAR, nu_zoomx)
     
     assert isinstance(dims, np.ndarray)
     assert dims.shape[0] == nu_zoomx + 1
@@ -23,7 +23,7 @@ def test_lecsem_scan_dim():
 
 def test_lecsem_scan_typevar():
 
-    var = lecsem.modgridmarthe.scan_typevar(XFILE)
+    var = functions.modgridmarthe.scan_typevar(XFILE)
     var = np.char.strip(np.char.decode(var, 'utf-8'))
     var = var[var != '']
 
@@ -38,7 +38,7 @@ def test_lecsem_read_marthe_grid():
     (
         zvar, zdates, isteps, zxcol,
         zylig, zdxlu, zdylu, ztitle, dims
-    ) = lecsem._read_marthe_grid(XFILE, VAR, shallow_only=False)
+    ) = functions._read_marthe_grid(XFILE, VAR, shallow_only=False)
     
     assert isinstance(zvar, np.ndarray)
     assert np.prod(dims, axis=1).sum() == np.size(zvar)

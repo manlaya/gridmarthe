@@ -19,9 +19,14 @@ endif
 F2PY = $(PY) -m numpy.f2py
 
 ###### SOURCES ########
-MAINDIR := $(shell pwd)
-F90SRCDIR := $(MAINDIR)/src/gridmarthe/lecsem
-F90FILES  := lecsem.f90 edsemigl.f90 scan_grid.f90
+MAINDIR := $(shell pwd)			 
+F90SRCDIR := \
+             $(MAINDIR)/src/gridmarthe/modmarthe \
+             $(MAINDIR)/src/gridmarthe/modmarthe/lecsem \
+			 $(MAINDIR)/src/gridmarthe/modmarthe/flowdirect \
+			 $(MAINDIR)/src/gridmarthe/modmarthe/utils
+F90FILES  := lecsem.f90 edsemigl.f90 Anal_Topo_0.f90 Cal_Direct_Drainage.f90 Lec_Param_Cal_Dir_Drain.f90 Num_8_Voisins.f90 \
+             xy_dxdy.f90 modgridmarthe.f90
 #######################
 
 # editable

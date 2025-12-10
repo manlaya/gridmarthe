@@ -8,6 +8,7 @@ from ._parse_gridmarthe import (
     _get_col_and_lig,
     _decode_title,
     _extract_zvar_from_ds,
+    _calc_flow_directions,
     _parse_dims_from_xr_attrs,
     scan_var,
     FortranError

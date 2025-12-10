@@ -11,16 +11,14 @@ project('gridmarthe', ['fortran', 'c'],
   default_options : [
     'warning_level=1',
     'buildtype=release'
+    # 'fortran_std=legacy'
   ],
 )
 
 # add_languages('fortran')
-lecsem_sources = files([
-    'src/gridmarthe/lecsem/lecsem.f90',
-    'src/gridmarthe/lecsem/edsemigl.f90',
-    'src/gridmarthe/lecsem/scan_grid.f90'
-])
-lecsem_install_dir = 'gridmarthe/lecsem/'  # in python_install_dir
+subdir('src/gridmarthe/functions')
+functions_sources = all_functions_sources
+functions_install_dir = 'gridmarthe/functions/'  # in python_install_dir
 
 
 # ------ Get compiler and build options ------ #
@@ -108,24 +106,24 @@ fortranobject_c = incdir_f2py / 'fortranobject.c'
 
 inc_dir += [inc_np,inc_f2py]
 
-# ---- Building interface for LECSEM ---- #
+# ---- Building interface for modgridmarthe functions ---- #
 # subdir('src/gridmarthe/lecsem') # not functionnal yet, keep it here for now
-lecsem_interface = custom_target('lecsemmodule.c',
-  input : lecsem_sources,
-  output : ['lecsemmodule.c', 'lecsem-f2pywrappers.f', 'lecsem-f2pywrappers2.f90'],
-  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'lecsem', '--lower']
+functions_interface = custom_target('functionsmodule.c',
+  input : functions_sources,
+  output : ['functionsmodule.c', 'functions-f2pywrappers.f', 'functions-f2pywrappers2.f90'],
+  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'functions', '--lower']
 )
 
-py.extension_module('lecsem',
+py.extension_module('functions',
   [
-    lecsem_sources,
-    lecsem_interface,
+    functions_sources,
+    functions_interface,
     fortranobject_c
   ],
   include_directories: inc_dir,
   dependencies: deps,
   install: true,
-  install_dir: python_install_dir / lecsem_install_dir,
+  install_dir: python_install_dir / functions_install_dir,
 )
 
 # --------- Install pypackage ----------- #

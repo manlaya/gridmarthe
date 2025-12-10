@@ -75,6 +75,12 @@ VARS_ATTRS = {
         'standard_name': '',
         'long_name': 'geometry_zone_identifier'
     },
+    'direct_val' : {
+        'varname': 'DIRECT_AVAL',
+        'units': '-',
+        'missing_value': 0.,
+        'standard_name': 'Flow direction'
+    },
 }
 
 # add variants for variable names

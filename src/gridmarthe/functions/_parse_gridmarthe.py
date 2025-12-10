@@ -25,7 +25,7 @@
 import re
 import numpy as np
 
-from .lecsem import modgridmarthe
+from .functions import modgridmarthe
 from ..utils import _datetime64_to_float
 
 
@@ -220,6 +220,20 @@ def _extract_zvar_from_ds(ds, varname):
         ztitle, izdates
     )
 
+def _calc_flow_directions(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top):
+    res1 = modgridmarthe.calc_flow_direct(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top )
+    
+    nu_zoomx = modgridmarthe.scan_nu_zoomx(file_out_direct) # scan nb of nested grids (gig)
+    varname = ''
+    dims, nbsteps = modgridmarthe.scan_dim(file_out_direct, varname, nu_zoomx)
+    dims[0][-1] = 1
+    nbtot = np.prod(dims, axis=1).sum()
+    
+    res = list(modgridmarthe.read_grid( file_out_direct, varname, nbsteps, nbtot, nu_zoomx))
+    # print(res)
+    # dims[0][-1] = 0
+    res.append(dims)
+    return res
 
 if __name__ == '__main__':
     
