@@ -22,7 +22,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-__version__ = '0.1.4'
+__version__ = '0.3.0'
 
 _copyleft = """
     {program}  Copyright (C) {year}  {name_of_author}.
