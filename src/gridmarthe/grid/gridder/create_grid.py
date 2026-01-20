@@ -9,7 +9,6 @@ import xarray as xr
 # from gridmarthe.gridmarthe import _parse_attrs, VAR_ATTRS
 
 
-# EDIT THIS SHOULD BE MOVED TO gridmarthe!
 def create_grid_domain(
     x0,
     y0,
