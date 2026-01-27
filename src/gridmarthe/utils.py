@@ -313,14 +313,15 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
 
     da = da.set_index(zone=dims)
     if not keep_zone:
-        da = da.drop_duplicates(zone_label).unstack(zone_label)  # drop duplicates is a security for nested grids, if dropnan was not performed
+        # drop duplicates is a security for nested grids, if dropnan was not performed
+        da = da.drop_duplicates(zone_label).unstack(zone_label)
 
     da.x.attrs = coords_attrs[-1]
     da.y.attrs = coords_attrs[1]
     if z_coords is not None:
         da.z.attrs = coords_attrs[0]
 
-    return da.sortby(dims)
+    return da.sortby(dims).sortby('y', ascending=False)
 
 
 def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
@@ -357,10 +358,12 @@ def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
     # create zone index
     coords = [d for d in coords if d in ds.coords.keys()]  # make sure to drop coords that are not present
     dims = np.prod([len(ds[d]) for d in coords])  # create new zone dim
+    # dims = np.prod(list(ds.sizes.values()))  # ok -eq
     zone = np.arange(1, dims + 1)
 
-    # stack coords
-    ds2 = ds.copy().stack(zone=coords)  # multiindex zone grouping coords key
+    # stack coords with multiindex zone grouping coords key
+    # y need to be re sorted by descending order
+    ds2 = ds.copy().sortby('y', ascending=False).stack(zone=coords)
 
     # keep only zone as dim
     ds3 = ds2.drop_vars(['zone'] + coords).assign_coords(zone=('zone', zone))
