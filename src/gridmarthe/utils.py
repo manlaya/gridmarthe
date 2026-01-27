@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -22,22 +22,69 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+import functools
 import re
+import warnings
 from datetime import datetime
-import pandas as pd
-import numpy as np
+from typing import Any, Callable, Dict, Union
 
-from typing import Union
+import numpy as np
+import pandas as pd
+
+
+# decorator and deprecation argument from :
+# https://stackoverflow.com/questions/49802412/how-to-implement-deprecation-in-python-with-argument-alias
+def deprecated_alias(**aliases: str) -> Callable:
+    """Decorator for deprecated function and method arguments.
+
+    Use as follows:
+
+    @deprecated_alias(old_arg='new_arg')
+    def myfunc(new_arg):
+        ...
+
+    """
+
+    def deco(f: Callable):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            rename_kwargs(f.__name__, kwargs, aliases)
+            return f(*args, **kwargs)
+        return wrapper
+    return deco
+
+
+def rename_kwargs(func_name: str, kwargs: Dict[str, Any], aliases: Dict[str, str]):
+    """Helper function for deprecating function arguments."""
+    for alias, new in aliases.items():
+        if alias in kwargs:
+            if new in kwargs:
+                raise TypeError(
+                    f"{func_name} received both {alias} and {new} as arguments!"
+                    f" {alias} is deprecated, use {new} instead."
+                )
+            warnings.warn(
+                message=(
+                    f"`{alias}` is deprecated as an argument to `{func_name}`; "
+                    f" Please use `{new}` as a replacement."
+                ),
+                category=DeprecationWarning,
+                stacklevel=3,
+            )
+            kwargs[new] = kwargs.pop(alias)
 
 
 def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
     # Memo: here, origin should be defined from pastp (time since timestep 0)
     idate = (zdates - np.datetime64(origin)) / np.timedelta64(1, 's')
-    idate = np.where(idate < 0., 0., idate) # fake dates from load_marthe_grid will be set to 0, meaning timestep -9999. (eg used in parameters grids)
+    # fake dates from load_marthe_grid will be set to 0,
+    # meaning timestep -9999. (eg used in parameters grids)
+    idate = np.where(idate < 0., 0., idate)
     return idate
 
 
 def _is_sorted(a):
+    # https://stackoverflow.com/questions/47004506/check-if-a-numpy-array-is-sorted
     return np.all(a[:-1] <= a[1:])
 
 
@@ -88,11 +135,11 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     # First, get steady state time
     idx_0  = pastp.loc[pastp.str.contains(r' \*\*\* D.*but de la simulation.*', regex=True)].index.values[0]
     date_0 = re.findall(r'[0-9]+', pastp.iloc[idx_0] )
-    
+
     # convert as DF
     timesteps = pd.DataFrame([{
-        'timestep': 0, 
-        'date': datetime(int(date_0[2]), int(date_0[1]), int(date_0[0]) ) 
+        'timestep': 0,
+        'date': datetime(int(date_0[2]), int(date_0[1]), int(date_0[0]) )
     }])
 
     # Then, get all ending times for transient state
@@ -103,19 +150,19 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
         columns=['timestep', 'day', 'month', 'year'],
         #dtype={'timestep':int, 'day':int, 'month':int, 'year':int}
     )
-    
+
     # assign dtype
     dates['timestep'] = pd.to_numeric(dates['timestep'])
 
     # convert data as datetime object
     dates['date'] = pd.to_datetime(dates[['day', 'month', 'year']])
     dates = dates.drop(['month','year', 'day'], axis=1)
-    
+
     return pd.concat([timesteps, dates], axis=0)
 
 
 def dropna(ds, varname: str, nanval: Union[list, float]):
-    """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.) 
+    """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.)
     for 1D (or 2D (time, zone)) array
     zone must me a coordinate dimension.
 
@@ -123,13 +170,13 @@ def dropna(ds, varname: str, nanval: Union[list, float]):
     ----------
     ds : xr.Dataset
         dataset of marthe variable(s)
-    
+
     varname : str
         variable name in dataset to treat
-    
+
     nanval : list or float
         value to consider as NaN
-    
+
     Returns
     -------
     dataset where variable != nanval
@@ -147,7 +194,7 @@ def dropna(ds, varname: str, nanval: Union[list, float]):
 def subset(ds, varname: str, value: Union[list, float]):
     """ Subset dataset based on variable name and value.
     --> inverse of :py:func:`dropna`
-    
+
     Parameters
     ----------
     ds : xr.Dataset
@@ -177,16 +224,16 @@ def replace(ds, varname: str, value: float, replace: float):
     ----------
     ds : xr.Dataset
         dataset of marthe variable(s)
-    
+
     varname : str
         variable name
-    
+
     value: float
         value to replace
 
     replace: float
         value to replace with
-    
+
     Returns
     -------
     dataset with replaced value
@@ -203,7 +250,7 @@ def fillna(ds, varname, value):
     ----------
     ds : xr.Dataset
         dataset of marthe variable(s)
-    
+
     varname : str
        variable name
 
@@ -216,7 +263,7 @@ def fillna(ds, varname, value):
 
 def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zone_label='zone'):
     """ Assign coordinates from variables to dimensions
-    
+
     This function transform a 1D or 2D (time, zone dimensions) array to 3D or 4D
     with time, x,y [,z] as dimensions.
 
@@ -226,19 +273,15 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
     ----------
     ds : xr.Dataset
         dataset of Marthe variable(s)
-
     add_lay : bool, optional
         Boolean to treat `z` (layer) as a dimension (True) or a variable (False)
-
     coords : list, optional
         list of coordinates to add as dimensions. Default is `['x', 'y', 'z']`
-
     keep_zone : bool, optional
         keep zone as dimension (will make multiindex). Default is False.
-    
     zone_label : str, optional
         label of current index. Default is `zone` as read by :py:func:`gridmarthe.load_marthe_grid`
-    
+
     Returns
     -------
     xr.Dataset
@@ -248,57 +291,91 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
         z_coords = ds.get(coords[2], None) # assert z is here, or bypass
     else:
         z_coords = None
-    
+
     if add_lay is False:
         # in some case, even if z is included it should not be treated as coord (ex. plot outcrop)
         z_coords = None
-    
+
     # attrs not kept ? force to keep them
     coords_attrs = [ds.y.attrs, ds.x.attrs]
-    
+
     da = ds.assign_coords(
         #x=(zone_label, np.around(da_in[coords[0]].data, 1) ),
         x=(zone_label, ds[coords[0]].data ),
         y=(zone_label, ds[coords[1]].data ),
     )
     dims = ['y', 'x']
-    
+
     if z_coords is not None:
         da = da.assign_coords(z=(zone_label, ds[coords[2]].data))
         dims.insert(0, 'z')
         coords_attrs.insert(0, ds.z.attrs)
-    
+
     da = da.set_index(zone=dims)
     if not keep_zone:
         da = da.drop_duplicates(zone_label).unstack(zone_label)  # drop duplicates is a security for nested grids, if dropnan was not performed
-    
+
     da.x.attrs = coords_attrs[-1]
     da.y.attrs = coords_attrs[1]
     if z_coords is not None:
         da.z.attrs = coords_attrs[0]
-    
+
     return da.sortby(dims)
 
 
 def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
-    """ Transform a 3 or 4D aray into 1 or 2D array 
+    """ Transform a 3 or 4D aray into 1 or 2D array
     inverse of  :py:func:`assign_coords`
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset of Marthe variable(s)
+    coords : list, optional
+        list of coordinates to stack. Default is `['z', 'y', 'x']`
+        if `z` is not present in ds.coords, it will be ignored.
+    dropna : bool, optional
+        drop NaN values in stacked dataset. Default is False.
+
+    Returns
+    -------
+    xr.Dataset
+        Dataset with stacked coordinates as single dimension `zone`.
+
+    Notes
+    -----
+    For nested grids, the total number of zones cannot be checked
+    when flattening back to 1D from cartesian coords/arrays. It will
+    lead to incorrect total number of zones as different cell sizes exist
+    in the 3D grid. For such cases, it is advised to use dropna=True to remove
+    empty zones. Then write back to marthe grid with :py:func:`gridmarthe.write_marthe_grid`
+    using a permh file as template.
+
+    TODO: add a sort option to ensure sorted coords in output
+    based on z,y,x order AND dx, dy scale (larger scale first, then smaller)
     """
     # create zone index
-    coords = [d for d in coords if d in ds.coords.keys()] # make sure to drop coords that are not present
-    dims = np.prod( [len(ds[d]) for d in coords] ) # create new zone dim
+    coords = [d for d in coords if d in ds.coords.keys()]  # make sure to drop coords that are not present
+    dims = np.prod([len(ds[d]) for d in coords])  # create new zone dim
     zone = np.arange(1, dims + 1)
-    
+
     # stack coords
-    ds2 = ds.copy().stack(zone=coords) # multiindex zone grouping coords key
-    
+    ds2 = ds.copy().stack(zone=coords)  # multiindex zone grouping coords key
+
     # keep only zone as dim
     ds3 = ds2.drop_vars(['zone'] + coords).assign_coords(zone=('zone', zone))
-    
+
     # get back xy[z] as var
     for c in coords:
         ds3[c] = ('zone', ds2[c].data)
-    
+
     if dropna:
         ds3 = ds3.dropna(dim='zone')
     return ds3
+
+
+def get_default_variable(ds):
+    """ Get the first non coordinate variable in xarray Dataset
+    """
+    _vars = [x for x in ds.keys() if x not in ['z', 'y', 'x', 'dx', 'dy', 'zone', 'time']]
+    return _vars[0]

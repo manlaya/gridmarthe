@@ -21,6 +21,7 @@ dynamic = ["version"]
 authors = [
     {name = "Adrien Manlay", email = "a.manlay@brgm.fr"},
     {name = "Jean-Pierre Vergnes", email = "jp.vergnes@brgm.fr"},
+    {name = "Shuaitao Wang", email = "s.wang@brgm.fr"},
 ]
 
 description = "python package to read/write/manage Marthe Grids"
@@ -47,7 +48,7 @@ keywords = ["hydrology", "groundwater", "modelling"]
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
-    "pandas",
+    "pandas<3.0",
     "h5netcdf",
     "xarray",
     "pyproj",

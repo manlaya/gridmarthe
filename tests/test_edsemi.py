@@ -23,10 +23,10 @@ def test_extract_var():
         zxcol, zylig, zdxlu, zdylu,
         ztitle, izdates
     ) = _extract_zvar_from_ds(ds, varname.lower())
-    
+
     assert np.prod(np.array(dims), axis=1).sum() == np.size(zvar), \
     'Expected dimensions and actual dimension of array do not match'
-    
+
     # help(gm.lecsem.modgridmarthe.write_grid)
     # modgridmarthe.write_grid(
     #     zvar=zvar,
@@ -64,7 +64,7 @@ def _single_test_write_marthe_grid(martfile, varname, fout):
     assert ds3.permeab.shape == ds1.permeab.shape, "re-read written file shape mismatch"
     assert np.allclose(ds3.permeab.values, ds1.permeab.values, equal_nan=True), \
         "write_marthe_grid re-read written file values mismatch"
-    
+
     print("==================================================")
     print(f"write_marthe_grid test passed for file {martfile}")
 
@@ -90,6 +90,12 @@ def test_write_marthe_grid_multilayer():
     _single_test_write_marthe_grid(martfile, varname, fout)
 
 
+def test_write_no_varname():
+    martfile = './tests/data/craie_npc_gig.permh'  # multilayer and nested
+    fout = './tests/res/grid.out'
+    _single_test_write_marthe_grid(martfile, varname=None, fout=fout)
+
+
 if __name__ == "__main__":
-    
+
     test_write_marthe_grid()

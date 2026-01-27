@@ -1,5 +1,17 @@
 <!-- gridmarthe changelog -->
 
+v0.4.0
+------
+
+<!-- Released on 202X-XX-XX -->
+
+* add: drainage direction computation from legacy fortran sources
+* fix: reading single grid output, even without metada (`read_shallow` parameter)
+* change: default to `varname=None` when writing a marthe grid file.
+1st non dimension/coord variable will be selected.
+add `.lower()` security for user's variable
+
+
 v0.3.0
 ------
 
@@ -17,7 +29,7 @@ Released on 2025-12-09
     - `--dump` (`-H`) to mimic `ncdump -H` command (netcdf CLI tools).
     - `--attrs` (`-a`) to add global attributes
     - treat input if already in netcdf fmt (modify it, with scale factor or attrs, to 2D, etc)
- 
+
 
 v0.2.0
 ------
@@ -44,7 +56,7 @@ Released on 2025-09-02
 * add geometry functions (`get_mask_array`, `compute_geometry`)
 * add reprojection functions (still experimental)
 * add `martshp` script to easily convert a marthe grid file into a shp/gpkg file in command line
-* change: rename function to write raster: `to_raster()` instead of `write_raster_from_da()` 
+* change: rename function to write raster: `to_raster()` instead of `write_raster_from_da()`
 * change: zone index is reset when the `drop_nan` option is used in `load_grid_marthe()`. A new
   variable 'zone_all' store the old index for the `reset_geometry()` method
 * code refactoring (lecsem module and global organization)
