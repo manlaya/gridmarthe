@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2025  BRGM
 #
@@ -38,7 +38,7 @@ def parse_args():
         description="Convert a Marthe GridFile to shapefile format.",
         epilog=textwrap.dedent(_copyleft)
     )
-    
+
     parser.add_argument(
         'opt',
         metavar='grid timesteps',
@@ -56,14 +56,20 @@ def parse_args():
     parser.add_argument('--mask'    , '-m', action="store_const", const=True, default=False, help='Only get a mask of active domain')
     parser.add_argument('--version' , '-v', action="store_const", const=True, default=False, help='Show version and exit')
     parser.add_argument('--wide_fmt', '-w', action="store_const", const=True, default=False, help='Use wide format (columns) for time')
-    
+
     args = parser.parse_args()
-    
+
     if args.version:
         print('gridmarthe {}'.format(gm.__version__))
         print(_copyleft)
         sys.exit(0)
-    
+
+    if len(args.opt) == 0:
+        print('martshp: no argument/option')
+        parser.print_usage()  # less verbose than print_help
+        print('use martshp -h for more help')
+        sys.exit(1)
+
     fname, ext = os.path.splitext(args.opt[0])
     args.fname, args.ext = fname, ext
     if args.output is not None:
@@ -72,11 +78,11 @@ def parse_args():
             os.makedirs(dirout, exist_ok=True)
     else:
         args.output = '{}.shp'.format(fname)
-    
+
     if args.gpkg:
         fname, ext = os.path.splitext(args.output)
         args.output = '{}.gpkg'.format(fname)
-    
+
     if os.path.exists(args.output):
         os.remove(args.output)
 
@@ -92,8 +98,8 @@ def main():
     """
     args   = parse_args()
     fpastp = args.opt[1] if len(args.opt) > 1 else None
-    
-    if not args.ext.endswith('nc'): 
+
+    if not args.ext.endswith('nc'):
         ds = gm.load_marthe_grid(
             args.opt[0],
             fpastp=fpastp,
@@ -119,10 +125,10 @@ def main():
     gdf = gm.to_geodataframe(ds, fmt='long' if not args.wide_fmt else 'wide')
     gdf.to_file(args.output)
     return 0
-    
-    
+
+
 if __name__ == "__main__":
-    
+
     status = main()
     sys.exit(status)
-   
+
