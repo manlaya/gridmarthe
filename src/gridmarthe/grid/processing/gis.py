@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024-2025  BRGM
 #
@@ -31,19 +31,18 @@ from pyproj import Transformer
 import geopandas as gpd
 import xarray as xr
 
-from ..utils import assign_coords
+from ..grid_utils import assign_coords
 from .gutils import _polygonize
-
 
 
 def _build_polyg(ds):
     """ build a (rectangular) polygon shape from marthegrid dataset """
-    
+
     x0 = ds.x.values - (ds.dx.values / 2.)
     y0 = ds.y.values - (ds.dy.values / 2.)
     x1 = ds.x.values + (ds.dx.values / 2.)
     y1 = ds.y.values + (ds.dy.values / 2.)
-    
+
     return _polygonize(x0, y0, x1, y1)
 
 
@@ -58,25 +57,25 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
         The EPSG code for the coordinate reference system, by default 'EPSG:27572'.
     fmt : str, optional
         The format of the output GeoDataFrame, either 'long' or 'wide', by default 'long'.
-    
+
     Returns
     -------
     geopandas.GeoDataFrame
         The converted GeoDataFrame.
     """
-    
+
     polygons = _build_polyg(ds) # .isel(time=0) # x,y does not vary in time
     df = ds.to_dataframe() #.to_pandas() # only for 1 dim
-    
+
     if 'time' in ds.dims.keys():
         polygons = np.tile(polygons.flatten(), len(np.unique(df.index.get_level_values('time')))) # ad geom for every timestep
-    
+
     gdf = gpd.GeoDataFrame(
         df,
         geometry=polygons,
         crs=epsg
     )
-    
+
     if fmt == "wide" and 'time' in ds.dims.keys():
         # here no wide fmt if no time, so no if 'time' in ds.dims.keys():
         gdf = gdf.unstack('time')
@@ -87,7 +86,7 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
         ]
         gdf = gdf.loc[:,~gdf.columns.duplicated()].copy()  # drop duplicated cols
         gdf = gdf.set_geometry('geometry')  # need to make again geom after drop dupl
-    
+
     return gdf
 
 
@@ -121,7 +120,7 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
         The coordinate reference system to use for the clipping, by default 27572.
     engine : str, optional
         The engine to use for clipping, by default 'gdf'.
-    
+
     Returns
     -------
     xarray.DataArray or xarray.Dataset
@@ -147,7 +146,7 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
         A GeoDataFrame containing the geometry to use for subsetting, by default None.
     xmin, ymin, xmax, ymax : float, optional
         The manual bounds to use for subsetting, by default None.
-    
+
     Returns
     -------
     xarray.DataArray or xarray.Dataset
@@ -163,15 +162,15 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
         assert xmax is not None, "When using manual bounds, all must be set"
         assert ymin is not None, "When using manual bounds, all must be set"
         assert ymax is not None, "When using manual bounds, all must be set"
-    
+
     mask_lon = ( da[dims[0]] >= xmin) & ( da[dims[0]] <= xmax) #da.xc
     mask_lat = ( da[dims[1]] >= ymin) & ( da[dims[1]] <= ymax)
-    
+
     # imin, imax = np.where(da[var[0]].values==xmin)[0], np.where(da[var[0]].values==xmax)[0]
     # jmin, jmax = np.where(da[var[1]].values==ymin)[0], np.where(da[var[1]].values==ymax)[0]
 
     # sub_da = da.isel(i=slice(int(imin), int(imax)+1), j=slice(int(jmax), int(jmin)+1)) # j in reverse order / +1 on imax, jmin because upper is exclude in py slicing
-    
+
     return da.where(mask_lon & mask_lat, drop=True)
 
 
@@ -203,7 +202,7 @@ def _transf_proj_meshgrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
     """
     x, y = np.unique(ds['x'].data), np.unique(ds['y'].data)
     transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-    
+
     xx, yy = np.meshgrid(x, y)
     xx_transformed, yy_transformed = transformer.transform(xx, yy)
     data_transformed = xr.DataArray(
@@ -223,7 +222,7 @@ def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarr
     If needed, use :py:func:`gridmarthe.assign_coords` first.
 
     Warning: IN DEVELOPMENT, not tested yet // USE WITH CAUTION
-    """ 
+    """
     if engine == 'rioxarray':
         _check_rioxarray()
         ds_transf = ds.rio.write_crs(from_epsg).rio.reproject(to_epsg)
@@ -251,7 +250,7 @@ def to_raster(
     filename_tpl='raster'
 ):
     """ Write a xr.DataArray to a raster file
-    
+
     Notes
     -----
     - Warning, only functionnal for regular grids
@@ -273,15 +272,15 @@ def to_raster(
     filename_tpl : str, optional
         The output file template for the raster file, by default 'raster'.
         Final name will be '{filename_tpl}_{time}.tiff'
-    
+
     Returns
     -------
     None
         The function writes the raster file and returns None.
     """
-    
+
     _check_rioxarray()
-    
+
     if isinstance(ds, xr.Dataset):
         assert varname is not None, \
             'You need to provide a variable name to export when using a Dataset'
@@ -290,12 +289,12 @@ def to_raster(
         da = ds.copy()
     else:
         raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
-    
+
     if time is None:
         time = da.times  # if not defined, get all available times
     elif isinstance(time, str):  # make sure to get a iterable for slicing
         time = [time]
-    
+
     for t in time:
         _single_grid_to_raster(
             da.sel(time=slice(t)),

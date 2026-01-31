@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -23,19 +23,3 @@
 #
 
 __version__ = '0.4.0_dev'
-
-_copyleft = """
-    {program}  Copyright (C) {year}  {name_of_author}.
-    This program comes with ABSOLUTELY NO WARRANTY.
-    This is free software, see GNU General Public Lisence v3 for copying.
-""".format(program='gridmarthe', year=2025, name_of_author='BRGM')
-
-
-# def _show_c():
-    # print('c')
-    # return
-
-
-# def _show_w():
-    # print('w')
-    # return

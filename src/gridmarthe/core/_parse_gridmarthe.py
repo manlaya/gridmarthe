@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -25,8 +25,7 @@
 import re
 import numpy as np
 
-from .functions import modgridmarthe
-from ..utils import _datetime64_to_float
+from .coremod import modgridmarthe         # compiled fortran module
 
 
 class FortranError(Exception):
@@ -34,9 +33,18 @@ class FortranError(Exception):
         self.message = message
         super().__init__(self.message)
         self.iostat = iostat
-    
+
     def __str__(self):
         return f"Error Code: {self.iostat}: {self.message}"
+
+
+def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
+    # Memo: here, origin should be defined from pastp (time since timestep 0)
+    idate = (zdates - np.datetime64(origin)) / np.timedelta64(1, 's')
+    # fake dates from load_marthe_grid will be set to 0,
+    # meaning timestep -9999. (eg used in parameters grids)
+    idate = np.where(idate < 0., 0., idate)
+    return idate
 
 
 def scan_var(xfile):
@@ -50,7 +58,7 @@ def scan_var(xfile):
 def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     """ Read a Marthe grid file
     using fortran wrapper, for a specific variable
-    
+
     Parameters
     ----------
     xfile: str
@@ -58,7 +66,7 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     varname : str
         string of variable in xfile to get values.
         Default is CHARGE (groundwater head)
-    
+
     Returns
     -------
     zvar  : np.array
@@ -85,12 +93,12 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     nbtot = np.prod(dims, axis=1).sum() # product deprecated => prod // DeprecationWarning: `product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.
     if nbtot == 0:
         raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
-    
+
     if shallow_only:
         res = list(modgridmarthe.read_grid_shallow( xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx ))
     else:
         res = list(modgridmarthe.read_grid( xfile, varname, nbsteps, nbtot, nu_zoomx))
-    
+
     res.append(dims)
     return res
 
@@ -203,8 +211,13 @@ def _parse_dims_from_xr_attrs(str_dims):
     # print('not yet available')
 
 
+def _compute_dxdy():
+    # TODO
+    raise NotImplementedError
+
+
 def _extract_zvar_from_ds(ds, varname):
-    
+
     zvar    = ds[varname].data
     zdates  = ds.time.data
     zxcol   = ds.x.data
@@ -222,13 +235,13 @@ def _extract_zvar_from_ds(ds, varname):
 
 def _calc_flow_directions(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top):
     res1 = modgridmarthe.calc_flow_direct(file_presence, file_topo, file_out_direct, file_out_topo, file_listing, ityp_direct, eps_top )
-    
+
     nu_zoomx = modgridmarthe.scan_nu_zoomx(file_out_direct) # scan nb of nested grids (gig)
     varname = ''
     dims, nbsteps = modgridmarthe.scan_dim(file_out_direct, varname, nu_zoomx)
     dims[0][-1] = 1
     nbtot = np.prod(dims, axis=1).sum()
-    
+
     res = list(modgridmarthe.read_grid( file_out_direct, varname, nbsteps, nbtot, nu_zoomx))
     # print(res)
     # dims[0][-1] = 0
@@ -236,8 +249,8 @@ def _calc_flow_directions(file_presence, file_topo, file_out_direct, file_out_to
     return res
 
 if __name__ == '__main__':
-    
+
     # print(_lecsem.__doc__)
     print(modgridmarthe.__doc__)
-    
+
 

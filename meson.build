@@ -16,9 +16,9 @@ project('gridmarthe', ['fortran', 'c'],
 )
 
 # add_languages('fortran')
-subdir('src/gridmarthe/functions')
-functions_sources = all_functions_sources
-functions_install_dir = 'gridmarthe/functions/'  # in python_install_dir
+subdir('src/gridmarthe/core')
+core_sources = all_functions_sources
+core_install_dir = 'gridmarthe/core/'  # in python_install_dir
 
 
 # ------ Get compiler and build options ------ #
@@ -108,22 +108,22 @@ inc_dir += [inc_np,inc_f2py]
 
 # ---- Building interface for modgridmarthe functions ---- #
 # subdir('src/gridmarthe/lecsem') # not functionnal yet, keep it here for now
-functions_interface = custom_target('functionsmodule.c',
-  input : functions_sources,
-  output : ['functionsmodule.c', 'functions-f2pywrappers.f', 'functions-f2pywrappers2.f90'],
-  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'functions', '--lower']
+core_interface = custom_target('coremodmodule.c',
+  input : core_sources,
+  output : ['coremodmodule.c', 'coremod-f2pywrappers.f', 'coremod-f2pywrappers2.f90'],
+  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'coremod', '--lower']
 )
 
-py.extension_module('functions',
+py.extension_module('coremod',
   [
-    functions_sources,
-    functions_interface,
+    core_sources,
+    core_interface,
     fortranobject_c
   ],
   include_directories: inc_dir,
   dependencies: deps,
   install: true,
-  install_dir: python_install_dir / functions_install_dir,
+  install_dir: python_install_dir / core_install_dir,
 )
 
 # --------- Install pypackage ----------- #

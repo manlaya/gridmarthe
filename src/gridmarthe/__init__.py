@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -22,15 +22,10 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-from .__version__ import __version__
+from ._version import __version__
 
-from .gridmarthe import *
-from .operasem import *
-from .flowdirections import *
-
-from .velocity import read_velocity
+from .grid import *
 from .plot import (
     plot_nested_grid, plot_outcrop,
     plot_veloc_quiver, plot_cross_section
 )
-

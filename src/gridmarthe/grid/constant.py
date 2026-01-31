@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Variables and attributes definitions for gridmarthe.
+Coordinates and variables and attributes definitions for gridmarthe.
 """
 
 # http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html
@@ -10,6 +10,7 @@ Variables and attributes definitions for gridmarthe.
 # should we make a suggestion with water_table_level ?
 # https://github.com/cf-convention/discuss/issues
 
+# TODO: use the config file from martpy, and deal with english names too.
 VARS_ATTRS = {
     'permeab': {
         'varname': 'PERMEAB',
@@ -85,3 +86,42 @@ VARS_ATTRS = {
 
 # add variants for variable names
 VARS_ATTRS['geom_zone'] = VARS_ATTRS['zone_geom']  # english variant in MARTHE code
+
+
+# For memory only, now with pyproj
+COOR_ATTRS = {
+    'x' : {
+        'units': 'meters',
+        'axis': 'X',
+        'standard_name': 'projection_x_coordinate',
+        'coverage_content_type' : "coordinate"
+    },
+    'y'  : {
+        'units': 'meters',
+        'axis': 'Y',
+        'standard_name': 'projection_y_coordinate',
+        'coverage_content_type' : "coordinate"
+    },
+    'lon': {
+        'units': 'degrees_east',
+        'standard_name': 'longitude',
+    },
+    'lat': {
+        'units': 'degrees_north',
+        'standard_name': 'latitude' ,
+    },
+    'z': {
+        'units': 'm',
+        'axis': 'Z',
+        'positive': 'down',
+        'standard_name': 'depth',
+        'long_name': 'depth'
+    },
+    'layer': {
+        'units': '-',
+        'axis': 'Z',
+        'positive': 'down',
+        'standard_name': 'depth',
+        'long_name': 'aquifer_layer'
+    }
+}

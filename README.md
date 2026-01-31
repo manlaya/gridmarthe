@@ -36,7 +36,7 @@ Still, as Marthe meshes are always parallelepiped, the array does *not* necessar
 [ugrid convention](https://ugrid-conventions.github.io/ugrid-conventions/).
 This may be an evolution for future version if required.
 
-The x, and y coordinates are the center of cell. Dx, Dy are the dimension of the cell.
+The `x`, and `y` coordinates are the center of cell. `dx`, `dy` are the dimensions of the cell.
 
 
 ## Installation
@@ -51,7 +51,7 @@ Users can install it with:
 pip install gridmarthe
 ```
 
-For GNU/Linux and MacOS, the package needs gfotran/gcc to run.
+For GNU/Linux and MacOS, the package needs gforran/gcc shared libraries to run.
 
 Linux, example with debian/ubuntu:
 
@@ -79,8 +79,8 @@ mamba install gridmarthe
 
 ### From sources
 
-`gridmarthe` use some Fortran modules which need
-to be compiled before local installation.
+`gridmarthe` use some Fortran modules which need to be compiled before local installation,
+hence user/developer who want to install from sources will need a Fortran an C compiler.
 
 #### Compilation and installation
 
@@ -93,8 +93,8 @@ cd gridmarthe
 
 ##### With pip (Unix-like OS)
 
-On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile Fortran sources and install
-**in development mode** the package.
+On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile
+Fortran sources and install **in development mode** the package.
 
 ```bash
 make
@@ -135,7 +135,7 @@ conda develop src/
 
 ## Usage
 
-Simple examples can be found in the 
+Simple examples can be found in the
 [documentation](https://gridmarthe.readthedocs.io/en/stable/user_guide/index.html).
 
 

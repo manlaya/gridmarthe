@@ -74,15 +74,6 @@ def rename_kwargs(func_name: str, kwargs: Dict[str, Any], aliases: Dict[str, str
             kwargs[new] = kwargs.pop(alias)
 
 
-def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
-    # Memo: here, origin should be defined from pastp (time since timestep 0)
-    idate = (zdates - np.datetime64(origin)) / np.timedelta64(1, 's')
-    # fake dates from load_marthe_grid will be set to 0,
-    # meaning timestep -9999. (eg used in parameters grids)
-    idate = np.where(idate < 0., 0., idate)
-    return idate
-
-
 def _is_sorted(a):
     # https://stackoverflow.com/questions/47004506/check-if-a-numpy-array-is-sorted
     return np.all(a[:-1] <= a[1:])

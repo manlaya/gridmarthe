@@ -5,7 +5,7 @@
 import numpy as np
 
 import gridmarthe as gm
-from gridmarthe.functions import (
+from gridmarthe.core import (
     _extract_zvar_from_ds,
     _parse_dims_from_xr_attrs,
     # modgridmarthe
@@ -42,7 +42,7 @@ def test_extract_var():
     #     nsteps=len(zdates),
     #     dates=izdates,
     #     debug=True,
-    #     xfile='tests/res/test.out'
+    #     xfile='tests/tmp_outputs/test.out'
     # )
 
 
@@ -72,27 +72,27 @@ def _single_test_write_marthe_grid(martfile, varname, fout):
 def test_write_marthe_grid():
     martfile = './tests/data/hallue.permh'  # simple, single layer
     varname  = 'PERMEAB'
-    fout = './tests/res/grid.out'
+    fout = './tests/tmp_outputs/grid.out'
     _single_test_write_marthe_grid(martfile, varname, fout)
 
 
 def test_write_marthe_grid_nested():
     martfile = './tests/data/Somme_V3_Surfex.permh'  # nested
     varname  = 'PERMEAB'
-    fout = './tests/res/grid.out'
+    fout = './tests/tmp_outputs/grid.out'
     _single_test_write_marthe_grid(martfile, varname, fout)
 
 
 def test_write_marthe_grid_multilayer():
     martfile = './tests/data/craie_npc_gig.permh'  # multilayer and nested
     varname  = 'PERMEAB'
-    fout = './tests/res/grid.out'
+    fout = './tests/tmp_outputs/grid.out'
     _single_test_write_marthe_grid(martfile, varname, fout)
 
 
 def test_write_no_varname():
     martfile = './tests/data/craie_npc_gig.permh'  # multilayer and nested
-    fout = './tests/res/grid.out'
+    fout = './tests/tmp_outputs/grid.out'
     _single_test_write_marthe_grid(martfile, varname=None, fout=fout)
 
 

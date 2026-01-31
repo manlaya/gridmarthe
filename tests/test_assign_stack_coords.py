@@ -3,7 +3,7 @@
 
 import numpy as np
 import gridmarthe as gm
-from gridmarthe.utils import _is_sorted
+from gridmarthe.grid.grid_utils import _is_sorted
 
 
 DATA_WITH_Z_NESTED = './tests/data/craie_npc_gig.permh'
@@ -76,7 +76,7 @@ def test_stack_coords_no_z():
     assert _is_sorted(ds3.x.data[:len(ds2.x.data)])
     assert _is_sorted(ds3.y.data[::len(ds2.x.data)][::-1])
 
-    status = gm.write_marthe_grid(ds3, './tests/res/temp_stack_coords_no_z.permh', VAR.lower(), debug=True)
+    status = gm.write_marthe_grid(ds3, './tests/tmp_outputs/temp_stack_coords_no_z.permh', VAR.lower(), debug=True)
     assert status == 0
 
 
@@ -105,7 +105,7 @@ def test_stack_coords_with_z():
     assert _is_sorted(np.unique(ds3.x.data))
     assert _is_sorted(np.unique(ds3.y.data))
     assert _is_sorted(np.unique(ds3.z.data))
-    status = gm.write_marthe_grid(ds3, './tests/res/temp_stack_coords_with_z.permh', VAR.lower())
+    status = gm.write_marthe_grid(ds3, './tests/tmp_outputs/temp_stack_coords_with_z.permh', VAR.lower())
     assert status == 0
 
 

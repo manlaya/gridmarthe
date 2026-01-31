@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -32,65 +32,54 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from .utils import _get_scale
+from gridmarthe.grid.grid_utils import _get_scale, deprecated_alias
+from .plot_utils import _set_map_lims
 
 
 """ Module for visualisation of gridmarthe files
 """
 
 
-def _set_map_lims(ax, xmin, ymin, xmax, ymax, perc=.05):
-    x_range = xmax - xmin
-    y_range = ymax - ymin
-    # and add 5% margin around bounds (2.5% on each side)
-    ax.set_xlim([xmin - (perc * x_range)/2, xmax + (perc * x_range)/2])
-    ax.set_ylim([ymin - (perc * y_range)/2, ymax + (perc * y_range)/2])
-    return None
-
-
+@deprecated_alias(var='varname')
 def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
-    
+
     Parameters
     ----------
     ds: xr.Dataset
         the dataset MUST be a 2D array, with dims = x,y.
         In other words, you may need to sel z and time before plot, and you need to apply
         :py:func:`gridmarthe.assign_coord`
-    
+
     ax: matplotlib axe, optional.
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
-    
+
     varname: str, optional
         the variable to plot in dataset. Default is 'charge'.
-    
+
     **kwargs
         any keywords argument from `xr.Dataset.plot.pcolormesh`
-    
+
     Returns
     -------
     ax: matplotlib axis.
     """
     da = ds.copy()
-    
-    if 'var' in kwargs.keys():
-        # legacy, previous arg name was only var, harmonize between functions/methods
-        varname = kwargs.pop('var')
-    
+
     vmin, vmax = da[varname].min(), da[varname].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
     if kwargs.get('norm') is not None:
         vmin, vmax = None, None  # if user set a norm, vmin and vmax are not allowed
     cbar_kwargs = kwargs.pop('cbar_kwargs', {})
-    
+
     # split grids
     dx, dy = _get_scale(da)
     dx1, dy1 = dx.pop(0), dy.pop(0)
     grid = da.where(da['dx'] == dx1, drop=True)
-    
+
     if ax is None:
         fig, ax = plt.subplots()
-    
+
     # plots nested then main
     for dx2, dy2 in zip(dx, dy):
         gig = da.where(da['dx'] == dx2, drop=True)
@@ -100,46 +89,46 @@ def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
             add_colorbar=False,
             **{k:v for k,v in kwargs.items() if k != 'add_colorbar'}
         )
-    
+
     grid[varname].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
-    
+
     _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
-    
+
     if hasattr(da, 'time') and str(da.time.values)[:10] == '1850-01-01':
         # remember: no slice on time because it must be selected before calling function
         ax.set_title(varname)  # remove default title from xarray API if dummy timestep (e.g plot parameters)
-    
+
     return ax
 
 
 def plot_mesh_time_serie(*args, zone: int, varname='charge', show=False, figsize=(12,4), **kwargs):
     """ Usefull function to plot time serie from any dataset, by extracting a specific cell timeserie
-    
+
     Parameters
     ----------
-    
+
     *args: xr.Dataset,
         any datasets (you can pass multiple datasets, eg. `plot_mesh_time_serie(ds1, ds2, ds3, ... zone=32)`
-    
+
     zone: int
         zone value (dimension) to select data
-    
+
     varname: str, optional (default is 'charge')
         Variable to plot. Must be a key of all dataset passed as *arg.
-    
+
     show: bool, optional.
         show plot using `plt.show()`
-    
+
     figsize: tuple[int], optional.
         figsize argument for matplotlib.
-    
+
     **kwargs
         any keywords argument for `xr.Dataset.plot()` method
-    
+
     Returns
     -------
     ax: matplotlib axis.
-    
+
     """
     fig, ax = plt.subplots(figsize=figsize)
     for da in args:
@@ -152,55 +141,55 @@ def plot_mesh_time_serie(*args, zone: int, varname='charge', show=False, figsize
 
 def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, file_out=None, show=False, **kwargs):
     """ Usefull function to plot outcrop layers of a marthe (multilayer) grid
-    
+
     There is two mode implementend yet, using xr.plot or
     gpd.plot (useful for nested grid).
 
     To use this function, `ds` provided need to have a `z` variable (i.e model
     used need to be multilayer) and user need to assign coords before and **keep**
     the z dimension as a variable (see Note).
-    
+
     Note
     ----
     If input is a `xarray.Dataset` instance, `ds_outcrop` need to get coords before
     but keep `z` as a variable. To do so, use:
-    
+
     >>> gm.assign_coords(ds_outcrop, add_lay=False)
-    
+
     Parameters
     ----------
     ds_outcrop: xr.Dataset
         output of :py:func:`gridmarthe.get_surface_mask`
-    
+
     fig: matplotlib figure, Optional.
         if provided, data are plotted on this figure, otherwise fig, ax instances will be created
-    
+
     ax: matplotlib axe, Optional.
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created
-    
+
     cbar_width: str, Optional.
         width of colorbar, as a percentage of the main axis. Default is '3'
-    
+
     labels: list, Optional.
         labels for layers in colorbar
 
     file_out: str, Optional.
         If not None (default), file name to write plot
-    
+
     show: bool, Optional.
         Show result (`plt.show()`), default is False.
-    
+
     **kwargs
         Any keywords argument to pass to either `xarray.Dataset.plot.pcolormesh()`
         or `geopandas.GeoDataFrame.plot()`.
-    
+
     Returns
     -------
     fig, ax, ax_cbar if not `show`, otherwise return None
-    
+
     Example
     -------
-    
+
     xarray version:
 
     >>> ds_surf = gm.get_surface_layer(ds)
@@ -219,15 +208,17 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
         assert 'z' in ds_outcrop.columns, "No `z` dimension. Outcrop plot is not possible."
         maxn = np.nanmax(ds_outcrop['z'].to_numpy())
         engine = 'gpd'
+    else:
+        raise ValueError('`ds_outcrop` must be either a xarray.Dataset or a geopandas.GeoDataFrame')
 
     # custom cbar to force categories
     cmap = kwargs.pop('cmap', None)
     norm = kwargs.pop('norm', None)
-    
+
     if cmap is None:
         cmap = cm.tab10 if maxn <= 10 else cm.tab20
         cmap = colors.ListedColormap(cmap.colors[:int(maxn)])  # subset on number of colors, if not wrong legend
-    
+
     if norm is not None:
         bounds = norm.boundaries
     else:
@@ -235,15 +226,15 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
         if len(bounds) == 1:
             bounds = np.append(bounds, [maxn+1])
         norm = colors.BoundaryNorm(bounds, cmap.N)  # set bins to custom values
-    
+
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
-    
+
     # Create the figure and axes, with a place for colorbar
     if fig is None or ax is None:
         fig, ax = plt.subplots(1, 1)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="{}%".format(cbar_width), pad=0.1)
-    
+
     if engine == 'xr':
         the_plot = plot_nested_grid(
             ds_outcrop, var='z',
@@ -253,9 +244,9 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
             add_colorbar=False,
             **kwargs
         )
-    
+
     elif engine == 'gpd':
-        
+
         ds_outcrop.plot(
             column='z',
             ax=ax,
@@ -265,7 +256,7 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
             norm=norm,
             **kwargs
         )
-    
+
     ax_cbar = fig.colorbar(
         sm, ax=ax, cax=cax,
         orientation='vertical',
@@ -273,7 +264,7 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
         label='Layers',
     )
     ax_cbar.ax.tick_params(size=0)
-    
+
     _labels = copy(labels)
     if _labels is None:
         _labels = ['{:.0f}'.format(x) for x in bounds]
@@ -281,7 +272,7 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
         _labels = _labels + ['none']
     ax_cbar.set_ticklabels(_labels)
     ax_cbar.ax.invert_yaxis()
-    
+
     if file_out is not None:
         plt.savefig(file_out, dpi=300)
     if show:
@@ -294,7 +285,7 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
 
 def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_norm=True, loc_scale_xy=(0.1,0.1)):
     r""" Plot velocity field as quiver
-    
+
     Parameters
     ----------
     ds: xr.Dataset
@@ -304,41 +295,41 @@ def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_
         - `vmod`: velocity module
 
         See :py:func:`gm.read_velocity` to get velocity dataset from file.
-    
+
     ax: matplotlib.axes, optional
         if not provided, an ax will be created and returned.
-    
+
     xyfreq: int, optional
         filter velocity data every X cell.
-    
+
     veclenght: float, optional
         vector scale legend. Default is 1.
-    
+
     color_mod: bool, optional
         use velocity module as color field. Default is False.
-    
+
     sqrt_norm: bool, optional
         Norm the velocity data `u` and `v`, with
-        
+
         .. math::
-            
+
             u = u / \sqrt{u^2 + v^2}
 
             v = v / \sqrt{u^2 + v^2}
-        
+
         Default is True (recommended).
-    
+
     loc_scale_xy: list or tuple, optional
         coordinates (X, Y) in Axes dimension (from 0 to 1) where to add
         the velocity scale.
-    
+
     Returns
     -------
     ax: matplotlib.axes
     """
     if ax is None:
         fig, ax = plt.subplots()
-    
+
     # norm data before plot
     vx, vy = ds['vx'].data, ds['vy'].data
     x, y = ds['x'].data, ds['y'].data
@@ -349,7 +340,7 @@ def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_
         vy_norm = vy / norm
     else:
         vx_norm, vy_norm = vx, vy
-    
+
     # plot data
     # kwargs not accepted for x,y,u,v,c ;
     # use a list to make c optional
@@ -359,7 +350,7 @@ def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_
     ]
     if color_mod:
         args.append(module_v[:, ::xyfreq])
-    
+
     quiver = ax.quiver(
         *args,
         # scale=9.5e-4,
@@ -369,7 +360,7 @@ def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_
     )
     # add scale, copy from : https://tristansalles.github.io/EnviReef/5-xarray/examples/maps.html
     maxstr = r'$%3.1f \cdot 10^{%1.0f} m.s^{-1}$' % (veclenght, np.log10(np.nanmedian(np.abs(norm))))
-    plt.quiverkey(quiver, loc_scale_xy[0], loc_scale_xy[1], veclenght, maxstr, labelpos='S', 
+    plt.quiverkey(quiver, loc_scale_xy[0], loc_scale_xy[1], veclenght, maxstr, labelpos='S',
                   coordinates='axes').set_zorder(11)
     ax.set_title('Velocity field')
     return ax
@@ -413,15 +404,15 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
     gridmarthe.slice_cross_section : Function to create cross-section dataset.
     gridmarthe.operasem.xsection._mk_cross_section_geom : Function to create cross-section geometry.
     """
-    from .operasem.xsection import _mk_cross_section_geom
-    
+    from gridmarthe.grid.processing.xsection import _mk_cross_section_geom
+
     if cmap is None:
         cmap = colors.ListedColormap(cm.tab10.colors)
     if labels is None:
         labels = ['Layer {:.0f}'.format(i) for i in ds_xs['z'].data]
     if ax is None or fig is None:
         fig, ax = plt.subplots()
-    
+
     if norm is None:
         bounds = np.arange(1, len(cmap)+2)  # add a fictive layer at the end because this is lower bounds
         norm = colors.BoundaryNorm(bounds, cmap.N)
@@ -431,12 +422,12 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
     # Create cax for colorbar
     divider = make_axes_locatable(ax)
     cax = divider.append_axes('right', size=f'{cbar_size}%', pad=0.05)
-    
+
     df = _mk_cross_section_geom(ds_xs)
     for z, gr in df.groupby('z'):
         for polyg in gr['geom']:
             ax.fill(*polyg.exterior.xy, color=cmap.colors[z-1], edgecolor='none',alpha=0.5)
-    
+
     # Future work: improve colorbar handling
     # extract same corde from plot_outcrop() --> plotting.utils
     # then use here

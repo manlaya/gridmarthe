@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -28,17 +28,17 @@
 import numpy as np
 import xarray as xr #needs netcdf4, rioxarray
 
-from ..utils import _get_scale
+from ..grid_utils import _get_scale
 
 
 def get_new_coords(ds, res=1000):
     """ Reset xy with a range from min to max, with res as step"""
     xmin, xmax = np.min(ds.x).values, np.max(ds.x).values
     ymin, ymax = np.min(ds.y).values, np.max(ds.y).values
-    
+
     new_x = np.arange(xmin, xmax+res, res)
     new_y = np.arange(ymin, ymax+res, res)
-    
+
     return new_x, new_y
 
 
@@ -57,7 +57,7 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
         `xr.Dataset.interp` method to use. Default is 'nearest'
     **kwargs
         Any keywords argument to pass to `xr.Dataset.interp`.
-    
+
     Returns
     -------
         interpolated xr.Dataset
@@ -72,7 +72,7 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
 
 def rescale_grid(da, res=1000, **kwargs):
     """ Wrapper function that uses `get_new_coords()` and `interp_grid()` together
-    
+
     See also
     --------
     `get_new_coords`
@@ -97,16 +97,3 @@ def coarse_nested_grid(da, varname='charge', dx=None, dy=None):
         gig = gig[varname].coarsen(x=int(dx1/dx2), y=int(dy1/dy2), boundary='trim').mean()
         grid = xr.combine_by_coords([grid, gig])
     return grid
-
-
-def aggregate_to_grid(value_grid, target_grid):
-    # Définir un facteur d'agrégation basé sur les résolutions
-    factor_x = int(round((value_grid.x.size / target_grid.x.size)))
-    factor_y = int(round((value_grid.y.size / target_grid.y.size)))
-
-    # Vérifier que le facteur est valide
-    if factor_x > 1 and factor_y > 1:
-        value_grid_coarse = value_grid.coarsen(x=factor_x, y=factor_y, boundary="trim").mean()
-    else:
-        raise ValueError("Les tailles des grilles ne permettent pas une agrégation nette.")
-    return value_grid_coarse

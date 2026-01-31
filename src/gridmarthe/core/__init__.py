@@ -13,4 +13,3 @@ from ._parse_gridmarthe import (
     scan_var,
     FortranError
 )
-

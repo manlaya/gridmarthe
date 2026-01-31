@@ -35,10 +35,10 @@ def _get_vertices_connectivity(geom):
     dz = geom['z_upper'].data[0] - geom['z_lower'].data[0]  # only dt=0, assume no grid variation during time
     zc = geom['z_upper'].data[0] - dz/2
     cc = np.stack((geom['x'].data, geom['y'].data, zc), axis=-1)  # center cells array
-    
+
     # cell nodes (8 nodes per cell)
     cn = np.reshape(np.tile(cc, 8), (-1, 8, 3))
-    
+
     # use voxel vtk cell types (this could be changed)
     cn[:, [0, 2, 4, 6], 0] -= dx[:, None]  # left side
     cn[:, [1, 3, 5, 7], 0] += dx[:, None]  # right side
@@ -46,13 +46,13 @@ def _get_vertices_connectivity(geom):
     cn[:, [2, 3, 6, 7], 1] += dy[:, None]  # rear side
     cn[:, [0, 1, 2, 3], 2] -= dz[:, None]  # bottom side
     cn[:, [4, 5, 6, 7], 2] += dz[:, None]  # top side
-    
+
     # vertices
     vertices = np.reshape(cn, (-1, 3))
     # cell nodes connectivity: self-explicit no nodes is duplicated
     connectivity = np.arange(vertices.shape[0])
     connectivity.shape = -1, 8
-    
+
     return vertices, connectivity, "voxel"
 
 
@@ -65,20 +65,20 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
         The grid to convert, with variable to export `varname`
         In addition, it needs to have all geometry informations/variables.
         See :py:func:`gridmarthe.compute_geometry`
-    varnam: str
+    varname: str
        name of the variable to export
     time : str or datetime, optional
         time to export, by default None (all times)
     output_tpl : str, optional
        path/template name of file to write. By default, 'output/gm_vtk'.
-       Final file names will be `{output_tpl}_{varname}.pvd` and 
+       Final file names will be `{output_tpl}_{varname}.pvd` and
        `{output_tpl}_{varname}_{time}.pvu`
 
     Returns
     -------
     None
         Write pvu/pvd files to output directory
-    
+
     Example
     -------
 
@@ -92,7 +92,7 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
     """
     if time is None:
         time = grid.time.values
-    
+
     if isinstance(time, str):
         time = [time]  # convert to list if single time is given
     elif isinstance(time, int):
@@ -106,9 +106,9 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
 
     if varname not in grid:
         raise KeyError(f"Variable {varname} not found in grid")
-    
+
     grid = grid.copy().sel(time=time)
-    
+
     # create a collection of files per timestep
     output_dir = Path(output_tpl).parent
     output_dir.mkdir(exist_ok=True)
@@ -116,7 +116,7 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
     to_output = lambda s: f"{output_dir}/{s}"
 
     vertices, cellnodes, celltype = _get_vertices_connectivity(grid)
-    
+
     snapshots = []
     for i, t in enumerate(time):
         filename = f"output-{i:04d}.vtu"  # TODO, better time name management (strftime, int, etc.)

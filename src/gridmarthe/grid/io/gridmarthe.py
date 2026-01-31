@@ -22,21 +22,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os, sys, warnings
-
-if sys.version_info >= (3, 11):
-    from datetime import datetime, UTC
-else:
-    from datetime import datetime
+import os, warnings
 
 from typing import Union
 
 import pandas as pd
 import numpy as np
 import xarray as xr
-import pyproj
 
-from .functions import (
+from gridmarthe.core import (
     modgridmarthe,
     _read_marthe_grid,
     _transform_xcoords,
@@ -51,7 +45,7 @@ from .functions import (
     FortranError
 )
 
-from .utils import (
+from ..grid_utils import (
     read_dates_from_pastp,
     assign_coords,
     stack_coords,
@@ -62,73 +56,8 @@ from .utils import (
     get_default_variable
 )
 
-from .variable_attrs import VARS_ATTRS
-
-
-def _parse_attrs(
-    title=None,
-    dims=None,
-    xyfactor=1.,
-    dates=None,
-    is_nested=False,
-    dxlus=None,
-    dylus=None,
-    xcols=None,
-    yligs=None,
-    epsg=27572,
-    reference=None,
-):
-    """ Parse attributes for xarray.Dataset
-    nb: attrs must be string, int, float
-    # TODO: check https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/apa.html
-    # Memo:
-    #   - for gridmapping https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch05s06.html
-    #   - for reduced-horizontal-grid https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.html
-    #   - for timeseries https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch09s05.html
-    """
-    prologue = {
-        'conventions'         :'CF-1.10',  # check https://cfconventions.org/
-        'title'               : title if title is not None else '',
-        'marthe_grid_version' : 9.0,
-        'original_dimensions' : 'x,y,z [grids]: ' + '; '.join(
-            [ ' '.join(map(str, x)) for x in dims]
-        ),
-    }
-    crs = pyproj.CRS(epsg)
-    grid_attrs = {
-        'crs': str(crs.to_cf()),
-        'lon_resolution': ', '.join(map(str, np.unique(dxlus))),
-        'lat_resolution': ', '.join(map(str, np.unique(dylus))),
-        'resolution_units': crs.coordinate_system.to_cf()[0].get('units', ''),
-        'scale_factor'  : xyfactor,
-        'nested_grid'   : str(is_nested),
-        'extend'        : "xymin : {} {}; xymax: {} {}".format(
-            np.min(xcols), np.min(yligs), np.max(xcols), np.max(yligs)
-        ),
-    }
-    dates_attrs = {}
-    if isinstance(dates, pd.DatetimeIndex):
-        dates_attrs = {
-            'period'    : '{}-{}'.format(
-                pd.to_datetime(dates.min()).year, pd.to_datetime(dates.max()).year
-            ), # force pd.date_time, case of pastp => numpydatetime64 / # np.datetime_as_string(i, unit='M')
-            'frequency' : '{} day(s)'.format(str(dates.to_series().diff().mean().days)),
-        }
-
-    if sys.version_info >= (3, 11):
-        _date_now = datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%SZ UTC')
-    else:
-        _date_now = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ UTC')
-
-    epilogue = {
-        'creation_date' : 'Created on {}'.format(_date_now),
-        # comment or source ? https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch02s06.html
-        'comment'       : 'Hydrogeological model created with MARTHE code '\
-                          '(Thiery, D. 2020. Guidelines for MARTHE v7.8 computer code '\
-                          'for hydro-systems modelling. report BRGM/RP-69660-FR).'
-    }
-
-    return {**prologue, **grid_attrs, **dates_attrs, **epilogue}
+from ..grid_attrs import _assign_z_attrs, _assign_xy_attrs, _parse_global_attrs
+from ..constant import VARS_ATTRS
 
 
 @deprecated_alias(nanval='nan_value')
@@ -342,23 +271,11 @@ def load_marthe_grid(
 
     vattrs = VARS_ATTRS.get(varname.lower(), {})
     vattrs.update(var_attrs)
+    _coords_attrs = _assign_xy_attrs(epsg)
     dic_data = {
-        varname.lower() : (["time", "zone"], zvar, vattrs), #dict(**vattrs, **var_attrs)
-        'x'  : ("zone", xcols, {
-            'units': 'meters',  # 'm', degrees_east
-            # TODO: use pyproj here too ? crs.coordinate_system.to_cf()[0].get('units', '') ?
-            'axis': 'X',
-            # 'standard_name': 'longitude',
-            'standard_name': 'projection_x_coordinate',
-            'coverage_content_type' : "coordinate"
-        }),
-        'y'  : ("zone", yligs, {
-            'units': 'meters', # m, degrees_north
-            'axis': 'Y',
-            #'standard_name': 'latitude' ,
-            'standard_name': 'projection_y_coordinate',
-            'coverage_content_type' : "coordinate"
-        }),
+        varname.lower() : (["time", "zone"], zvar, vattrs),
+        'x'  : ("zone", xcols, _coords_attrs.get('x', {})),
+        'y'  : ("zone", yligs, _coords_attrs.get('y', {})),
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
@@ -381,14 +298,7 @@ def load_marthe_grid(
     _has_z_dim = dims[0][-1] > 1
     if _has_z_dim:
         zlus = _set_layers(dims)
-        zattrs = {
-            'units': '-' if not full_3d else 'm',
-            'axis': 'Z',
-            'positive': 'down',
-            'standard_name': 'depth',
-            'long_name': 'aquifer_layer' if not full_3d else 'depth'
-        }
-        dic_data['z'] = ("zone", zlus, zattrs) # add lay
+        dic_data['z'] = ("zone", zlus, _assign_z_attrs(full_3d)) # add lay
 
     if fpastp is not None:
         # add dates from a pastp file, case of non-uniform timesteps
@@ -417,7 +327,7 @@ def load_marthe_grid(
             'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32)
         },
         attrs={
-            **_parse_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs, epsg),
+            **_parse_global_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs, epsg),
             **model_attrs
         }
     )
@@ -547,13 +457,16 @@ def write_marthe_grid(
     ds,
     fileout='grid.out',
     varname=None,
-    file_permh: str = None,
+    file_permh: str|None = None,
     nan_value=9999.,
     title=None,
     dims=None,
     debug=False
 ):
     """ Write Dataset as MartheGrid v9 file
+
+    Notes
+    -----
 
     ds should contain x, y, dx, dy, attrs[['title', 'original_dimensions']]
     in case of error, please use :py:func:`gridmarthe.reset_geometry` first.
@@ -563,7 +476,6 @@ def write_marthe_grid(
 
     >>> gm.write_marthe_grid(ds, 'toto.out', file_permh='./mymodel/model.permh')
 
-
     WARNING: This function was developped to write parameters grids to marthe format.
     Not to recreate simulation results (hydraulic head at several timesteps for example)
     as gridmarthe format.
@@ -571,9 +483,8 @@ def write_marthe_grid(
     Example, to create a new initial hydraulic head file based on simulation, select the
     timestep in dataset before writing.
 
-    >>> ds = ds_head.isel(time=16) # or do an aggregation (eg mean over a period)
+    >>> ds = ds_head.isel(time=-1)
     >>> gm.write_marthe_grid(ds, 'mymodel.charg')
-
 
     Parameters
     ----------
@@ -624,7 +535,7 @@ def write_marthe_grid(
 
     if file_permh is not None:
         # if permeab, fill_na with permh file (because either 0 or -9999.)
-        _fill_na = True if varname == 'permeab' else False
+        _fill_na = varname == 'permeab'
         # reset geometry with full domain (stored in permh file)
         ds2 = reset_geometry(ds2, path_to_permh=file_permh, variable=varname, fillna=_fill_na)
         if not _fill_na:
@@ -697,4 +608,3 @@ def write_marthe_grid(
         )
 
     return status
-

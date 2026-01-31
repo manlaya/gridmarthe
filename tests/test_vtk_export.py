@@ -6,7 +6,7 @@ import numpy as np
 import vtkwriters as vtkw
 
 import gridmarthe as gm
-from gridmarthe.operasem.vtk_writer import (
+from gridmarthe.grid.io.vtk_writer import (
     _get_vertices_connectivity,
     convert_grid_to_vtk
 )
@@ -19,17 +19,17 @@ def test_vtk_export():
     permh = gm.load_marthe_grid('./tests/data/{}.permh'.format(model_name), xyfactor=1e3, varname='PERMEAB', drop_nan=True)
     # geom = gm.compute_geometry(topo, hsubs, mask)  # ok
     geom = gm.compute_geometry(topo, hsubs).sel(zone=permh.zone.values)
-    
+
     vertices, cellnodes, celltype = _get_vertices_connectivity(geom)
     assert np.shape(vertices) == (8*len(geom.x), 3), 'Wrong number of vertices'
     assert np.shape(cellnodes) == (len(geom.x), 8), 'Wrong number of cellnodes'
     assert celltype == 'voxel', 'Wrong celltype'
 
-    convert_grid_to_vtk(geom, 'z', time=0, output_tpl='tests/res/vtk_hallue')
+    convert_grid_to_vtk(geom, 'z', time=0, output_tpl='tests/tmp_outputs/vtk_hallue')
     print('vtk writer test passed!')
     return
 
 
 if __name__ == '__main__':
-    
+
     test_vtk_export()

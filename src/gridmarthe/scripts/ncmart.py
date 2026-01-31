@@ -27,7 +27,7 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import xarray as xr
 
 import gridmarthe as gm
-from gridmarthe.__version__ import _copyleft
+from ._common import _copyleft
 
 
 # Usage: `ncmart PATH_CHASIM PATH_PASTP [-o output] [-v varname]`

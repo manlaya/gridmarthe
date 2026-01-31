@@ -6,8 +6,8 @@ Grid operations
 
 .. autosummary::
     :toctree: ./generated
-    
-    operasem.geometry
+
+    grid.processing.geometry
     reset_geometry
-    operasem.gis
+    grid.processing.gis
 

@@ -17,4 +17,3 @@ def _mk_cell_polygon(xleft, ylower, xright, yupper):
 
 
 _polygonize = np.vectorize(_mk_cell_polygon)
-

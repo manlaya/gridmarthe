@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -29,7 +29,7 @@ import numpy as np
 import xarray as xr
 
 from .gis import to_geodataframe
-from ..utils import _nearest_node, subset
+from ..grid_utils import _nearest_node, subset
 
 
 def _get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
@@ -40,27 +40,27 @@ def _get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
 
 def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_array=False, shp_file=None):
     """ Filter dataset on non-nan values, and dissolve results to get a mask shape
-    
+
     Input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic
     conductivity).
-    
+
     Parameters
     ----------
-    
+
     ds : xr.Dataset
-    
+
     varname: str, optional
         default is 'permeab'
-    
+
     nanval: float or list, optional.
         default are 'permeab' nan values : 0,-9999.
-    
+
     as_array: bool, optional.
         default is False. Option to get result as a xr.Dataset and not geodataframe.
-        
+
     shp_file: str, optional.
         if set (and not `as_array`), used to stored result in a file.
-    
+
     Returns
     -------
     either a xr.Dataset filter to mask array or a
@@ -107,14 +107,14 @@ def _get_upper_alt(topo, hsubs):
     dataset with only (time,zone), (h_topogr, h_substr, h_upper)
     """
     ds = xr.combine_by_coords([topo, hsubs], combine_attrs='override', compat='override')
-    
+
     df = ds.isel(time=0).to_dataframe().reset_index()  # time is constant! TODO change this/ check if working
     df = df.sort_values(by=['x', 'y', 'z']).copy()  # assure data are sort in this way
     # set nans for topo and hsubs
     # this is constant in Marthe / should not be changed by user
     for x in ['h_substrat', 'h_topogr']:
         df[x] = df[x].replace(9999., np.nan)  # avoid doing this on full df, zone might be impacted
-    
+
     # Compute z top of layers
     df['h_topogr'] = df.groupby(['x', 'y'])['h_topogr'].transform('first')  # topo is always first of group
     df['tmp']      = df.groupby(['x', 'y'])['h_substrat'].ffill()  # ffill z down for each group
@@ -165,15 +165,15 @@ def compute_geometry(topo, hsubs, mask=None):
     # compute elements of geometry
     xtopo = _get_true_topo(topo)  # map topo values to all layers
     xhsubs = hsubs.copy()
-    
+
     if mask is not None:
         xtopo  = xtopo.sel(zone=mask)
         xhsubs = xhsubs.sel(zone=mask)
-    
+
     tmp   = _get_upper_alt(xtopo, xhsubs)
     thick = _get_thickness(tmp['h_upper'].data, tmp['h_substrat'].data)
     depth = _get_depth(tmp['h_topogr'].data, tmp['h_upper'].data)
-    
+
     # put values in xr.Dataset
     # ds = xr.combine_by_coords([ds, tmp])
     ds = xtopo.copy()
@@ -186,35 +186,35 @@ def compute_geometry(topo, hsubs, mask=None):
 
 def get_surface_layer(ds, aquif_layers=None):
     """ Compute surface mask of marthe domain
-    
+
     This function return min layer for every zone of a grimarthe dataset with z coords
     A subset on specific (aquifers) layers can be performed with `aquif_layers`.
     if set, aquif_layers must be a sequence (list, tuple, array) of layer (list of int).
-    
+
     This should be used to get a surface mask, ie get zone to filter a dataset.
-    
+
     Examples
     --------
     >>>    mask = get_surface_layer(ds, [6,8,9])
     >>>    ds_surf = ds.sel(zone=mask.zone.data)
-        
+
     Parameters
     ----------
         ds: xr.Dataset
         aquif_layers: sequence (list, tuple, array) of int
-            representing layers to subset ds. Only active domain must 
+            representing layers to subset ds. Only active domain must
             be passed to function (ie drop nan first)
-            
+
     Returns
     -------
         surface_mask: xr.Dataset
     """
     df = ds.to_dataframe()
     df = df.reset_index()
-    
+
     if aquif_layers is not None:
         df = df[df['z'].isin(aquif_layers)]
-    
+
     idx_z_min = df.groupby(['x', 'y', 'time']).z.idxmin() # get index of min z ("layer") for each x,y,t groups
     first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone').drop('index', axis=1)
     # time not needed here, zone are independant from time coords
@@ -230,7 +230,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
     Note
     ----
-    
+
     - if ds is multilayered, you need to provide the layer you want (z arg., int type)
     - ds should contains dx and dy
     - ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
@@ -249,7 +249,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
         y coordinate to search zone.
     z : int, optional
         layer index to search zone. If not provided, all layers are considered.
-    
+
     Returns
     -------
     zone : xr.Dataset
@@ -258,7 +258,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
         If multiple zones are found, all of them are returned.
     """
     ds_search = ds.copy()
-    
+
     if z is not None:
         ds_search = ds_search.where(ds_search.z == z, drop=True)
 
@@ -267,7 +267,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
         ## mask = ds.sel(x=x, y=y, method='nearest') # possible uniquement si x,y sont des coordonnées/dim
         nearest = _nearest_node(np.array([(x, y)]), np.array(list(zip(ds_search['x'].data, ds_search['y'].data))))
         nearest_zone = ds_search.isel(zone=nearest)
-        
+
         # check if xy is in a cell == dx and dy are not greater than grid resolution
         dx = np.abs(nearest_zone.x.data - x)
         dy = np.abs(nearest_zone.y.data - y)

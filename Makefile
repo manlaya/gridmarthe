@@ -4,7 +4,6 @@
 # --------------------------------- #
 #####################################
 #    ONLY FOR LINUX DEVELOP MODE    #
-#        OR CONDA SRC INSTALL       #
 #####################################
 
 FC := gfortran
@@ -42,7 +41,8 @@ FFLAGS += -fdefault-real-8
 # already O3 in f2py, change it here
 # FFLAGS += -O2 
 # Position-Independent Code, si shared library, utile
-FFLAGS +=-fPIC -shared
+FFLAGS +=-fPIC
+# FFLAGS += -shared  # bug ?
 FFLAGS += -ffree-line-length-none
 # only gfortran > 12.0
 FFLAGS +=-fallow-argument-mismatch
@@ -56,7 +56,6 @@ COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m lecsem 
 # ------------- Rules ------------- #
 
 .PHONY: all docs clean requirements wheel
-# all: clean install bakup_pyproj
 all: clean editable
 
 # only compile with f2py for develop purpose
@@ -76,7 +75,9 @@ doc:
 #     # format pyproject.{toml,bak} non accepté par make ?
 
 requirements:
-	$(PY) -m pip install charset_normalizer numpy meson meson-python
+	$(PY) -m pip install charset_normalizer numpy meson meson-python pytest
+conda-req:
+	mamba install charset-normalizer numpy meson meson-python pytest h5netcdf xarray pandas geopandas
 
 #install: requirements lecsem.so setuptools bakup_pyproj
 #	$(PY) -m pip install $(PIPFLAGS) . -vvv
@@ -94,12 +95,15 @@ lecsem.so:
 # FC="$(FC)" FFLAGS="$(FFLAGS)" python -m numpy.f2py -c lecsem.pyf lecsem.f90 edsemigl.f90 scan_grid.f90 -m lecsem --backend=meson --lower
 
 # meson editable for dev/testing
-editable: #requirements
-	$(PY) -m pip install --no-build-isolation \
+editable:
+	$(PY) -m pip install --no-build-isolation --no-deps \
 		--config-settings=editable-verbose=true \
 		--config-settings=setup-args='-Dpip_edit_mode=true' \
 		--editable . \
 		-vvv
+
+meson:
+	rm -rf build/ ; meson setup build; cd build; meson compile
 
 wheel:
 	$(PY) -m pip install build
