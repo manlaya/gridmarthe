@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2024  BRGM
 #
@@ -29,10 +29,11 @@ import os, sys, re, shutil, textwrap
 from pathlib import Path
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
-from gridmarthe.__version__ import _copyleft
+from ._common import _copyleft
 
 
 # ext: VARIABLE_NAME in French
+# TODO: use the config file from martpy, and deal with english names too.
 MARTGRID_FILES = {
     'permh' : 'PERMEAB',
     'debit' : 'DEBIT',
@@ -40,6 +41,8 @@ MARTGRID_FILES = {
     'emmca' : 'EMMAG_CAPT',
     'emmli' : 'EMMAG_LIBR',
     'zgeom' : 'ZONE_GEOM',
+    'zoneg2': 'ZONE_2',
+    'zoneg3': 'ZONE_3',
     'hsubs' : 'H_SUBSTRAT',
     'equip' : 'Z_EQUIPOT',
     'topog' : 'H_TOPOGR',
@@ -70,6 +73,7 @@ MARTGRID_FILES = {
     'rug_r' : 'RUGOS_RIVI',
     'seuil_r': 'SEUIL_RIVI',
     'pnt_r' : 'PENTE_RIVI',
+    'c_seu_r': 'COE_SEUIL_RIV',
     'fon_r' : 'FOND_RIVI',
     'conc_r': 'CONCEN_RIVI',
     'cext_r': 'CONC_EXT_RIVI',
@@ -97,7 +101,7 @@ def parse_args():
         description="Clean marthe grid file for miswritten attributes. Only works for marthe grid v9.0 (a check is performed and <v9 are skipped)",
         epilog=textwrap.dedent(_copyleft)
     )
-    
+
     parser.add_argument('opt', metavar='PATH_TO_FILE', type=str, nargs=1, help='PATH_TO_FILE can be a relative path, if it ends with ".rma" all grid file in rma project will be processed.')
     parser.add_argument('--layer' , '-l', type=int, default=None, help='Number of layer. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
     parser.add_argument('--grid'  , '-g', type=int, default=None, help='Number of nested grid. Only if PATH_TO_FILE is *NOT* a rma file. Otherwise, it will be parsed from Marthe\'s files.')
@@ -107,9 +111,9 @@ def parse_args():
         action="store_const", const=True, default=False,
         help='Do no overwrite file, add `.fix` extension. By default file is bakup and then overwrite.'
     )
-    
+
     args = parser.parse_args()
-    
+
     if not args.opt[0].endswith('rma') and (args.layer is None or args.grid is None):
         print('File {} is not a Marthe project ("*.rma"). Please provide `-l` and `-g` argument when using on a single grid file. See `cleanmgrid -h`')
         sys.exit(1)
@@ -143,26 +147,25 @@ def parse_geom(layer_str:str):
 
 def read_rma(frma):
     rma = fread(frma)
-    files = re.finditer(r'(.*)  =\s+[A-z]', rma)
+    files = re.finditer(r'^=?(\S+)\s*=\s+.*$', rma)
     files = [ x.group(1).strip().replace('=', '') for x in files]
     files = [ x for x in files if len(x) > 0]
     return files
 
 
 def read_files_from_rma(frma):
-    
+
     root = os.path.dirname(frma)
     # root = os.getcwd()
     files = read_rma(frma)
-    
+
     # get all gridded files
     res = []
     for fgrid in files:
-        # files[fgrid] = re.findall(r'(.*\.[A-z]*) *=.*Perméabilité', rma)[0],
         kind = os.path.splitext(fgrid)[-1].replace('.', '')
         if kind in MARTGRID_FILES.keys():
             res.append((kind, fgrid, MARTGRID_FILES.get(kind)))
-    
+
     # get layers, ngrid infos
     layer =  [x for x in files if x.endswith('layer')][0]
     layer =  fread("{}/{}".format(root, layer))
@@ -186,7 +189,7 @@ def clean_grid_str(string: str, pattern: str, fillvalue: str|list, test=lambda x
     """
     matches = search_index(string, pattern)
     new_str = string
-    
+
     if len(matches) == 0:
         # nothing to clean // or bug with regex :)
         return new_str
@@ -217,17 +220,17 @@ def write_res(string, fname):
 
 def main():
     """ CLEANMGRID """
-    
+
     args = parse_args()
     finputs = args.opt[0]
-    
+
     root = os.path.dirname(finputs) # edit no, if not ./MONMODEL.rma but MONMODEL.rma, dirname is '' so /bakup => not allowed in linux non root
     if root == '' or root is None:
         root = os.getcwd()
     if args.output is None and not args.no_overwrite:
         os.makedirs('{}/bakup'.format(root), exist_ok=True)
     filename = os.path.split(finputs)[-1]
-    
+
     # --- get geom
     if finputs.endswith('rma'):
         files, layers, ngrid = read_files_from_rma(finputs)
@@ -238,19 +241,19 @@ def main():
             print('Unkwnown key field for grid kind {} (file: {})'.format(ext, finputs))
             sys.exit(1)
         files, layers, ngrid = [(ext, filename, key)], list(range(1, args.layer + 1)), str(args.grid)
-    
+
     for ext, file, key in files:
-        
+
         # --- treatment of each grid file --- #
         # --- read and scan var
         fpath = Path(root, file)
         grid  = fread(fpath)
         version = scan_vers_semi(grid)
         fileout = fpath
-        
+
         if version != 9.0:
             continue
-        
+
         # --- clean attributes:
         grid = clean_grid_str(grid, r'\nField=(.?)', key, test=lambda x: len(x) < 1 )
         grid = clean_grid_str(grid, pattern=r'\nLayer=([0-9]*)'  , fillvalue=layers * (int(ngrid)+1)   , test=lambda x: int(x) == 0)
@@ -260,7 +263,7 @@ def main():
         grid = clean_grid_str(grid, pattern=r'Nest_grid=([0-9]*)', fillvalue=x, test=lambda x: int(x) == 0)
         grid = clean_grid_str(grid, pattern=r'Max_NestG=([0-9]*)', fillvalue=ngrid                     , test=lambda x: int(x) == 0)
         grid = clean_grid_str(grid, pattern=r'Time=([0-9]*\.[0-9]*E[|\-|\+][0-9]*)', fillvalue='0', test=lambda x: float(x) != 0)
-        
+
         # --- save results
         if args.no_overwrite:
             fpath = '{}.fix'.format(str(fpath))
@@ -268,13 +271,13 @@ def main():
             fileout = Path(root, args.output)
         else:
             shutil.copy(fpath, Path(root, 'bakup', file))
-        
+
         write_res(grid, fileout)
-    
+
     return 0
 
 
 if __name__ == '__main__':
-    
+
     status = main()
     sys.exit(status)
