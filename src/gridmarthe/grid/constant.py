@@ -24,8 +24,7 @@ VARS_ATTRS = {
         'units': 'm',
         'missing_value': 9999.,
         'standard_name': 'water_table_level',
-        'long_name':
-        'groundwater head'
+        'long_name': 'groundwater head'
     },
     'saturat': {
         'varname': 'SATURAT',

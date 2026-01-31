@@ -46,11 +46,11 @@ def test_extract_var():
     # )
 
 
-def _single_test_write_marthe_grid(martfile, varname, fout):
+def _single_test_write_marthe_grid(martfile, varname, fout, **kwargs):
 
     # test normal (time still a dimension/axis)
     ds1 = gm.load_marthe_grid(martfile, varname, drop_nan=True, nan_value=[0., -9999.])
-    status = gm.write_marthe_grid(ds1, fout, varname='permeab', file_permh=martfile)
+    status = gm.write_marthe_grid(ds1, fout, varname='permeab', file_permh=martfile, **kwargs)
     assert status == 0, "write_marthe_grid test, with permh file and dropna, failed"
 
     # test sel time
@@ -94,6 +94,19 @@ def test_write_no_varname():
     martfile = './tests/data/craie_npc_gig.permh'  # multilayer and nested
     fout = './tests/tmp_outputs/grid.out'
     _single_test_write_marthe_grid(martfile, varname=None, fout=fout)
+
+
+def test_force_full_grid():
+    martfile = './tests/data/dummy_cst.permh'
+    fout = './tests/tmp_outputs/grid_cst_force_full.out'
+    # test normal (time still a dimension/axis)
+    ds1 = gm.load_marthe_grid(martfile, drop_nan=True, nan_value=[0., -9999.])
+    status = gm.write_marthe_grid(ds1, fout, varname='permeab', file_permh=martfile, force_full_grid=True)
+    assert status == 0, "write_marthe_grid test, with permh file and dropna, failed"
+    with open(fout) as f:
+        lines = f.readlines()
+    assert len(lines) >= 50
+
 
 
 if __name__ == "__main__":

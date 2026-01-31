@@ -274,20 +274,22 @@ def load_marthe_grid(
     if varname == '':
         varname = 'variable'  # security if force mode
 
+    # Get attributes
     vattrs = VARS_ATTRS.get(varname.lower(), {})
     vattrs.update(var_attrs)
     _coords_attrs = _assign_xy_attrs(epsg)
+
+    # prepare data
     dic_data = {
         varname.lower() : (["time", "zone"], zvar, vattrs),
+    }
+
+    dic_coords = {
         'x'  : ("zone", xcols, _coords_attrs.get('x', {})),
         'y'  : ("zone", yligs, _coords_attrs.get('y', {})),
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
-
-    # dic_coords = {
-    #
-    # }
 
     if add_col_row:
         if is_nested:
@@ -337,19 +339,19 @@ def load_marthe_grid(
         }
     )
 
+    # add non-dimensionnal coordinates
+    # ds = ds.assign_coords(  # future
+    # TODO more tests before assigning coords xy (compat?)
+    # TODO assign also metadata ? 'domain_size': dims
+    ds = ds.assign(
+        dic_coords
+    )
+
     # add attributes for Reduced horizontal grid
     # https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#reduced-horizontal-grid
     ds['zone'].attrs['compress'] = "z y x" if _has_z_dim else "y x"
 
-    # add non-dimensionnal coordinates
-    # 'xc': (['zone'], xcols), # TODO coordinates directly as coords depending on dims ?
-    # 'yc': (['zone'], yligs),
-    # 'domain_size': dims, # add non dimension coordinate for info
-    # 'domain_origin': [(x0, y0) for igig in grids], # add non dimension coordinate for info
-    # ds = ds.assign_coords(  # or toto.set_coords(['time', 'zone', 'x', 'y', 'z', 'dx', 'dy'])
-        # dic_coords
-    # )
-
+    # --- Drop NaN values
     if drop_nan:
         if nan_value is None:
              # if no  user defined nanval, try to get corresponding val in dict
@@ -361,9 +363,12 @@ def load_marthe_grid(
         elif isinstance(nan_value, tuple):
             nan_value = list(nan_value)
 
-        if (varname.lower() == 'permeab' or filename.endswith("permh")) and is_nested:
-            if -9999. not in nan_value:
-                nan_value += [-9999.]
+        if (
+            (varname.lower() == 'permeab' or filename.endswith("permh"))
+            and is_nested
+            and -9999. not in nan_value
+        ):
+            nan_value += [-9999.]
 
         ds = dropna(ds, varname, nan_value)
         # add range zone of active cells. memo: remove tuple to set as dimension
@@ -426,10 +431,6 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     if 'x' in da.coords.keys():
         da = stack_coords(da, dropna=True)
         coords = [x for x in da.coords.keys() if x in ['x', 'y', 'z']]  # if xy assert only existing coords in xyz
-    # elif 'zone_all' in da.keys():
-        # da['zone'].data = da['zone_all'].data  # restore zone_all (zone before reorder after dropnan) for merge
-        # da = da.drop('zone_all')
-        # coords = ['zone']
     else:
         coords = ['zone']
 
@@ -466,6 +467,7 @@ def write_marthe_grid(
     nan_value=9999.,
     title=None,
     dims=None,
+    force_full_grid=False,
     debug=False
 ):
     """ Write Dataset as MartheGrid v9 file
@@ -523,6 +525,10 @@ def write_marthe_grid(
         - if None (default, dims will be parsed from `ds.attrs['original_dimensions']` which is added
         when read with :py:func:`gridmarthe.load_marthe_grid`. If not present (lost in some computation for example),
         please use py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
+
+    force_full_grid: bool, optional
+        force to write full grid (even if grid is constant). Default is False
+        By default, Marthe will write a compact form of grid is constant.
 
     debug: bool, optional
         print debug informations. Default is False
@@ -601,6 +607,7 @@ def write_marthe_grid(
         nsteps=len(zdates),
         dates=izdates,
         debug=debug,
+        force_full_grid=force_full_grid,
         xfile=fileout
     )
 

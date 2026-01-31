@@ -410,7 +410,8 @@ CONTAINS
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
     SUBROUTINE WRITE_GRID(ZVAR, XCOL, YLIG, DXLU, DYLU, TYP_DON, TITSEM, &
-                          N_DIMS, NVAL, NGRID, NSTEPS, DATES, XFILE, DEBUG, IEREDI)
+                          N_DIMS, NVAL, NGRID, NSTEPS, DATES, XFILE, DEBUG, FORCE_FULL_GRID, &
+                          IEREDI)
         ! --- Write array to Marthe Grid format (v9.0) ---
         ! ZVAR should not have missing value (if nan, set 9999. before writing !)
         ! BUT, ZVAR should contain all possible value (9999. if nan but do NOT drop nan before)
@@ -426,7 +427,7 @@ CONTAINS
         real(kind=4), intent(in), dimension(NSTEPS)       :: DATES
         character(len=13)  , intent(in)              :: TYP_DON
         character(len=132) , intent(in)              :: TITSEM, XFILE
-        logical, optional                            :: DEBUG
+        logical, optional                            :: FORCE_FULL_GRID, DEBUG
         !
         !outputs
         integer, intent(out) :: IEREDI
@@ -436,7 +437,7 @@ CONTAINS
         real :: X0, Y0
         real, dimension(:), allocatable :: XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
         real, dimension(:), allocatable :: ZTEMPVAR
-        logical :: DEBUGG
+        logical :: DEBUGG, FORCE_FULL_GRID_OPT
 
         INVY   = 0
         IEREDI = 0
@@ -444,8 +445,10 @@ CONTAINS
         NLAY   = N_DIMS(1, 3)
         NGIG   = NGRID - 1
         DEBUGG = .FALSE.  ! default value for debugging
+        FORCE_FULL_GRID_OPT = .FALSE.
         !
         IF(PRESENT(DEBUG)) DEBUGG = DEBUG
+        IF(PRESENT(FORCE_FULL_GRID)) FORCE_FULL_GRID_OPT = FORCE_FULL_GRID
         !
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='write')
 
@@ -507,7 +510,8 @@ CONTAINS
                         ! //////// Not used now
                         ,LIBCHIM &
                         ! ////////////////////
-                        ,DXTEMP, DYTEMP &
+                        ,DXTEMP, DYTEMP, &
+                        FORCE_FULL_GRID_OPT &
                     )
                     !
                     if (IEREDI /= 0) then

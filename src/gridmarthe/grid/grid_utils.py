@@ -363,6 +363,9 @@ def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
     for c in coords:
         ds3[c] = ('zone', ds2[c].data)
 
+    # future coords as non dimensions coordinates
+    # ds3 = ds3.set_coords(coords)
+
     if dropna:
         ds3 = ds3.dropna(dim='zone')
     return ds3

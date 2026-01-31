@@ -1,17 +1,17 @@
 ! SPDX-License-Identifier: GPL-3.0-or-later
 ! Copyright 2024, BRGM
-! 
+!
 ! This file is part of gridmarthe.
-! 
+!
 ! Gridmarthe is free software: you can redistribute it and/or modify it under the
 ! terms of the GNU General Public License as published by the Free Software
 ! Foundation, either version 3 of the License, or (at your option) any later
 ! version.
-! 
+!
 ! Gridmarthe is distributed in the hope that it will be useful, but WITHOUT ANY
 ! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 ! PARTICULAR PURPOSE. See the GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License along with
 ! Gridmarthe. If not, see <https://www.gnu.org/licenses/>.
 !
@@ -68,6 +68,25 @@
       REAL   , INTENT(IN)  :: X0, Y0
       INTEGER, INTENT(IN)  :: INVY, IOUMAI
       INTEGER, INTENT(OUT) :: IEREDI
+!     add interface with new optional arg
+      INTERFACE
+         SUBROUTINE EDSEMI_3(FONC, NKOL, NLIG, XCOL, YLIG, X0, Y0, INVY &
+           ,TITSEM, IEREDI, IOUMAI &
+           ,TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
+           ,DATE, LIBCHIM &
+           ,DXLU, DYLU, FORCE_FULL_GRID)
+            IMPLICIT NONE
+            INTEGER, INTENT(IN)  :: NKOL, NLIG, IOUMAI, INVY &
+                                   ,N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX
+            REAL   , INTENT(IN)  :: DATE, X0, Y0
+            REAL, DIMENSION(*), INTENT(IN) :: XCOL, YLIG, DXLU, DYLU, FONC
+            CHARACTER (LEN=*) , INTENT(IN) :: TITSEM, LIBCHIM
+            CHARACTER (LEN=*) , INTENT(IN) :: TYP_DON
+            CHARACTER (LEN=7) , INTENT(IN) :: TYP_DON3
+            LOGICAL, OPTIONAL, INTENT(IN)  :: FORCE_FULL_GRID
+            INTEGER, INTENT(OUT) :: IEREDI
+         END SUBROUTINE EDSEMI_3
+      END INTERFACE
 !     ========
 !      Locaux
 !     ========
@@ -104,7 +123,7 @@
            ,TITSEM, IEREDI, IOUMAI &
            ,TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
            ,DATE, LIBCHIM &
-           ,DXLU, DYLU)
+           ,DXLU, DYLU, FORCE_FULL_GRID)
 !=================================================================================
 !   **********
 !   *EDSEMI_3*                         BRGM     B.P. 36009
@@ -148,6 +167,7 @@
 !     NU_ZOO   = Numéro du Gigogne (0 = main)
 !     NU_ZOOMX = Nombre Maxi de Gigognes
 !     DATE     = Date associée à la Grille
+!     FORCE_FULL_GRID = bool, force to write full grid even if constant
 !      En retour :
 !     IEREDI = 0 Si normal
 !            = 1 Si problèmes (X = XP ; Y = YP)
@@ -163,6 +183,7 @@
       CHARACTER (LEN=*) , INTENT(IN) :: TITSEM, LIBCHIM
       CHARACTER (LEN=*) , INTENT(IN) :: TYP_DON
       CHARACTER (LEN=7) , INTENT(IN) :: TYP_DON3
+      logical, optional    :: FORCE_FULL_GRID
       INTEGER, INTENT(OUT) :: IEREDI
 !     ============
 !      Interfaces
@@ -190,6 +211,9 @@
       CHARACTER (LEN=7) , DIMENSION(9999) :: TABCHAR7
       CHARACTER (LEN=7)  :: CHARAC7
       INTEGER, DIMENSION(9999) :: TABINTEG
+      logical :: FORCE_FULL_GRID_OPT = .FALSE.
+!     =================================
+      IF(PRESENT(FORCE_FULL_GRID)) FORCE_FULL_GRID_OPT = FORCE_FULL_GRID
 !     =======
 !      Début
 !     =======
@@ -259,6 +283,7 @@
 !     =========================================
       EGALIT = "="
       FONPRE = FONC(1)
+      if (FORCE_FULL_GRID_OPT) EGALIT = " "  ! force to write full grid in any case
       IF (ANY(FONC(2:NTOT) /= FONPRE)) EGALIT = " "
       SELECT CASE (NONFOR)
       CASE (1)
