@@ -143,6 +143,7 @@ def load_marthe_grid(
 
     shallow_only: bool, optional
         Boolean to read only the first layer. Default is False.
+        Warning: only valid for NON nested grids for now.
 
     add_col_row: bool, optional
         Add columns (col) and rows (row, formerly lig (v<=0.1.3)) index (from 1 to n).
@@ -218,12 +219,14 @@ def load_marthe_grid(
         if len(varname) >= 1:
             varname = varname[0]
         else:
+            varname = ''
             # if no varname read from scan, it can be a bug (some version of marthe
             # did not write field name in metadata)
-            raise ValueError(
-                'No variable founded in file, please consider check file or clean it '
-                '(cleanmgrid util or winmarthe)'
-            )
+            if not shallow_only:
+                raise ValueError(
+                    'No variable founded in file, please consider check file or clean it '
+                    '(cleanmgrid util or winmarthe)'
+                )
 
     elif varname.lower() == 'all':
         varname  = scan_var(filename)
@@ -253,8 +256,10 @@ def load_marthe_grid(
 
     # --- transform data and parse into xarray.Dataset
     if shallow_only:
-        print('NOT YET AVAILABLE')
-        # TODO shape (time, gig, values) -> (time, values)
+        # shadow_only(time, gig, values) -> (time, values)
+        # for now, only valid for regular (non nested) grids
+        # TODO nested grid shallow only?
+        zvar = zvar[:, 0, :]
 
     if title is None:
         title = _decode_title(ztitle)

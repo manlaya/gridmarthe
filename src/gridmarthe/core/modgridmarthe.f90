@@ -1,17 +1,17 @@
 ! SPDX-License-Identifier: GPL-3.0-or-later
 ! Copyright 2024, BRGM
-! 
+!
 ! This file is part of gridmarthe.
-! 
+!
 ! Gridmarthe is free software: you can redistribute it and/or modify it under the
 ! terms of the GNU General Public License as published by the Free Software
 ! Foundation, either version 3 of the License, or (at your option) any later
 ! version.
-! 
+!
 ! Gridmarthe is distributed in the hope that it will be useful, but WITHOUT ANY
 ! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 ! PARTICULAR PURPOSE. See the GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License along with
 ! Gridmarthe. If not, see <https://www.gnu.org/licenses/>.
 !
@@ -299,7 +299,10 @@ CONTAINS
                       , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
                       , DATE, LIBCHIM &
                       , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
-            IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
+            N_COUCH = 0  ! reset to zero for shallow only
+            ! IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
+            IF (IERLEC == 0) THEN
+                N_COUCH = 1  ! add 1 for shallow only break after 1st grid without error
                 KDIMEN(NU_ZOO + 1, 1) = NKOL
                 KDIMEN(NU_ZOO + 1, 2) = NLIG
                 KDIMEN(NU_ZOO + 1, 3) = NCOUC_MX
@@ -317,6 +320,7 @@ CONTAINS
                     PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
                 ENDIF
                 ZTEMP(ISTEPINC, NU_ZOO + 1, N_COUCH, :NTOT) = FONC(:NTOT)
+                exit  ! quit while loop after 1st non error
             ENDIF
         ENDDO
         !
@@ -344,7 +348,7 @@ CONTAINS
     SUBROUTINE SCAN_TYPEVAR(XFILE, ZTYP_DON)
         !
         ! Get list of available var in gridfile
-        ! 
+        !
         IMPLICIT NONE
         !
         CHARACTER (LEN=132), INTENT(IN)                 :: XFILE
@@ -373,7 +377,7 @@ CONTAINS
                       , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
                       , DATE, LIBCHIM &
                       , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
-                      
+
             IF (IERLEC == 0 .AND. .not.(is_in_array_strings(TYP_DON, ZTYP_DON, N_DIM)) ) THEN
                 ZTYP_DON(IT) = TYP_DON
                 IT = IT + 1
@@ -392,7 +396,7 @@ CONTAINS
         logical :: test
         character(len=13) :: element
         character(len=13), dimension(n_dim) :: array
-        
+
         test = .FALSE.
         do it = 1, n_dim
             if ( element == array(it) ) then
@@ -400,7 +404,7 @@ CONTAINS
                 exit ! quit do loop on first true
             endif
         enddo
-        
+
     end function is_in_array_strings
     !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -410,7 +414,7 @@ CONTAINS
         ! --- Write array to Marthe Grid format (v9.0) ---
         ! ZVAR should not have missing value (if nan, set 9999. before writing !)
         ! BUT, ZVAR should contain all possible value (9999. if nan but do NOT drop nan before)
-        ! ZVAR shoult be sorted according to sorted indexes (in this order) : 
+        ! ZVAR shoult be sorted according to sorted indexes (in this order) :
         !       Time(asc), GRID(main/gig, asc) LAYER(asc), YCOL (dsc), XCOL (asc)
         IMPLICIT NONE
         !
@@ -433,7 +437,7 @@ CONTAINS
         real, dimension(:), allocatable :: XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
         real, dimension(:), allocatable :: ZTEMPVAR
         logical :: DEBUGG
-        
+
         INVY   = 0
         IEREDI = 0
         LEC    = 20 ! unité d'écriture, IOUMAI from DTH
@@ -444,20 +448,20 @@ CONTAINS
         IF(PRESENT(DEBUG)) DEBUGG = DEBUG
         !
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='write')
-        
+
         ! Starting process:
         ! loop over timesteps, then id_grid (main, gig), then layers. Write each grid.
         ! data are stored in 2D array (Time, Zone), so we need to extract values from it
         ! based on those indexes (layer, grid, time indexes)
         DO ISTEP=1, NSTEPS
             DATE = DATES(ISTEP)
-            
+
             DO NU_GRID=1, NGRID
-                
+
                 NU_ZOO = NU_GRID - 1
                 NKOL = N_DIMS(NU_GRID, 1)
                 NLIG = N_DIMS(NU_GRID, 2)
-                
+
                 ! To navigate through ZVAR, before computing start_idx, end_idx based on NLAY, NLIG, NKOL,
                 ! we compute a 'shift' index, to jump over previous grids, if id_grid > 0
                 ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig)
@@ -468,14 +472,14 @@ CONTAINS
                         shift = shift + (NLAY * N_DIMS(i, 1) * N_DIMS(i, 2))
                     ENDDO
                 ENDIF
-                
-                
+
+
                 DO N_COUCH=1, NLAY
-                    
+
                     NTOT = NKOL * NLIG
                     start_idx = ((N_COUCH - 1) * NTOT ) + shift + 1     ! +1 to get 0-based (n-couch -1) to 1-based starting index. if 1st layer return 1 (cause n-couch-1 would be 0)
                     end_idx   = start_idx + NTOT - 1                    ! here minus 1 cause upper bound is included in fortran, would cause error (idx > len)
-                    
+
                     ! Get current var and coords + transf to real 8 for edsemigl
                     ZTEMPVAR = ZVAR(ISTEP, start_idx:end_idx)
                     XTEMPCOL = XCOL(start_idx:start_idx + NKOL - 1)  ! x is repeated for every different y, but EDSEMI_3 will subset to NKOL
@@ -492,7 +496,7 @@ CONTAINS
                     ELSE
                         TMP_ISTEP = ISTEP
                     ENDIF
-                    
+
                     CALL EDSEMI_3(&
                         ZTEMPVAR, NKOL, NLIG, XTEMPCOL, YTEMPLIG, X0, Y0, INVY &
                         ,TITSEM, IEREDI, LEC, TYP_DON &
@@ -536,13 +540,13 @@ CONTAINS
         integer, intent(in)         :: ITYP_DIRECT
         real(kind=8), intent(in)    :: EPS_TOP
 
-        CHARACTER (LEN=132), INTENT(IN) :: FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_LISTING, FICH_SOR_TOPO        
+        CHARACTER (LEN=132), INTENT(IN) :: FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_LISTING, FICH_SOR_TOPO
 
         INTEGER, INTENT(OUT) :: NLIG_LOC, NKOL_LOC
         REAL(kind=8), INTENT(OUT)    :: X0_LOC , Y0_LOC
-        CHARACTER (LEN=132),INTENT(OUT)  :: TITSEM_LOC  
-        REAL(kind=8), DIMENSION(999), INTENT(OUT) :: DX_LU 
-        REAL(kind=8), DIMENSION(999), INTENT(OUT) :: DY_LU 
+        CHARACTER (LEN=132),INTENT(OUT)  :: TITSEM_LOC
+        REAL(kind=8), DIMENSION(999), INTENT(OUT) :: DX_LU
+        REAL(kind=8), DIMENSION(999), INTENT(OUT) :: DY_LU
         REAL(kind=8), DIMENSION(999*999), INTENT(OUT) :: CHAMP_AUX
         ! REAL(KIND=8), ALLOCATABLE :: CHAMP_AUX(:)
         ! ALLOCATE(CHAMP_AUX(999*999))
@@ -550,7 +554,7 @@ CONTAINS
         CALL Cal_Direct_Drainage(ITYP_DIRECT, EPS_TOP, FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING, &
            CHAMP_AUX, NKOL_LOC, NLIG_LOC, X0_LOC, Y0_LOC, TITSEM_LOC, DX_LU, DY_LU)
 
-        ! WRITE(*,*) "Before assignment: X0 =", X0, "X0_LOC =", X0_LOC   
+        ! WRITE(*,*) "Before assignment: X0 =", X0, "X0_LOC =", X0_LOC
         ! X0_LOC = X0
         ! Y0_LOC = Y0
 

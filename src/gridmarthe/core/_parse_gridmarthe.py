@@ -47,6 +47,17 @@ def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
     return idate
 
 
+def _scan_dim_py(xfile):
+    import re
+    with open(xfile, 'r', encoding='ISO-8859-1') as f:
+        head = [next(f) for x in range(25)]
+    head = '\n'.join(head)
+
+    ncol = int(re.search(r'Ncolumn=(\d+)', head, re.MULTILINE).group(1))
+    nrow = int(re.search(r'Nrows=(\d+)', head, re.MULTILINE).group(1))
+    return [[ncol, nrow, 1]]
+
+
 def scan_var(xfile):
     """ List all variables stored in a Marthe grid file """
     var = modgridmarthe.scan_typevar(xfile)  # get a list of unique type_var that are in xfile
@@ -92,7 +103,12 @@ def _read_marthe_grid(xfile, varname='CHARGE', shallow_only=False):
     dims, nbsteps = modgridmarthe.scan_dim(xfile, varname, nu_zoomx)
     nbtot = np.prod(dims, axis=1).sum() # product deprecated => prod // DeprecationWarning: `product` is deprecated as of NumPy 1.25.0, and will be removed in NumPy 2.0. Please use `prod` instead.
     if nbtot == 0:
-        raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
+        if not shallow_only:
+            raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
+        else:
+            dims = _scan_dim_py(xfile)
+            nbtot =  np.prod(dims, axis=1).sum()
+            nbsteps, nu_zoomx = 1, 0
 
     if shallow_only:
         res = list(modgridmarthe.read_grid_shallow( xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx ))
