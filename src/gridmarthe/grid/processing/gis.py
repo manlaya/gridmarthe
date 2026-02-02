@@ -67,8 +67,12 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     polygons = _build_polyg(ds) # .isel(time=0) # x,y does not vary in time
     df = ds.to_dataframe() #.to_pandas() # only for 1 dim
 
-    if 'time' in ds.dims.keys():
-        polygons = np.tile(polygons.flatten(), len(np.unique(df.index.get_level_values('time')))) # ad geom for every timestep
+    if 'time' in ds.dims:
+        # ad geom for every timestep
+        polygons = np.tile(
+            polygons.flatten(),
+            len(np.unique(df.index.get_level_values('time')))
+        )
 
     gdf = gpd.GeoDataFrame(
         df,
@@ -76,7 +80,7 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
         crs=epsg
     )
 
-    if fmt == "wide" and 'time' in ds.dims.keys():
+    if fmt == "wide" and 'time' in ds.dims:
         # here no wide fmt if no time, so no if 'time' in ds.dims.keys():
         gdf = gdf.unstack('time')
         gdf.columns = [
@@ -93,11 +97,11 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
 def _check_rioxarray():
     try:
         import rioxarray
-    except ModuleNotFoundError:
+    except ModuleNotFoundError as e:
         raise ModuleNotFoundError(
             'rioxarray is not Found in python env.' + \
             'Please install it or reinstall gridmarthe with optional dependancies: pip install gridmarthe[opt]'
-        )
+        ) from e
     return
 
 
@@ -289,6 +293,9 @@ def to_raster(
         da = ds.copy()
     else:
         raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
+
+    if 'time' not in da.dims:
+        da = da.expand_dims('time')
 
     if time is None:
         time = da.times  # if not defined, get all available times

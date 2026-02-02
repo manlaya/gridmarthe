@@ -90,10 +90,12 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
     >>> geom = gm.compute_geometry(topo, hsubs).sel(zone=permh.zone.values)
     >>> convert_grid_to_vtk(geom, 'z', time=0, output_tpl='tests/res/vtk/hallue')
     """
-    if time is None:
-        time = grid.time.values
+    if 'time' not in grid:
+        grid = grid.copy().expand_dims({'time': [0]})  # add dummy time dimension
 
-    if isinstance(time, str):
+    if time is None :
+        time = grid.time.values
+    elif isinstance(time, str):
         time = [time]  # convert to list if single time is given
     elif isinstance(time, int):
         time = [grid.time.values[time]]

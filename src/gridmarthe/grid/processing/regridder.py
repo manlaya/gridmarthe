@@ -28,7 +28,7 @@
 import numpy as np
 import xarray as xr #needs netcdf4, rioxarray
 
-from ..grid_utils import _get_scale
+from ..grid_utils import _get_scale, get_default_variable
 
 
 def get_new_coords(ds, res=1000):
@@ -83,11 +83,13 @@ def rescale_grid(da, res=1000, **kwargs):
     return new_da
 
 
-def coarse_nested_grid(da, varname='charge', dx=None, dy=None):
+def coarse_nested_grid(da, varname=None, dx=None, dy=None):
     """ Coarse nested grid to res of main grid
     only realy valid if nested grid resolution is a multiple of maingrid resolution
     coords needs to be assign first
     """
+    if varname is None:
+        varname = get_default_variable(da)
     if dx is None or dy is None:
         dx, dy = _get_scale(da)
     dx1, dy1 = dx.pop(0), dy.pop(0)

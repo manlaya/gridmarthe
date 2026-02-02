@@ -89,7 +89,7 @@ def _get_true_topo(topo, key='h_topogr'):
         zdim = len(np.unique(topo.z.data))
     true_topo = subset(topo, 'z', 1)[key].data  # true topo is only 1st layer
     true_topo = np.tile(true_topo, zdim)  # set topo for all layers
-    ds[key] = (('time', 'zone'), true_topo)
+    ds[key] = (tuple(topo.dims), true_topo)
     return ds
 
 
@@ -104,11 +104,13 @@ def _get_upper_alt(topo, hsubs):
 
     Returns
     -------
-    dataset with only (time,zone), (h_topogr, h_substr, h_upper)
+    dataset with only ([time],zone), (h_topogr, h_substr, h_upper)
     """
     ds = xr.combine_by_coords([topo, hsubs], combine_attrs='override', compat='override')
-
-    df = ds.isel(time=0).to_dataframe().reset_index()  # time is constant! TODO change this/ check if working
+    _dims = list(ds.dims)  # ('time','zone') in most cases, only 'zone' if no time
+    if 'time' in _dims:
+        ds.isel(time=0)  # only for first time, topo is mainly constant in time in Marthe
+    df = ds.to_dataframe().reset_index()
     df = df.sort_values(by=['x', 'y', 'z']).copy()  # assure data are sort in this way
     # set nans for topo and hsubs
     # this is constant in Marthe / should not be changed by user
@@ -123,11 +125,8 @@ def _get_upper_alt(topo, hsubs):
     mask = (df['h_upper'].isna()) & (df['h_substrat'].notna())
     df.loc[mask, 'h_upper'] = df.loc[mask, 'h_topogr']
 
-    # debug
-    # df.to_csv('toto.csv')
-
     # # switch back to xarray backend
-    ds = df.set_index(['time','zone'])[['h_topogr', 'h_substrat', 'h_upper']].to_xarray()
+    ds = df.set_index(_dims)[['h_topogr', 'h_substrat', 'h_upper']].to_xarray()
     return ds
 
 
@@ -177,10 +176,11 @@ def compute_geometry(topo, hsubs, mask=None):
     # put values in xr.Dataset
     # ds = xr.combine_by_coords([ds, tmp])
     ds = xtopo.copy()
-    ds['z_lower']    = (('time', 'zone'), tmp['h_substrat'].data)
-    ds['z_upper']    = (('time', 'zone'), tmp['h_upper'].data)
-    ds['thickness']  = (('time', 'zone'), thick)
-    ds['depth']      = (('time', 'zone'), depth)
+    dims = tuple(xtopo.dims)  # ('time', 'zone') in most cases, only 'zone' if no time
+    ds['z_lower']    = (dims, tmp['h_substrat'].data)
+    ds['z_upper']    = (dims, tmp['h_upper'].data)
+    ds['thickness']  = (dims, thick)
+    ds['depth']      = (dims, depth)
     return ds
 
 
@@ -209,13 +209,17 @@ def get_surface_layer(ds, aquif_layers=None):
     -------
         surface_mask: xr.Dataset
     """
+    _dims = tuple(ds.dims)
+    coords = ['x', 'y']
+    if 'time' in _dims:
+        coords.append('time')
     df = ds.to_dataframe()
     df = df.reset_index()
 
     if aquif_layers is not None:
         df = df[df['z'].isin(aquif_layers)]
 
-    idx_z_min = df.groupby(['x', 'y', 'time']).z.idxmin() # get index of min z ("layer") for each x,y,t groups
+    idx_z_min = df.groupby(coords).z.idxmin() # get index of min z ("layer") for each x,y,t groups
     first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone').drop('index', axis=1)
     # time not needed here, zone are independant from time coords
     return first_aquif_lay.to_xarray()
@@ -265,13 +269,19 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     if x is not None:
         assert y is not None, 'if x is provided, y cannot be None'
         ## mask = ds.sel(x=x, y=y, method='nearest') # possible uniquement si x,y sont des coordonnées/dim
-        nearest = _nearest_node(np.array([(x, y)]), np.array(list(zip(ds_search['x'].data, ds_search['y'].data))))
+        nearest = _nearest_node(
+            np.array([(x, y)]),
+            np.array(list(zip(ds_search['x'].data, ds_search['y'].data)))
+        )
         nearest_zone = ds_search.isel(zone=nearest)
 
         # check if xy is in a cell == dx and dy are not greater than grid resolution
         dx = np.abs(nearest_zone.x.data - x)
         dy = np.abs(nearest_zone.y.data - y)
-        mask = ds_search['zone'] == nearest_zone.zone if (dx <= nearest_zone.dx.data) & (dy <= nearest_zone.dy.data) else ds_search['zone'].isnull()
+        mask = (
+            ds_search['zone'] == nearest_zone.zone if (dx <= nearest_zone.dx.data) &
+            (dy <= nearest_zone.dy.data) else ds_search['zone'].isnull()
+        )
 
     if i is not None:
         assert j is not None, 'if i is provided, j cannot be None'

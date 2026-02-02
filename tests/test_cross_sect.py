@@ -27,7 +27,6 @@ def test_cross_section():
     assert 'x' not in ds_xs.dims, "Cross-section should not have 'x' dimension"
     assert ds_xs.sizes['y'] > 1  # cross-section has multiple points
     assert ds_xs.sizes['z'] == 10  # we have 10 layers
-    
 
 
 # Visual test - disable for automated testing
@@ -78,3 +77,8 @@ def _check_plot_cross_section():
 
     plt.tight_layout()
     plt.show()
+
+
+if __name__ == "__main__":
+    test_cross_section()
+    # _check_plot_cross_section()

@@ -241,7 +241,7 @@ def _extract_zvar_from_ds(ds, varname):
     zdxlu   = ds.dx.data
     zdylu   = ds.dy.data
     ztitle  = ds.attrs.get('title')
-    izdates = _datetime64_to_float(zdates)
+    izdates = _datetime64_to_float(zdates) if isinstance(zdates[0], np.datetime64) else zdates
 
     return (
         zvar, zdates,

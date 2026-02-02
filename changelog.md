@@ -10,6 +10,11 @@ v0.4.0
 * change: default to `varname=None` when writing a marthe grid file.
 1st non dimension/coord variable will be selected.
 add `.lower()` security for user's variable
+* change: use integer as default dummy time dimension for parameters grid, instead
+of '1850-01-01' fake date.
+* add: `drop_time` argument to `gridmarthe.load_marthe_grid` to drop dummy time
+dimension
+* refact: code refactoring/reorganization with new fortran subroutines
 
 
 v0.3.0

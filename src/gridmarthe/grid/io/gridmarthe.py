@@ -81,6 +81,7 @@ def load_marthe_grid(
     var_attrs: dict = {},
     epsg: int = 27572,
     full_3d: bool = False,
+    drop_time: bool = False,
     model_attrs: dict = {
         'domain' : 'FR-France',
         'institution': 'BRGM, French Geological Survey, Orléans, France'
@@ -172,6 +173,11 @@ def load_marthe_grid(
         Is z dimension an aquifer layer or real Z axis (in meters for exemple)
         Default is False (z is aquifer layer number)
 
+    drop_time: bool, optional
+        Drop time dimension even if only one timestep is present.
+        Default is False. If True and only one timestep, time dimension is removed.
+        Useful for parameters grids.
+
     model_attrs: dict, optional
         Dictionnary of attributes to add to Dataset.
         by default, gis attrs are added and can be modified
@@ -240,7 +246,7 @@ def load_marthe_grid(
             arrays.append(load_marthe_grid(
                 filename, var, fpastp, dates, nan_value, drop_nan, xyfactor,
                 shallow_only, add_col_row, add_id_grid, title, var_attrs, epsg,
-                full_3d, model_attrs, engine, verbose
+                full_3d, drop_time, model_attrs, engine, verbose
             ))
         return xr.merge(arrays, compat='no_conflicts')
 
@@ -325,10 +331,8 @@ def load_marthe_grid(
                 category=UserWarning,
                 stacklevel=1
             )
-        dates = pd.date_range('1850', '1900', len(isteps))
-        # dates = np.arange(1, len(isteps)+1)
-        # TODO use integers for time isno dates provided ?
-        # TODO remove time dimension if only one and not dates (eg parameters?)
+        # dates = pd.date_range('1850', '1900', len(isteps))  // old v_<0.4
+        dates = np.arange(len(isteps))  # use integer for dummy time
 
     # --- Create xarray.Dataset object
     ds = xr.Dataset(
@@ -342,6 +346,9 @@ def load_marthe_grid(
             **model_attrs
         }
     )
+
+    if drop_time and ds.sizes['time'] == 1:
+        ds = ds.drop_dims('time')
 
     # add non-dimensionnal coordinates
     # ds = ds.assign_coords(  # future
@@ -545,6 +552,8 @@ def write_marthe_grid(
     # TODO: infer nx, ny, nz, ngrid from ds ? --> allow to create a custom grid
     varname = varname.lower() if varname is not None else get_default_variable(ds)
     ds2 = ds.copy()
+    if 'time' not in ds2.dims:
+        ds2 = ds2.expand_dims('time')
 
     nan_value = VARS_ATTRS.get(varname, {}).get('missing_value', 9999.) if nan_value is None else nan_value
 

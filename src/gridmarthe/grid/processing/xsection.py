@@ -8,7 +8,7 @@ from .gutils import _polygonize
 
 
 # or get_transect
-def slice_cross_section(grid, x=None, y=None, agg_along_axis=None): 
+def slice_cross_section(grid, x=None, y=None, agg_along_axis=None):
     """ grid needs geom infos and to have x,y as dimension.
     See :py:func:`gridmarthe.compute_geometry` and :py:func:`gridmarthe.assign_coords`
 
@@ -19,10 +19,10 @@ def slice_cross_section(grid, x=None, y=None, agg_along_axis=None):
 
     x, y : float, optional
         Coordinates on which search for cross section transect.
-    
+
     agg_along_axis : str, optional
        If not None, aggregate along axis (mean). Accepted values are 'x' or 'y'.
-    
+
     Returns
     -------
     xr.Dataset
@@ -48,7 +48,7 @@ def slice_cross_section(grid, x=None, y=None, agg_along_axis=None):
     crossect = grid.sel(method='nearest', **coords)  # tolerance=2e3
     if agg_along_axis is not None:
         crossect = crossect.mean(dim=(agg_along_axis), skipna=True)
-    
+
     return crossect
 
 
@@ -64,7 +64,7 @@ def _mk_cross_section_geom(ds_xsection):
     mode : str, optional
         Mode of cross section ('x' or 'y', default is 'x'). Wether the cross
         section is done along x or y axis.
-    
+
     Returns
     -------
     pd.DataFrame
@@ -85,11 +85,11 @@ def _mk_cross_section_geom(ds_xsection):
         mode = 'y'
     else:
         raise ValueError('Argument `ds_xsection` has no x or y dimension coordinates.')
-    
+
     df = ds_xsection.to_dataframe().reset_index().dropna()
     grp = df.groupby(['x', 'y'])
     geoms = []
-    for gr, dff in grp:
+    for _, dff in grp:
         geoms.append(pd.DataFrame(
             _polygonize(
                 np.round(dff[mode].values - dff[f'd{mode}'].values/2, 2),

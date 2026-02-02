@@ -11,6 +11,8 @@ import gridmarthe as gm
 
 
 DATA_PATH = './tests/data/chasim_hallue_2var.out'
+DATA_WITH_TIME = './tests/data/chasim_hallue.out'
+FPASTP = './tests/data/hallue.pastp'
 VAR = "CHARGE"
 
 
@@ -73,6 +75,18 @@ def test_load_grid_attrs_present():
     assert 'title' in ds.attrs
     assert 'marthe_grid_version' in ds.attrs
     assert 'original_dimensions' in ds.attrs
+
+
+def test_drop_time_dimension_for_parameter_grid():
+    ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_time=True)
+    assert 'time' not in ds.dims
+
+
+def test_load_grid_with_time_dimension():
+    ds = gm.load_marthe_grid(DATA_WITH_TIME, VAR, FPASTP)
+    assert 'time' in ds.dims
+    assert ds.sizes['time'] == 205
+    assert isinstance(ds.time.values[0], np.datetime64)
 
 
 def run_all():

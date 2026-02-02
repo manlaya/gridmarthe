@@ -51,9 +51,9 @@ def test_lecsem_read_marthe_grid():
     print("test_lecsem_read_marthe_grid passed")
 
 
-def test_lecsem_transform_coords():
-    # TODO
-    pass
+# def test_lecsem_transform_coords():
+#     # TODO
+#     pass
 
 
 def main():

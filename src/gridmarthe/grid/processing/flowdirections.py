@@ -150,7 +150,8 @@ def calc_flow_directions(
         'dx' : ("zone", dxlus),
         'dy' : ("zone", dylus)
     }
-    dates = pd.date_range('1850', '1900', 1)
+    # dates = pd.date_range('1850', '1900', 1)
+    dates = np.arange(1)  # use integer for dummy time
 
     xyfactor = 1
     ds = xr.Dataset(

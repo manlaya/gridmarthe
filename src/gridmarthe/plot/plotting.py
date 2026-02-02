@@ -32,7 +32,7 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from gridmarthe.grid.grid_utils import _get_scale, deprecated_alias
+from gridmarthe.grid.grid_utils import _get_scale, deprecated_alias, get_default_variable
 from .plot_utils import _set_map_lims
 
 
@@ -41,7 +41,7 @@ from .plot_utils import _set_map_lims
 
 
 @deprecated_alias(var='varname')
-def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
+def plot_nested_grid(ds, ax=None, varname=None, **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
 
     Parameters
@@ -55,7 +55,8 @@ def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
 
     varname: str, optional
-        the variable to plot in dataset. Default is 'charge'.
+        the variable to plot in dataset. Default is None, which means the first
+        non coordinates variable found in dataset.
 
     **kwargs
         any keywords argument from `xr.Dataset.plot.pcolormesh`
@@ -65,6 +66,8 @@ def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
     ax: matplotlib axis.
     """
     da = ds.copy()
+    if varname is None:
+        varname = get_default_variable(da)
 
     vmin, vmax = da[varname].min(), da[varname].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
@@ -94,27 +97,32 @@ def plot_nested_grid(ds, ax=None, varname='charge', **kwargs):
 
     _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
 
-    if hasattr(da, 'time') and str(da.time.values)[:10] == '1850-01-01':
+    if hasattr(da, 'time') and \
+        (str(da.time.values)[:10] == '1850-01-01' or da.time.values[0] == 0):
         # remember: no slice on time because it must be selected before calling function
         ax.set_title(varname)  # remove default title from xarray API if dummy timestep (e.g plot parameters)
 
     return ax
 
 
-def plot_mesh_time_serie(*args, zone: int, varname='charge', show=False, figsize=(12,4), **kwargs):
-    """ Usefull function to plot time serie from any dataset, by extracting a specific cell timeserie
+def plot_mesh_time_serie(*args, zone: int, varname=None, show=False, figsize=(12,4), **kwargs):
+    """ Usefull function to plot time serie from any dataset, by extracting a
+    specific cell timeserie
 
     Parameters
     ----------
 
     *args: xr.Dataset,
-        any datasets (you can pass multiple datasets, eg. `plot_mesh_time_serie(ds1, ds2, ds3, ... zone=32)`
+        any datasets (you can pass multiple datasets, eg.
+        `plot_mesh_time_serie(ds1, ds2, ds3, ... zone=32)`
 
     zone: int
         zone value (dimension) to select data
 
-    varname: str, optional (default is 'charge')
+    varname: str, optional
         Variable to plot. Must be a key of all dataset passed as *arg.
+        Default is None, which means the first non coordinates variable
+        found in the first dataset.
 
     show: bool, optional.
         show plot using `plt.show()`
@@ -130,6 +138,8 @@ def plot_mesh_time_serie(*args, zone: int, varname='charge', show=False, figsize
     ax: matplotlib axis.
 
     """
+    if varname is None:
+        varname = get_default_variable(args[0])
     fig, ax = plt.subplots(figsize=figsize)
     for da in args:
         da[varname].sel(zone=zone).plot(ax=ax, **kwargs)
@@ -139,7 +149,15 @@ def plot_mesh_time_serie(*args, zone: int, varname='charge', show=False, figsize
     return ax
 
 
-def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, file_out=None, show=False, **kwargs):
+def plot_outcrop(
+    ds_outcrop,
+    fig=None, ax=None,
+    cbar_width='3',
+    labels=None,
+    file_out=None,
+    show=False,
+    **kwargs
+):
     """ Usefull function to plot outcrop layers of a marthe (multilayer) grid
 
     There is two mode implementend yet, using xr.plot or
@@ -283,7 +301,15 @@ def plot_outcrop(ds_outcrop, fig=None, ax=None, cbar_width='3', labels=None, fil
         return fig, ax, ax_cbar
 
 
-def plot_veloc_quiver(ds, ax=None, xyfreq=1, veclenght=1, color_mod=False, sqrt_norm=True, loc_scale_xy=(0.1,0.1)):
+def plot_veloc_quiver(
+    ds,
+    ax=None,
+    xyfreq=1,
+    veclenght=1,
+    color_mod=False,
+    sqrt_norm=True,
+    loc_scale_xy=(0.1,0.1)
+):
     r""" Plot velocity field as quiver
 
     Parameters
