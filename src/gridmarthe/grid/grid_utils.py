@@ -82,7 +82,7 @@ def _is_sorted(a):
 def _get_scale(da):
     """ Get unique values of dx, dy marthegrid.Dataset """
     dx = np.sort(np.unique(da['dx'].values))[::-1]
-    dy = np.sort(np.unique(da['dx'].values))[::-1]
+    dy = np.sort(np.unique(da['dy'].values))[::-1]
     return list(dx[~np.isnan(dx)]), list(dy[~np.isnan(dy)])
 
 

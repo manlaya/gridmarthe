@@ -12,11 +12,11 @@ from gridmarthe.core import (
     _decode_title
 )
 
-from gridmarthe.grid.grid_attrs import (
+from gridmarthe.grid.conventions import (
     _parse_global_attrs,
-    _assign_xy_attrs
+    _assign_xy_attrs,
+    VARS_ATTRS
 )
-from gridmarthe.grid.constant import VARS_ATTRS
 
 
 def calc_flow_directions(

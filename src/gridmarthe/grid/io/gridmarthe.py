@@ -56,8 +56,12 @@ from ..grid_utils import (
     get_default_variable
 )
 
-from ..grid_attrs import _assign_z_attrs, _assign_xy_attrs, _parse_global_attrs
-from ..constant import VARS_ATTRS
+from ..conventions import (
+    _assign_z_attrs,
+    _assign_xy_attrs,
+    _parse_global_attrs,
+    VARS_ATTRS
+)
 
 
 @deprecated_alias(nanval='nan_value')
