@@ -288,7 +288,7 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
         z_coords = None
 
     # attrs not kept ? force to keep them
-    coords_attrs = [ds.y.attrs, ds.x.attrs]
+    coords_attrs = [ds.x.attrs, ds.y.attrs]
 
     da = ds.assign_coords(
         #x=(zone_label, np.around(da_in[coords[0]].data, 1) ),
@@ -300,17 +300,17 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
     if z_coords is not None:
         da = da.assign_coords(z=(zone_label, ds[coords[2]].data))
         dims.insert(0, 'z')
-        coords_attrs.insert(0, ds.z.attrs)
+        coords_attrs.append(ds.z.attrs)
 
     da = da.set_index(zone=dims)
     if not keep_zone:
         # drop duplicates is a security for nested grids, if dropnan was not performed
         da = da.drop_duplicates(zone_label).unstack(zone_label)
 
-    da.x.attrs = coords_attrs[-1]
+    da.x.attrs = coords_attrs[0]
     da.y.attrs = coords_attrs[1]
     if z_coords is not None:
-        da.z.attrs = coords_attrs[0]
+        da.z.attrs = coords_attrs[2]
 
     return da.sortby(dims).sortby('y', ascending=False)
 

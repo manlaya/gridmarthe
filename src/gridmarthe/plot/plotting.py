@@ -98,9 +98,13 @@ def plot_nested_grid(ds, ax=None, varname=None, **kwargs):
     _set_map_lims(ax, da.x.min().data, da.y.min().data, da.x.max().data, da.y.max().data)
 
     if hasattr(da, 'time') and \
-        (str(da.time.values)[:10] == '1850-01-01' or da.time.values[0] == 0):
+        (str(da.time.values)[:10] == '1850-01-01' or np.all(da.time.values == 0)):
         # remember: no slice on time because it must be selected before calling function
         ax.set_title(varname)  # remove default title from xarray API if dummy timestep (e.g plot parameters)
+
+    # Force X,Y labels
+    ax.set_xlabel('X' if not ds.x.attrs else '{} [{}]'.format(ds.x.attrs['long_name'], ds.x.attrs['units']))
+    ax.set_ylabel('Y' if not ds.y.attrs else '{} [{}]'.format(ds.y.attrs['long_name'], ds.y.attrs['units']))
 
     return ax
 

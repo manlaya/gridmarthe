@@ -209,9 +209,12 @@ def get_surface_layer(ds, aquif_layers=None):
     -------
         surface_mask: xr.Dataset
     """
+    ds = ds.copy()
     _dims = tuple(ds.dims)
     coords = ['x', 'y']
     if 'time' in _dims:
+        # time not needed here, zone are independant from time coords
+        # ds = ds.drop_dims('time')
         coords.append('time')
     df = ds.to_dataframe()
     df = df.reset_index()
@@ -221,7 +224,6 @@ def get_surface_layer(ds, aquif_layers=None):
 
     idx_z_min = df.groupby(coords).z.idxmin() # get index of min z ("layer") for each x,y,t groups
     first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone').drop('index', axis=1)
-    # time not needed here, zone are independant from time coords
     return first_aquif_lay.to_xarray()
 
 
