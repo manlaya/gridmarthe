@@ -66,11 +66,11 @@
 
       CHARACTER (LEN=80) :: TITGEN, LABAUX
       ! CHARACTER (LEN=15) :: DATE_RELEASE
-      CHARACTER (LEN=20) :: NAMEPG
-      CHARACTER (LEN=6)  :: NRELEA
-      COMMON /NVERSI/NAMEPG, NRELEA
-      CHARACTER (LEN=80), DIMENSION(25) :: WINT_BUFF
-      COMMON/WINT_WRITE/WINT_BUFF
+      ! CHARACTER (LEN=20) :: NAMEPG
+      ! CHARACTER (LEN=6)  :: NRELEA
+      ! COMMON /NVERSI/NAMEPG, NRELEA
+      ! CHARACTER (LEN=80), DIMENSION(25) :: WINT_BUFF
+      ! COMMON/WINT_WRITE/WINT_BUFF
       ! CHARACTER (LEN=3)   :: EXTEN_PROJ
       ! CHARACTER (LEN=50)  :: Nom_Logiciel
       ! CHARACTER (LEN=10)  :: Code_Fich_Recent
@@ -89,7 +89,7 @@
                 ,IANGL, NVOIS, NUMAFL, KONT, NBMRIV, N, K, IR,IRAVA, KONSOUR, ISOUR &
                 ,NBAMONT, NUMAFL_AVA, IEDIT_RESEAU, IEX_SURF, KONT_EXUT !, ISTOP, No_New_FILE
 !     =======
-!      D�but
+!      Début
 !     =======
       INPCON = 5
       IOUCON = 6
@@ -209,7 +209,7 @@
 !      Lectures
 !     ==========
 !     =====================================
-!      Fichier Pr�sence Domaine de Surface
+!      Fichier Présence Domaine de Surface
 !     =====================================
       NATUR_FICH = "Présence domaine de surface"
       ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
@@ -990,17 +990,17 @@
 !        =================================
          ! CALL WRIT_STATUS_BAR("�dition des num�ros d'Affluents", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
-         OPEN(UNIT=LEC, FILE=FICH_AFFLU, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
+         OPEN(UNIT=IOUMAI, FILE=FICH_AFFLU, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_AFFLU, IERNEW, 1)
          IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros d'Affluents"
+            NATUR_FICH = "Numéros d'Affluents"
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_AFFLU)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_AFFLU)
             ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
          ELSE
-            TITSEM = "Num�ros d'Affluents"
+            TITSEM = "Numéros d'Affluents"
             CODTIT_13 = "AFFLU_RIVI"
             WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
             TITSEM(71:) = TRIM(CHARA20)
@@ -1023,22 +1023,22 @@
 !        =================================
          ! CALL WRIT_STATUS_BAR("�dition des num�ros de tron�ons", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
-         OPEN(UNIT=LEC, FILE=FICH_TRONC, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
+         OPEN(UNIT=IOUMAI, FILE=FICH_TRONC, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_TRONC, IERNEW, 1)
          IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros de Tron�ons"
+            NATUR_FICH = "Numéros de Tronçons"
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_TRONC)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_TRONC)
             ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
          ELSE
-            TITSEM = "Num�ros de Tron�ons"
+            TITSEM = "Numéros de Tronçons"
             CODTIT_13 = "TRONC_RIVI"
             WRITE (CHARA20 , "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
             TITSEM(71:) = TRIM(CHARA20)
 !           =================================================
-!            Chargement des num�ros de Tron�ons pour �dition
+!            Chargement des numéros de Tronçons pour édition
 !           =================================================
             HYDRO(1:NTOT) = 0.
             DO IR=1,NBMRIV
@@ -1100,10 +1100,10 @@
 !        ===========================================================
          ! CALL WRIT_STATUS_BAR("�dition du champs des num�ros de sous-bassins", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
-         OPEN(UNIT=LEC, FILE=FICH_NUMER_SOUS_BV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
+         OPEN(UNIT=IOUMAI, FILE=FICH_NUMER_SOUS_BV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_NUMER_SOUS_BV, IERNEW, 1)
          IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros de sous-bassins"
+            NATUR_FICH = "Numéros de sous-bassins"
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_NUMER_SOUS_BV)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &

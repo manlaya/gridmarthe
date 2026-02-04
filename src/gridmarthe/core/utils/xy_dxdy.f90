@@ -110,15 +110,15 @@
          YDEB = YDEB + DY
          YCEN_P = YCEN_PP
       ENDDO
-! #ifndef ENGLISH
-!  9001 FORMAT (" ** Erreur dimension Colonne",I4 &
-!              ," X Gauche=",ES10.3," X Centre=",ES10.3,T77," **")
-!  9002 FORMAT (" ** Erreur dimension Ligne  ",I4 &
-!              ," Y Bas   =",ES10.3," Y Centre=",ES10.3,T77," **")
-! #else
+#ifndef ENGLISH
+ 9001 FORMAT (" ** Erreur dimension Colonne",I4 &
+             ," X Gauche=",ES10.3," X Centre=",ES10.3,T77," **")
+ 9002 FORMAT (" ** Erreur dimension Ligne  ",I4 &
+             ," Y Bas   =",ES10.3," Y Centre=",ES10.3,T77," **")
+#else
 9001 FORMAT (" ** Dimension error, Column ",I4 &
             ," X Left=",ES10.3," X Center=",ES10.3,T77," **")
 9002 FORMAT (" ** Dimension error, Row    ",I4 &
             ," Bottom=",ES10.3," Center=",ES10.3,T77," **")
-! #endif
+#endif
       END SUBROUTINE XY_DXDY
