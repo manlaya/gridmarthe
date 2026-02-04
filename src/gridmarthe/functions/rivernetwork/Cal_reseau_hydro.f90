@@ -209,15 +209,9 @@
 !      Lectures
 !     ==========
 !     =====================================
-<<<<<<< HEAD
 !      Fichier Présence Domaine de Surface
 !     =====================================
       NATUR_FICH = "Surface domaine presence"
-=======
-!      Fichier Pr�sence Domaine de Surface
-!     =====================================
-      NATUR_FICH = "Présence domaine de surface"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
       ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
       ! CALL OPEOLD(LEC, FICH_PRESENCE, IEROLD)
       OPEN (UNIT=LEC, FILE=FICH_PRESENCE, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
@@ -284,11 +278,7 @@
 !     =============================================
 !      Orientations (degr�s ou 1001:1008 ou 1:128)
 !     =============================================
-<<<<<<< HEAD
       NATUR_FICH = "Flow_directions"
-=======
-      NATUR_FICH = "Directions_Drainage"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
       ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
       ! CALL OPEOLD(LEC,FICH_DIRECT,IEROLD)
       OPEN (UNIT=LEC, FILE=FICH_DIRECT, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
@@ -355,11 +345,7 @@
 !        * Si pas de fichier Surfaces Drain�es => Les calcule
 !     ===========================================================
       IEX_SURF = 0
-<<<<<<< HEAD
       NATUR_FICH = "River presence (indicator)"
-=======
-      NATUR_FICH = "Présence Rivières"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
       SELECT CASE (FICH_ENT_EXIS_RIV)
       CASE DEFAULT
 !        ===================================================================
@@ -396,11 +382,7 @@
 !         => D�termination de surfaces drain�es : Il faut SURF_RIV > 0.
 !         Lecture d'un fichier "Pr�sence rivi�res" ou [Surfaces Drain�es]
 !        =================================================================
-<<<<<<< HEAD
          ! WRITE (*,*) "Determination of drained surfaces ", TRIM(NATUR_FICH)
-=======
-         WRITE (*,*) "Determination des surfaces drainees from ", TRIM(NATUR_FICH)
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
          ! CALL WRIT_STATUS_BAR("D�termination des surfaces drain�es", 0, 0)
          IF (SURF_RIV <= 0.) THEN
             WRITE (LISTIN, 9010, IOSTAT=IERRAUX)
@@ -413,11 +395,7 @@
 !            (calcul�es par "Cal_Direct_drainage"
 !            Lues dans la variable "SURF_DRA"
 !           ==========================================
-<<<<<<< HEAD
             NATUR_FICH = "Grainage areas (surface drainée)"
-=======
-            NATUR_FICH = "Surfaces Drainées"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
             OPEN (UNIT=LEC, FILE=FICH_ENT_SURF_AMO, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
             ! CALL OPEOLD(LEC,FICH_ENT_SURF_AMO,IEROLD)
@@ -448,11 +426,7 @@
 !           ===================================================================
             WHERE ((PRESEN(1:NTOT) == 0.).OR.(ABS(PRESEN(1:NTOT)) == 9999.)) SURF_DRA(1:NTOT) = 0.
             IEX_SURF = 1
-<<<<<<< HEAD
          CASE (" ")
-=======
-         CASE ("")
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
 !           ===============================================================
 !            Pas de fichier de "Surfaces drain�es Amonts"
 !            Calcul des surfaces drain�es => Dans la variable "SURF_DRA()"
@@ -474,11 +448,7 @@
                OPEN(UNIT=IOUMAI, FILE=FICH_SOR_SURF_AMO, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
                ! CALL OPENEW(IOUMAI,FICH_SOR_SURF_AMO,IERNEW,1)
                IF (IERNEW /= 0) THEN
-<<<<<<< HEAD
                   NATUR_FICH = "Drainage areas calculation"
-=======
-                  NATUR_FICH = "Surfaces drainées cal."
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
                   WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                         , TRIM(FICH_SOR_SURF_AMO)
                   WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -487,11 +457,7 @@
                   !                                       , TRIM(FICH_SOR_SURF_AMO)                                                        
                   ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
                ELSE
-<<<<<<< HEAD
                   TITSEM = "Drainage areas"
-=======
-                  TITSEM = "Surfaces Drainées calculées"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
                   CODTIT_13 = "SURFA_DRAI"
                   WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
                   TITSEM(71:) = TRIM(CHARA20)
@@ -519,11 +485,7 @@
             OPEN(UNIT=IOUMAI, FILE=FICH_SOR_EXIS_RIV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
             ! CALL OPENEW(IOUMAI,FICH_SOR_EXIS_RIV,IERNEW,1)
             IF (IERNEW /= 0) THEN
-<<<<<<< HEAD
                NATUR_FICH = "River presence (indicator) cal."
-=======
-               NATUR_FICH = "Présence Riviére cal."
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
                WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                      , TRIM(FICH_SOR_EXIS_RIV)
                WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -707,11 +669,7 @@
 !        ==============
 !!!!!!!!!!!!!!!!!!!!!
           write (LISTIN,*)
-<<<<<<< HEAD
           write (LISTIN,*) " Att tronçon IRAVA=",IRAVA," Plus de",NB_AMONT_MAX," amonts !"
-=======
-          write (LISTIN,*) " Att tron�on IRAVA=",IRAVA," Plus de",NB_AMONT_MAX," amonts !"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
          LIG = (NUM_SEMIS(IRAVA) -1) / NKOL + 1
          KOL = NUM_SEMIS(IRAVA) - (LIG - 1) * NKOL
          write (77,*) " Maille NUM_SEMIS(IRAVA)=",NUM_SEMIS(IRAVA)," KOL=",KOL," LIG=",LIG
@@ -846,11 +804,7 @@
          OPEN(UNIT=IOUMAI, FILE=FICH_SOR_RIV_BLN, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_SOR_RIV_BLN, IERNEW, 1)
          IF (IERNEW /= 0) THEN
-<<<<<<< HEAD
             NATUR_FICH = "Tracé du réseau"
-=======
-            NATUR_FICH = "Trac� du réseau"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_SOR_RIV_BLN)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -977,11 +931,7 @@
                   IANALY (IR) = 1
                ENDDO
             ENDDO BAL_SOUR3
-<<<<<<< HEAD
             LABAUX = " *** Fin du fichier Arbre des Affluents Rivière      ***"
-=======
-            LABAUX = " *** Fin du fichier Arbre des Affluents Rivi�re      ***"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             WRITE (IOUMAI, "(A)", IOSTAT=IERRAUX) TRIM(LABAUX)
            CLOSE (IOUMAI)
          ENDIF
@@ -1040,28 +990,17 @@
 !        =================================
          ! CALL WRIT_STATUS_BAR("�dition des num�ros d'Affluents", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
-<<<<<<< HEAD
          OPEN(UNIT=IOUMAI, FILE=FICH_AFFLU, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_AFFLU, IERNEW, 1)
          IF (IERNEW /= 0) THEN
             NATUR_FICH = "Numéros d'Affluents"
-=======
-         OPEN(UNIT=LEC, FILE=FICH_AFFLU, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
-         ! CALL OPENEW(IOUMAI, FICH_AFFLU, IERNEW, 1)
-         IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros d'Affluents"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_AFFLU)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_AFFLU)
             ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
          ELSE
-<<<<<<< HEAD
             TITSEM = "Numéros d'Affluents"
-=======
-            TITSEM = "Num�ros d'Affluents"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             CODTIT_13 = "AFFLU_RIVI"
             WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
             TITSEM(71:) = TRIM(CHARA20)
@@ -1080,7 +1019,6 @@
       ENDIF
       IF (FICH_TRONC /= " ") THEN
 !        =================================
-<<<<<<< HEAD
 !         édition des numéros de Tronçons
 !        =================================
          ! CALL WRIT_STATUS_BAR("�dition des num�ros de tron�ons", 0, 0)
@@ -1089,36 +1027,18 @@
          ! CALL OPENEW(IOUMAI, FICH_TRONC, IERNEW, 1)
          IF (IERNEW /= 0) THEN
             NATUR_FICH = "Numéros de Tronçons"
-=======
-!         �dition des num�ros de Tron�ons
-!        =================================
-         ! CALL WRIT_STATUS_BAR("�dition des num�ros de tron�ons", 0, 0)
-         ! CALL PEEK_4_MES(ISTOP, 1)
-         OPEN(UNIT=LEC, FILE=FICH_TRONC, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
-         ! CALL OPENEW(IOUMAI, FICH_TRONC, IERNEW, 1)
-         IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros de Tron�ons"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_TRONC)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_TRONC)
             ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
          ELSE
-<<<<<<< HEAD
             TITSEM = "Numéros de Tronçons"
-=======
-            TITSEM = "Num�ros de Tron�ons"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             CODTIT_13 = "TRONC_RIVI"
             WRITE (CHARA20 , "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
             TITSEM(71:) = TRIM(CHARA20)
 !           =================================================
-<<<<<<< HEAD
 !            Chargement des numéros de Tronçons pour édition
-=======
-!            Chargement des num�ros de Tron�ons pour �dition
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
 !           =================================================
             HYDRO(1:NTOT) = 0.
             DO IR=1,NBMRIV
@@ -1180,17 +1100,10 @@
 !        ===========================================================
          ! CALL WRIT_STATUS_BAR("�dition du champs des num�ros de sous-bassins", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
-<<<<<<< HEAD
          OPEN(UNIT=IOUMAI, FILE=FICH_NUMER_SOUS_BV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_NUMER_SOUS_BV, IERNEW, 1)
          IF (IERNEW /= 0) THEN
             NATUR_FICH = "Numéros de sous-bassins"
-=======
-         OPEN(UNIT=LEC, FILE=FICH_NUMER_SOUS_BV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
-         ! CALL OPENEW(IOUMAI, FICH_NUMER_SOUS_BV, IERNEW, 1)
-         IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Num�ros de sous-bassins"
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_NUMER_SOUS_BV)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -1206,10 +1119,7 @@
            CLOSE (IOUMAI)
          ENDIF
       ENDIF
-<<<<<<< HEAD
 #ifndef ENGLISH      
-=======
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
  9001 FORMAT (" Impossible d'ouvrir un fichier ",A," :" &
              /" de nom :",A)
  9002 FORMAT (" Fichiers d'entrée :" &
@@ -1246,11 +1156,7 @@
               /" (IERLEC = ",I0," Maille NUMERR ",I0)
  9009 FORMAT (/" Nombre de Directions du domaine non définies         =",I6 &
               /" Nombre de Directions sortant du rectangle du domaine =",I6)
-<<<<<<< HEAD
  9010 FORMAT (/" Il faut définir une surface minimale pour rivières ((surf_riv)) !")
-=======
- 9010 FORMAT (/" Il faut définir une surface minimale pour rivières !")
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
  9011 FORMAT (/" Calcul des surfaces drainées (surfaces amont)"/)
  9013 FORMAT (/" Nombre de tronçons détectés = ",I0)
  9014 FORMAT (/" Maille Rivière Num_Ordre n° ",I0," : x=",ES13.5," , y=",ES13.5 &
@@ -1283,7 +1189,6 @@
               /" ",I0," Colonnes ; ",I0," Lignes ; ",I0," Mailles")
 !  9029 FORMAT (" Lecture du fichier ",A," terminée")
  9030 FORMAT (/" Erreur : Impossible d'allouer la mémoire nécessaire" &
-<<<<<<< HEAD
               /" ",I0," Tronçons de rivières ; ",I0," Amonts maximum")
 #else
  9001 FORMAT (" Impossible to open a file ",A," :" &
@@ -1357,9 +1262,6 @@
  9030 FORMAT (/" Error : Impossible to allocate the necessary memory" &
               /" ",I0," River reaches ; ",I0," Maximum upstreams")
 #endif            
-=======
-              /" ",I0," Tronçons de riviçres ; ",I0," Amonts maximum")
->>>>>>> 13a25c4 (Rebase "river network" into "dev")
          CONTAINS
 !        ////////
          SUBROUTINE CODE_SUR_12_CARACT(VALEUR , CHARA12_SURF)
