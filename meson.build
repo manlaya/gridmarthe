@@ -33,7 +33,7 @@ largs = []  # link args
 
 if fc.get_id() == 'gcc'
   
-  fargs += ['-fdefault-real-8']
+  fargs += ['-cpp', '-fdefault-real-8']
   # fargs += ['-O2']  # fix warning 'use builtin O3, deactivate this line"
   fargs += ['-ffree-line-length-none']
   

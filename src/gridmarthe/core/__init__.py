@@ -9,6 +9,7 @@ from ._parse_gridmarthe import (
     _decode_title,
     _extract_zvar_from_ds,
     _calc_flow_directions,
+    _calc_riv_network,
     _parse_dims_from_xr_attrs,
     scan_var,
     FortranError

@@ -23,8 +23,13 @@ F90SRCDIR := \
              $(MAINDIR)/src/gridmarthe/modmarthe \
              $(MAINDIR)/src/gridmarthe/modmarthe/lecsem \
 			 $(MAINDIR)/src/gridmarthe/modmarthe/flowdirect \
+			 $(MAINDIR)/src/gridmarthe/modmarthe/rivernetwork \
+			 $(MAINDIR)/src/gridmarthe/modmarthe/dessin \
 			 $(MAINDIR)/src/gridmarthe/modmarthe/utils
-F90FILES  := lecsem.f90 edsemigl.f90 Anal_Topo_0.f90 Cal_Direct_Drainage.f90 Lec_Param_Cal_Dir_Drain.f90 Num_8_Voisins.f90 \
+F90FILES  := lecsem.f90 edsemigl.f90 Anal_Topo_0.f90 Cal_Direct_Drainage.f90 Num_8_Voisins.f90 \
+             Cal_reseau_hydro.f90 Convert_Direct_Drain.f90 Definit_Sous_Bassins.f90 Dir_Drain_LigCol_Ava.f90 \
+			 Direct_Drain_Mai_Ava.f90 Mai_Ava_Strahl_Surf_Drai.f90 Mai_Exu_Surf_Drai.f90 Verif_Surf_Stat_Hydro.f90 \
+			 colle_segments.f90 \
              xy_dxdy.f90 modgridmarthe.f90
 #######################
 
