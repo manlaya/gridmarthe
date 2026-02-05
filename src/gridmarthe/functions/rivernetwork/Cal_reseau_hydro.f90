@@ -211,7 +211,7 @@
 !     =====================================
 !      Fichier Présence Domaine de Surface
 !     =====================================
-      NATUR_FICH = "Présence domaine de surface"
+      NATUR_FICH = "Surface domaine presence"
       ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
       ! CALL OPEOLD(LEC, FICH_PRESENCE, IEROLD)
       OPEN (UNIT=LEC, FILE=FICH_PRESENCE, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
@@ -278,7 +278,7 @@
 !     =============================================
 !      Orientations (degr�s ou 1001:1008 ou 1:128)
 !     =============================================
-      NATUR_FICH = "Directions_Drainage"
+      NATUR_FICH = "Flow_directions"
       ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
       ! CALL OPEOLD(LEC,FICH_DIRECT,IEROLD)
       OPEN (UNIT=LEC, FILE=FICH_DIRECT, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
@@ -345,7 +345,7 @@
 !        * Si pas de fichier Surfaces Drain�es => Les calcule
 !     ===========================================================
       IEX_SURF = 0
-      NATUR_FICH = "Présence Rivières"
+      NATUR_FICH = "River presence (indicator)"
       SELECT CASE (FICH_ENT_EXIS_RIV)
       CASE DEFAULT
 !        ===================================================================
@@ -382,7 +382,7 @@
 !         => D�termination de surfaces drain�es : Il faut SURF_RIV > 0.
 !         Lecture d'un fichier "Pr�sence rivi�res" ou [Surfaces Drain�es]
 !        =================================================================
-         WRITE (*,*) "Determination des surfaces drainees from ", TRIM(NATUR_FICH)
+         ! WRITE (*,*) "Determination of drained surfaces ", TRIM(NATUR_FICH)
          ! CALL WRIT_STATUS_BAR("D�termination des surfaces drain�es", 0, 0)
          IF (SURF_RIV <= 0.) THEN
             WRITE (LISTIN, 9010, IOSTAT=IERRAUX)
@@ -395,7 +395,7 @@
 !            (calcul�es par "Cal_Direct_drainage"
 !            Lues dans la variable "SURF_DRA"
 !           ==========================================
-            NATUR_FICH = "Surfaces Drainées"
+            NATUR_FICH = "Drained surfaces"
             ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
             OPEN (UNIT=LEC, FILE=FICH_ENT_SURF_AMO, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
             ! CALL OPEOLD(LEC,FICH_ENT_SURF_AMO,IEROLD)
@@ -448,7 +448,7 @@
                OPEN(UNIT=IOUMAI, FILE=FICH_SOR_SURF_AMO, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
                ! CALL OPENEW(IOUMAI,FICH_SOR_SURF_AMO,IERNEW,1)
                IF (IERNEW /= 0) THEN
-                  NATUR_FICH = "Surfaces drainées cal."
+                  NATUR_FICH = "Drained surfaces calculation"
                   WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                         , TRIM(FICH_SOR_SURF_AMO)
                   WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -457,7 +457,7 @@
                   !                                       , TRIM(FICH_SOR_SURF_AMO)                                                        
                   ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
                ELSE
-                  TITSEM = "Surfaces Drainées calculées"
+                  TITSEM = "Surfaces Drainées"
                   CODTIT_13 = "SURFA_DRAI"
                   WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
                   TITSEM(71:) = TRIM(CHARA20)
@@ -485,7 +485,7 @@
             OPEN(UNIT=IOUMAI, FILE=FICH_SOR_EXIS_RIV, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
             ! CALL OPENEW(IOUMAI,FICH_SOR_EXIS_RIV,IERNEW,1)
             IF (IERNEW /= 0) THEN
-               NATUR_FICH = "Présence Riviére cal."
+               NATUR_FICH = "River presence (indicator) cal."
                WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                      , TRIM(FICH_SOR_EXIS_RIV)
                WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -669,7 +669,7 @@
 !        ==============
 !!!!!!!!!!!!!!!!!!!!!
           write (LISTIN,*)
-          write (LISTIN,*) " Att tron�on IRAVA=",IRAVA," Plus de",NB_AMONT_MAX," amonts !"
+          write (LISTIN,*) " Att tronçon IRAVA=",IRAVA," Plus de",NB_AMONT_MAX," amonts !"
          LIG = (NUM_SEMIS(IRAVA) -1) / NKOL + 1
          KOL = NUM_SEMIS(IRAVA) - (LIG - 1) * NKOL
          write (77,*) " Maille NUM_SEMIS(IRAVA)=",NUM_SEMIS(IRAVA)," KOL=",KOL," LIG=",LIG
@@ -804,7 +804,7 @@
          OPEN(UNIT=IOUMAI, FILE=FICH_SOR_RIV_BLN, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
          ! CALL OPENEW(IOUMAI, FICH_SOR_RIV_BLN, IERNEW, 1)
          IF (IERNEW /= 0) THEN
-            NATUR_FICH = "Trac� du réseau"
+            NATUR_FICH = "Tracé du réseau"
             WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                   , TRIM(FICH_SOR_RIV_BLN)
             WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -931,7 +931,7 @@
                   IANALY (IR) = 1
                ENDDO
             ENDDO BAL_SOUR3
-            LABAUX = " *** Fin du fichier Arbre des Affluents Rivi�re      ***"
+            LABAUX = " *** Fin du fichier Arbre des Affluents Rivière      ***"
             WRITE (IOUMAI, "(A)", IOSTAT=IERRAUX) TRIM(LABAUX)
            CLOSE (IOUMAI)
          ENDIF
@@ -1019,7 +1019,7 @@
       ENDIF
       IF (FICH_TRONC /= " ") THEN
 !        =================================
-!         �dition des num�ros de Tron�ons
+!         édition des numéros de Tronçons
 !        =================================
          ! CALL WRIT_STATUS_BAR("�dition des num�ros de tron�ons", 0, 0)
          ! CALL PEEK_4_MES(ISTOP, 1)
@@ -1119,6 +1119,7 @@
            CLOSE (IOUMAI)
          ENDIF
       ENDIF
+#ifndef ENGLISH      
  9001 FORMAT (" Impossible d'ouvrir un fichier ",A," :" &
              /" de nom :",A)
  9002 FORMAT (" Fichiers d'entrée :" &
@@ -1155,7 +1156,7 @@
               /" (IERLEC = ",I0," Maille NUMERR ",I0)
  9009 FORMAT (/" Nombre de Directions du domaine non définies         =",I6 &
               /" Nombre de Directions sortant du rectangle du domaine =",I6)
- 9010 FORMAT (/" Il faut définir une surface minimale pour rivières !")
+ 9010 FORMAT (/" Il faut définir une surface minimale pour rivières ((surf_riv)) !")
  9011 FORMAT (/" Calcul des surfaces drainées (surfaces amont)"/)
  9013 FORMAT (/" Nombre de tronçons détectés = ",I0)
  9014 FORMAT (/" Maille Rivière Num_Ordre n° ",I0," : x=",ES13.5," , y=",ES13.5 &
@@ -1188,7 +1189,79 @@
               /" ",I0," Colonnes ; ",I0," Lignes ; ",I0," Mailles")
 !  9029 FORMAT (" Lecture du fichier ",A," terminée")
  9030 FORMAT (/" Erreur : Impossible d'allouer la mémoire nécessaire" &
-              /" ",I0," Tronçons de riviçres ; ",I0," Amonts maximum")
+              /" ",I0," Tronçons de rivières ; ",I0," Amonts maximum")
+#else
+ 9001 FORMAT (" Impossible to open a file ",A," :" &
+             /" with name :",A)
+ 9002 FORMAT (" Input files :" &
+             /" Presence of surface domaine      =",1X,A &
+             /" Flow rections                    =",1X,A &
+             /" River presence indicators        =",1X,A &
+             /" Drained surfaces                 =",1X,A &
+             /" X_Y_Surf. hydro Stations         =",1X,A &
+             /" Col row of subbasin outlet       =",1X,A)
+ 9003 FORMAT (" Output files :" &
+             /" Calculated Drained_surfs         =",1X,A &
+             /" River connection tree            =",1X,A &
+             /" Num of tributaries               =",1X,A &
+             /" Num of reaches                   =",1X,A &
+             /" Calculated river indicators      =",1X,A &
+             /" Listing                          =",1X,A &
+             /" Historical discharge             =",1X,A &
+             /" Sub-basin                        =",1X,A &
+             /" Numver of sub-basins             =",1X,A)
+ 9004 FORMAT (" Parameters :" &
+             /" Type of directions (0=1001:1008 = MARTHE; 1=1:128 = ArcGis)  =",1X,I10 &
+             /" Minimum drained surface area Riv.                            =",1X,A &
+             /" Periodicity num reaches                                      =",1X,I10 &
+             /" Number of neighboring cells for hydro stations               =",1X,I10)
+!  9005 FORMAT (/" Fichier paramètres : ",A)
+ 9006 FORMAT (//" *** The file '",A,"'",T77,"***" &
+               /" *** was not found",T77,"***" &
+               /" *** for data of '",A,"'",T77,"***"/)
+ 9007 FORMAT (/" File ",A," read complete " &
+              /" Descriptive title = ",A &
+              /" Number of columns = ",I0 &
+              /" Number of rows   = ",I0)
+ 9008 FORMAT (/" Error when reading file ",A," :" &
+              /" (IERLEC = ",I0," Maille NUMERR ",I0)
+ 9009 FORMAT (/" Number of flow directions not defined   =",I6 &
+              /" Number of directions outside the domain =",I6)
+ 9010 FORMAT (/" A minimum surface area for rivers (surf_riv) must be defined!")
+ 9011 FORMAT (/" Calculation of drained areas (upstream areas)"/)
+ 9013 FORMAT (/" Number of river reaches detected = ",I0)
+ 9014 FORMAT (/" Cell river Num_Order n° ",I0," : x=",ES13.5," , y=",ES13.5 &
+              /" Column = ",I0," , Row = ",I0," => Direction (angle) = ",I0," Not defined")
+ 9015 FORMAT (/" Cell river Num_Order n° ",I0," : x=",ES13.5," , y=",ES13.5 &
+              /" Column = ",I0," , Row = ",I0," Direction (angle) = ",I0 &
+              /" => Downstream reach: Column = ",I0," , Row = ",I0," ** Outside Rectangle **")
+ 9016 FORMAT (/" Cell river Num_Order n° ",I0," : x=",ES13.5," , y=",ES13.5 &
+              /" Column = ",I0," , Row = ",I0," Direction (angle) = ",I0 &
+              /" => Downstream reach: Column = ",I0," , Row = ",I0," => Outlet" &
+              /"    (Value of the river presence indicator =",F0.1,")")
+ 9017 FORMAT (/" Cell river Num_Order n° ",I0," : x=",ES13.5," , y=",ES13.5 &
+              /" Column = ",I0," , Row = ",I0," Direction (angle) = ",I0 &
+              /" => Downstream reach: Column = ",I0," Row = ",I0 &
+              ," ** which is not a river **")
+ 9018 FORMAT (/" Error : Impossible to allocate the necessary memory" &
+              /" ",I0," Sources of tributaries")
+ 9019 FORMAT (/" Number of Tributary Sources detected =",I7)
+ 9020 FORMAT (/" Total number of tributaries detected =",I7)
+ 9021 FORMAT ( "    (Drained surface =",A,")")
+ 9022 FORMAT ( " Source n° ",I0," : Cell Col= ",I0," , Row= ",I0," , Tributary= ",I0," , Reach= ",I0)
+ 9023 FORMAT (" ",I0," reaches => Cell Col =",I0," , Row =",I0 &
+              ," , Tribu= ",I0," , Reach= ",I0)
+ 9024 FORMAT (/" Network analysis"/)
+ 9025 FORMAT (/" Total number of outlets                  =",I7)
+ 9026 FORMAT ( " Total surface area drained by the outlets=",A)
+ 9027 FORMAT (/" Error when reading file ",A," :" &
+              /" (IERLEC = ",I0,") ; ",I0," Columns ; ",I0," Rows")
+ 9028 FORMAT (/" Error : Impossible to allocate the necessary memory" &
+              /" ",I0," Columns ; ",I0," Rows ; ",I0," Cells")
+!  9029 FORMAT (" Lecture du fichier ",A," terminée")
+ 9030 FORMAT (/" Error : Impossible to allocate the necessary memory" &
+              /" ",I0," River reaches ; ",I0," Maximum upstreams")
+#endif            
          CONTAINS
 !        ////////
          SUBROUTINE CODE_SUR_12_CARACT(VALEUR , CHARA12_SURF)

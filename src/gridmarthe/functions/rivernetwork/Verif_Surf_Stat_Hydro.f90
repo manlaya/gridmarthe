@@ -199,16 +199,16 @@
          WRITE (IOUMAI, 9008)
          CLOSE (IOUMAI)
       ENDIF
- 9001 FORMAT (/" Nombre de stations hydrom�triques lues = ",I6/)
+ 9001 FORMAT (/" Nombre de stations hydrométriques lues = ",I6/)
  9002 FORMAT (/"     Station                         X_ref       Y_ref   Surface" &
               ,"   Er_Surf   Col   Lig  Affl")
  9003 FORMAT (A30,2F12.3,F10.1)
  9004 FORMAT (A30,24X   ,2F10.1,2I6,I5)
  9005 FORMAT (A30,2F12.3,2F10.1,2I6,I5)
- 9006 FORMAT (//" *** Le fichier de nom ",A," n'a pas �t� trouv�",T77,"***" &
-               /" *** pour les donn�es de ",A,T77,"***"/)
- 9007 FORMAT ("  /D�bit_Rivi   /HISTO/   =   /XCOO:X=",A7,"Y=",A7,"P=      1;",A)
- 9008 FORMAT (" *** Fin du fichier des 'Mailles � Historique'       ***")
+ 9006 FORMAT (//" *** Le fichier de nom ",A," n'a pas été trouvé",T77,"***" &
+               /" *** pour les données de ",A,T77,"***"/)
+ 9007 FORMAT ("  /Débit_Rivi   /HISTO/   =   /XCOO:X=",A7,"Y=",A7,"P=      1;",A)
+ 9008 FORMAT (" *** Fin du fichier des 'Mailles à Historique'       ***")
  9009 FORMAT (" Impossible d'ouvrir un fichier ",A," :" &
-             /" de nom :",A)
+             /" de nom :",A)  
       END SUBROUTINE Verif_Surf_Stat_Hydro

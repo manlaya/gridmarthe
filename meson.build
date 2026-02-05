@@ -70,6 +70,9 @@ else
 
 endif
 
+if get_option('english')
+  fargs += ['-DENGLISH']
+endif
 
 fortran_args = fc.get_supported_arguments(fargs)
 link_args = fc.get_supported_link_arguments(largs)

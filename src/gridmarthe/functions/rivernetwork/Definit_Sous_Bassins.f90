@@ -286,17 +286,31 @@
          IF (OD) CLOSE (UNIT=IOUMAI, IOSTAT=IERRAUX)
       ENDIF
   999 CONTINUE
+#ifndef ENGLISH  
  9001 FORMAT (/" Nombre de sous-bassins � calculer = ",I6/)
  9002 FORMAT (/" Exutoire Colonne, Ligne" &
               ,"   Er_Surf   Col   Lig  Affl")
  9003 FORMAT (/" *** Module de calcul des sous-bassins :" &
-              ," M�moire insuffisante",T77,"***")
+              ," Mémoire insuffisante",T77,"***")
  9004 FORMAT (/I0," exutoires de sous-bassins lus"/)
  9006 FORMAT (//" *** Le fichier de nom '",A,"'",T77,"***" &
-               /" *** n'a pas �t� trouv�",T77,"***" &
-               /" *** pour les donn�es de '",A,"'",T77,"***"/)
+               /" *** n'a pas été trouvé",T77,"***" &
+               /" *** pour les données de '",A,"'",T77,"***"/)
  9009 FORMAT (" Impossible d'ouvrir un fichier ",A," :" &
              /" de nom :",A)
+#else
+ 9001 FORMAT (/" Number of sub-basins to calcaute  = ",I6/)
+ 9002 FORMAT (/" Outlet Column, Row" &
+              ,"   Er_Surf   Col   Lig  Affl")
+ 9003 FORMAT (/" *** Sub-basin calculation module:" &
+              ," Insufficient memory",T77,"***")
+ 9004 FORMAT (/I0," sub-basin outlets read"/)
+ 9006 FORMAT (//" *** The file with the name '",A,"'",T77,"***" &
+               /" *** was not found",T77,"***" &
+               /" *** for the data of '",A,"'",T77,"***"/)
+ 9009 FORMAT (" Impossible to open a file ",A," :" &
+             /" named :",A)
+#endif
       END SUBROUTINE Definit_Sous_Bassins
       SUBROUTINE Masque_des_Sous_Bass(HYDRO, NLIG, NKOL, NTOT, NBSTAT &
         , IER, X0, Y0, IOUMAI &

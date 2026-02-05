@@ -3,16 +3,16 @@
 !=======================================================================
 !   *******************
 !   *Mai_Exu_Surf_Drai*                BRGM     B.P. 6009
-!   *******************                45060 Orléans Cédex
+!   *******************                45060 Orlï¿½ans Cï¿½dex
 !   Auteur(s):THIERY D.
 !   Date: 02/04/2018
 !=======================================================================
-!      Analyse des mailles hors Réseau Hydrographique
-!      Détection des mailles Sortant du Domaine ou Non Définies
-!      À partir de :
-!      * Présence Domaine : PRESEN
-!      * Présence Rivière : HYDRO
-!      * Numéro de la NMAI_AVAL (1:NTOT) de la maille Aval
+!      Analyse des mailles hors Rï¿½seau Hydrographique
+!      Dï¿½tection des mailles Sortant du Domaine ou Non Dï¿½finies
+!      ï¿½ partir de :
+!      * Prï¿½sence Domaine : PRESEN
+!      * Prï¿½sence Riviï¿½re : HYDRO
+!      * Numï¿½ro de la NMAI_AVAL (1:NTOT) de la maille Aval
 !=======================================================================
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: NTOT,NKOL,LISTIN
@@ -30,7 +30,7 @@
       INTEGER :: N, NAVA, NBRE_EXUT, NBRE_UNDEF, IERRAUX, I_EXUT, LIG, KOL, IANGL
       REAL    :: SURF_EXUT, SURF_UNDEF
 !     =======
-!      Début
+!      Dï¿½but
 !     =======
       WRITE (LISTIN, 9002, IOSTAT=IERRAUX)
       NBRE_EXUT  = 0
@@ -41,7 +41,7 @@
          IF ((PRESEN(N) <= 0.).OR.(ABS(PRESEN(N)) == 9999.)) CYCLE
          IF ((HYDRO(N) == 1.).OR.(ABS(HYDRO(N)) == 9999.)) CYCLE
 !        =============================
-!         Donc ici maille Non Rivière
+!         Donc ici maille Non Riviï¿½re
 !        =============================
          I_EXUT = 0
          NAVA = NMAI_AVAL(N)
@@ -55,14 +55,14 @@
          CASE (-9999)
 !           =============================================
 !            Sort du rectangle
-!            Att : Plus différencié (0 au lieu de -9999)
+!            Att : Plus diffï¿½renciï¿½ (0 au lieu de -9999)
 !           =============================================
             I_EXUT = 1
             NBRE_EXUT = NBRE_EXUT + 1
             SURF_EXUT = SURF_EXUT + SURF_DRA(N)
          CASE DEFAULT
 !           =============
-!            Cas général
+!            Cas gï¿½nï¿½ral
 !           =============
             IF ((PRESEN(NAVA) <= 0.).OR.(ABS(PRESEN(NAVA)) == 9999.)) THEN
 !              ================
@@ -93,13 +93,25 @@
             WRITE (LISTIN, 9000, IOSTAT=IERRAUX) NBRE_UNDEF, SURF_UNDEF, NBRE_EXUT, SURF_EXUT
          ENDIF
       ENDIF
- 9000 FORMAT (/" Analyse des mailles Hors Réseau riviéres" &
-             //I7," Mailles à direction indéfinie                  ; Surface drainée =",ES12.5 &
-              /I7," Mailles à direction hors du domaine de surface ; Surface drainée =",ES12.5)
- 9001 FORMAT (/" Analyse des mailles Hors Réseau riviéres" &
-             //I7," Mailles à direction indéfinie                  ; Surface drainée =",F12.3 &
-              /I7," Mailles à direction hors du domaine de surface ; Surface drainée =",F12.3)
- 9002 FORMAT (/" Détection des mailles Hors Réseau riviéres"/)
- 9003 FORMAT (/" Maille Num_Ordre n° ",I0," : Colonne = ",I0," , Ligne = ",I0 &
+#ifndef ENGLISH      
+ 9000 FORMAT (/" Analyse des mailles Hors RÃ©seau riviÃ¨res" &
+             //I7," Mailles ï¿½ direction indÃ©finie                  ; Surface drainÃ©e =",ES12.5 &
+              /I7," Mailles ï¿½ direction hors du domaine de surface ; Surface drainÃ©e =",ES12.5)
+ 9001 FORMAT (/" Analyse des mailles Hors RÃ©seau riviÃ¨res" &
+             //I7," Mailles ï¿½ direction indÃ©finie                  ; Surface drainÃ©e =",F12.3 &
+              /I7," Mailles ï¿½ direction hors du domaine de surface ; Surface drainÃ©e =",F12.3)
+ 9002 FORMAT (/" DÃ©tection des mailles Hors RÃ©seau riviÃ¨res"/)
+ 9003 FORMAT (/" Maille Num_Ordre nÂ° ",I0," : Colonne = ",I0," , Ligne = ",I0 &
               /" => Direction (angle) = ",I0," (",A,")"," => Hors domaine surface")
+#else
+ 9000 FORMAT (/" Analysis of cells outside the river network" &
+             //I7," Cells direction not defined                  ; Drained surface =",ES12.5 &
+              /I7," Cells direction Outside the surface domainee ; Drained surface =",ES12.5)
+ 9001 FORMAT (/" Analysis of cells outside the river network" &
+             //I7," Cells direction not defined                  ; Drained surface =",F12.3 &
+              /I7," Cells direction Outside the surface domaine  ; Drained surface =",F12.3)
+ 9002 FORMAT (/" Detection of cells outside the river network"/)
+ 9003 FORMAT (/" Cell Num_Order nÂ° ",I0," : Column = ",I0," , Row = ",I0 &
+              /" => Direction (angle) = ",I0," (",A,")"," => Outside surface domaine")
+#endif   
       END SUBROUTINE Mai_Exu_Surf_Drai

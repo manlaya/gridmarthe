@@ -66,7 +66,7 @@ def calc_river_network(
         raise Exception("Unknown type of D8 flow directions.")
         
     if fflowdir is None:
-        print("No flow direction data provided. \nCalculate flow dirction based on presence file (.topo or .permh).")
+        print("No flow directions data provided. Calculate flow directions based on the presence file (.topo or .permh).")
         fout_dir=os.path.abspath(os.path.join(os.path.dirname(fpresence), "ddr_dir_aval.d_ava"))
         ftopo = fpresence
         
