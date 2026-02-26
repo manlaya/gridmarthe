@@ -52,7 +52,7 @@ def test_calc_river_network():
     assert afflu_num_dat_py.equals(afflu_num_dat_win)
     assert tronc_riv_dat_py.equals(tronc_riv_dat_win)
     
-    assert open(friv_tree_out,'r', encoding='latin-1').read() == open(os.path.join(os.path.abspath(DATA_PATH), "tiv_tree_out_ref.arb_r"),'r', encoding='latin-1').read()
+    assert open(friv_tree_out,'r', encoding='latin-1').read() == open(os.path.join(os.path.abspath(DATA_PATH), "riv_tree_out_ref.arb_r"),'r', encoding='latin-1').read()
 
     
 if __name__ == "__main__":

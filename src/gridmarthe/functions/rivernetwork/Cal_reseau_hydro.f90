@@ -395,7 +395,7 @@
 !            (calcul�es par "Cal_Direct_drainage"
 !            Lues dans la variable "SURF_DRA"
 !           ==========================================
-            NATUR_FICH = "Drained surfaces"
+            NATUR_FICH = "Grainage areas (surface drainée)"
             ! CALL WRIT_STATUS_BAR("Lecture : "//TRIM(NATUR_FICH), 0, 0)
             OPEN (UNIT=LEC, FILE=FICH_ENT_SURF_AMO, STATUS="old", ACTION="read", BLANK="zero", IOSTAT=IEROLD)
             ! CALL OPEOLD(LEC,FICH_ENT_SURF_AMO,IEROLD)
@@ -426,7 +426,7 @@
 !           ===================================================================
             WHERE ((PRESEN(1:NTOT) == 0.).OR.(ABS(PRESEN(1:NTOT)) == 9999.)) SURF_DRA(1:NTOT) = 0.
             IEX_SURF = 1
-         CASE ("")
+         CASE (" ")
 !           ===============================================================
 !            Pas de fichier de "Surfaces drain�es Amonts"
 !            Calcul des surfaces drain�es => Dans la variable "SURF_DRA()"
@@ -448,7 +448,7 @@
                OPEN(UNIT=IOUMAI, FILE=FICH_SOR_SURF_AMO, STATUS="replace", ACTION="write", IOSTAT=IERNEW)
                ! CALL OPENEW(IOUMAI,FICH_SOR_SURF_AMO,IERNEW,1)
                IF (IERNEW /= 0) THEN
-                  NATUR_FICH = "Drained surfaces calculation"
+                  NATUR_FICH = "Drainage areas calculation"
                   WRITE (LISTIN   , 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
                                                         , TRIM(FICH_SOR_SURF_AMO)
                   WRITE (*, 9001, IOSTAT=IERRAUX) TRIM(NATUR_FICH) &
@@ -457,7 +457,7 @@
                   !                                       , TRIM(FICH_SOR_SURF_AMO)                                                        
                   ! CALL Dial_Message_Wait(WINT_BUFF, 0, 400)
                ELSE
-                  TITSEM = "Surfaces Drainées"
+                  TITSEM = "Drainage areas"
                   CODTIT_13 = "SURFA_DRAI"
                   WRITE (CHARA20, "(1X,A,1X,I2)", IOSTAT=IERRAUX) TRIM(CODTIT_13), 1
                   TITSEM(71:) = TRIM(CHARA20)
@@ -1197,11 +1197,11 @@
              /" Presence of surface domaine      =",1X,A &
              /" Flow rections                    =",1X,A &
              /" River presence indicators        =",1X,A &
-             /" Drained surfaces                 =",1X,A &
+             /" Drainage areas                   =",1X,A &
              /" X_Y_Surf. hydro Stations         =",1X,A &
              /" Col row of subbasin outlet       =",1X,A)
  9003 FORMAT (" Output files :" &
-             /" Calculated Drained_surfs         =",1X,A &
+             /" Calculated Drainage areas        =",1X,A &
              /" River connection tree            =",1X,A &
              /" Num of tributaries               =",1X,A &
              /" Num of reaches                   =",1X,A &
@@ -1228,7 +1228,7 @@
  9009 FORMAT (/" Number of flow directions not defined   =",I6 &
               /" Number of directions outside the domain =",I6)
  9010 FORMAT (/" A minimum surface area for rivers (surf_riv) must be defined!")
- 9011 FORMAT (/" Calculation of drained areas (upstream areas)"/)
+ 9011 FORMAT (/" Calculation of drainage areas (upstream areas)"/)
  9013 FORMAT (/" Number of river reaches detected = ",I0)
  9014 FORMAT (/" Cell river Num_Order n° ",I0," : x=",ES13.5," , y=",ES13.5 &
               /" Column = ",I0," , Row = ",I0," => Direction (angle) = ",I0," Not defined")
