@@ -109,16 +109,23 @@ CONTAINS
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! =============================================================================!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KNU_ZOOMX, KDIMEN, KNBSTEP)
+    ! SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KNU_ZOOMX, KDIMEN, KNBSTEP)
+    SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KDIMEN, KNBSTEP)
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
-        INTEGER, INTENT(IN)                           :: KNU_ZOOMX
-        INTEGER, DIMENSION(KNU_ZOOMX + 1, 3), INTENT(OUT) :: KDIMEN
-        INTEGER, INTENT(OUT)                          :: KNBSTEP
+        CHARACTER (LEN=132), INTENT(IN)               :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
+        ! INTEGER, INTENT(IN)                           :: KNU_ZOOMX
+        ! INTEGER, DIMENSION(KNU_ZOOMX + 1, 3), INTENT(OUT) :: KDIMEN
+        INTEGER, DIMENSION(99, 3), INTENT(OUT) :: KDIMEN
+        INTEGER, INTENT(OUT)                   :: KNBSTEP
         !
-        INTEGER :: ISTEP_TEMP
+        character(len=132) :: VAR_TO_READ  ! local copy to allow modif
+        INTEGER :: ISTEP_TEMP, ISTEPINC, i
+        integer  :: N_COUCH_TEMP, NCOUC_MX_TEMP, &
+                    NCOL_TEMP, NLIG_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP
+        logical :: is_main_grid
         !
         LIRE_DXDY =  0
         IANALY    =  1
@@ -131,29 +138,58 @@ CONTAINS
         KNBSTEP   =  0
         !
         ISTEP_TEMP = -1
+        ISTEPINC   =  0
+        ! temp index for layers
+        N_COUCH_TEMP  = 0
+        NCOUC_MX_TEMP = 0
+        NCOL_TEMP = 0
+        NLIG_TEMP = 0
+        NU_ZOO_TEMP   = 0
+        NU_ZOOMX_TEMP = 0
+        !
+        VAR_TO_READ = XTYP_DON
+        is_main_grid = .true.
         !
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
         !
+        i = 0
+        ! allocate temp array to store dimensions while scanning
         DO WHILE (IERLEC == 0)
-            CALL LECSEM_3(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
-                      , IOUCON, LEC, IERLEC, NUMERR, NTOT &
-                      , IANALY &
-                      , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
-                      , DATE, LIBCHIM &
-                      , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
-            IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
-                KDIMEN(NU_ZOO + 1, 1) = NKOL
-                KDIMEN(NU_ZOO + 1, 2) = NLIG
-                KDIMEN(NU_ZOO + 1, 3) = NCOUC_MX
+            CALL LECSEM_3(&
+                X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
+                IOUCON, LEC, IERLEC, NUMERR, NTOT, &
+                IANALY, &
+                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                DATE, LIBCHIM, &
+                LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
+            )
+
+            if (IERLEC /= 0) exit  ! quit loop if error
+
+            if (i == 0 .and. trim(VAR_TO_READ) == '') VAR_TO_READ = TYP_DON  ! if no var specified, take the first one as default
+
+            IF (TRIM(TYP_DON) == TRIM(VAR_TO_READ)) THEN
                 IF (ISTEP /= ISTEP_TEMP) THEN
+                    ISTEPINC = ISTEPINC + 1
                     KNBSTEP = KNBSTEP + 1
                     ISTEP_TEMP = ISTEP
                 ENDIF
+                if (ISTEPINC == 1 .AND. (NU_ZOOMX == 0 .AND. NCOUC_MX == 0)) then
+                    call fix_metada(&
+                        NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+                        i, is_main_grid &
+                    )
+                endif
+                ! add dimension
+                KDIMEN(NU_ZOO + 1, 1) = NKOL
+                KDIMEN(NU_ZOO + 1, 2) = NLIG
+                KDIMEN(NU_ZOO + 1, 3) = NCOUC_MX
             ENDIF
+            i = i + 1
         ENDDO
         !
         CLOSE(LEC)
-        !
     END SUBROUTINE SCAN_DIM
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! =============================================================================!
@@ -172,11 +208,12 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
         REAL(KIND=8), DIMENSION(KNBSTEP, KNBTOT), INTENT(OUT) :: PVAR
         CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
-        ! Modifs AM: ajout TITSEM dans les sorties de la subroutine (+ ajout en `dummy argument`
-        ! càd réf dans la list d'arg de la procedure)
-        !
-        INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, i_ncouch
-        ! LOGICAL    :: debug
+        ! memo: max in marthe 3000 colonnes, 3000 lignes, 999 couches, 99 gigognes
+        INTEGER  :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, i
+        integer  :: N_COUCH_TEMP, NCOUC_MX_TEMP, &
+                    NCOL_TEMP, NLIG_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP
+        logical :: is_main_grid
+        character(len=132) :: VAR_TO_READ
         !
         LIRE_DXDY =  1
         IANALY    =  0
@@ -199,7 +236,17 @@ CONTAINS
         ISTEP_TEMP = -1
         INTOT_TEMP =  1
         !
-        i_ncouch= 0  ! integer to check if coordinates already read
+        ! temp index for layers
+        N_COUCH_TEMP  = 0
+        NCOUC_MX_TEMP = 0
+        NCOL_TEMP = 0
+        NLIG_TEMP = 0
+        NU_ZOO_TEMP   = 0
+        NU_ZOOMX_TEMP = 0
+        !
+        VAR_TO_READ = XTYP_DON
+        is_main_grid = .true.
+        i = 0  ! integer to check if coordinates already read
         ! debug = .FALSE.
         OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
         !
@@ -209,13 +256,19 @@ CONTAINS
             NTOT = NLIG * NKOL
             NCOUC_MX = 99.
             NU_ZOOMX = 99.
-            CALL LECSEM_3(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
-                      , IOUCON, LEC, IERLEC, NUMERR, NTOT &
-                      , IANALY &
-                      , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
-                      , DATE, LIBCHIM &
-                      , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
-            IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
+
+            CALL LECSEM_3( &
+                X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
+                IOUCON, LEC, IERLEC, NUMERR, NTOT, &
+                IANALY, &
+                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                DATE, LIBCHIM, &
+                LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
+            )
+            if (IERLEC /= 0) exit  ! quit loop if error
+            if (i == 0 .and. trim(VAR_TO_READ) == '') VAR_TO_READ = TYP_DON
+
+            IF (TRIM(TYP_DON) == TRIM(VAR_TO_READ)) THEN
                 IF (ISTEP /= ISTEP_TEMP) THEN
                     ISTEPINC = ISTEPINC + 1
                     ISTEP_TEMP = ISTEP
@@ -223,15 +276,24 @@ CONTAINS
                     KSTEPS(ISTEPINC) = ISTEP
                     PDATES(ISTEPINC) = real(DATE, 4)
                 ENDIF
-                IF (ISTEPINC == 1 .AND. (N_COUCH == 1 .OR. i_ncouch ==0)) THEN
+
+                if (ISTEPINC == 1 .AND. (NU_ZOOMX == 0 .AND. NCOUC_MX == 0)) then
+                    call fix_metada(&
+                        NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+                        i, is_main_grid &
+                    )
+                endif
+
+                IF (ISTEPINC == 1 .AND. (N_COUCH == 1 .OR. i ==0)) THEN
                     PXCOL(NU_ZOO + 1, :NKOL) = real(XCOL(:NKOL), 4)
                     PYLIG(NU_ZOO + 1, :NLIG) = real(YLIG(:NLIG), 4)
                     PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
                     PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
-                    i_ncouch = i_ncouch + 1
                 ENDIF
                 PVAR(ISTEPINC, INTOT_TEMP:INTOT_TEMP + NTOT -1) = FONC(:NTOT)
                 INTOT_TEMP = INTOT_TEMP + NTOT
+                i = i + 1
             ! if(debug) print *, 'ERRLEC:', IERLEC, 'At step:', ISTEPINC, 'in layer:', N_COUCH, 'at mesh:', NUMERR
             ENDIF
         ENDDO
@@ -239,6 +301,58 @@ CONTAINS
         CLOSE(LEC)
         !
     END SUBROUTINE READ_GRID
+    ! ------------------------------------------------------------------------
+    subroutine fix_metada(NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+        i_ncouch, is_main_grid &
+    )
+        implicit none
+        integer, intent(inout) :: NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+        i_ncouch
+        logical, intent(inout) :: is_main_grid
+        logical :: test
+
+        ! bug in metadata, parse them when reading, only at 1st timestep
+        ! bug does not occur in results with multiple timesteps, only
+        ! in case of parameter grids
+        test = ((NCOL_TEMP /= NKOL .or. NLIG_TEMP /= NLIG))
+        if (test .and. i_ncouch > 0) then
+            NU_ZOOMX = NU_ZOOMX_TEMP + 1
+            NU_ZOOMX_TEMP = NU_ZOOMX
+            NU_ZOO = NU_ZOO_TEMP + 1
+            NU_ZOO_TEMP = NU_ZOO
+            ! reset grid id if we start a new subgrid
+            N_COUCH = 1
+            N_COUCH_TEMP = N_COUCH
+            NCOUC_MX = NCOUC_MX_TEMP  ! still useful with is_main_grid?
+            ! keep new col/lig number for next layer of subgrid
+            ! or detect another one. No need to reset after, in one
+            ! timestep maingrid will not re appear after subgrids
+            ! TODO (?)
+            ! otherwise store the X0,Y0 of 1st grid and compare. if equals,
+            ! we're back to main grid and we can reset the counters.
+            NCOL_TEMP = NKOL
+            NLIG_TEMP = NLIG
+            is_main_grid = .false.
+        else
+            ! same number of layer for every subgrid so parse only for main grid
+            if (is_main_grid) then
+                NCOUC_MX = NCOUC_MX_TEMP + 1
+                NCOUC_MX_TEMP = NCOUC_MX
+            else
+                NU_ZOO = NU_ZOO_TEMP
+                ! same max number of layers for subgrids, keep the one from main grid
+                NCOUC_MX = NCOUC_MX_TEMP
+            endif
+            N_COUCH = N_COUCH_TEMP + 1
+            if (N_COUCH > NCOUC_MX_TEMP) N_COUCH = 1  ! if not main grid but 2nd lay of nested grid
+            N_COUCH_TEMP = N_COUCH
+            NCOL_TEMP = NKOL
+            NLIG_TEMP = NLIG
+        endif
+    end subroutine fix_metada
+    !
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! =============================================================================!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

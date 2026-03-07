@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import numpy as np
 import xarray as xr
 
@@ -20,6 +19,7 @@ def test_load_valid_grid_returns_xarray():
     ds = gm.load_marthe_grid(DATA_PATH, VAR)
     assert isinstance(ds, xr.Dataset)
     assert VAR.lower() in ds.data_vars
+    assert len(ds.zone) == 2862
 
 
 def test_load_with_varname_none_picks_first():
@@ -44,6 +44,7 @@ def test_load_with_drop_nan_removes_nan():
 
 
 def test_load_with_custom_nanval():
+    DATA_PATH = './tests/data/craie_npc_gig.permh'
     ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True, nan_value=0.)
     arr = ds[VAR.lower()].values
     assert not np.any(arr == 0.)
@@ -83,10 +84,21 @@ def test_drop_time_dimension_for_parameter_grid():
 
 
 def test_load_grid_with_time_dimension():
-    ds = gm.load_marthe_grid(DATA_WITH_TIME, VAR, FPASTP)
+    ds = gm.load_marthe_grid(DATA_WITH_TIME, VAR, FPASTP, drop_nan=True)
     assert 'time' in ds.dims
     assert ds.sizes['time'] == 205
     assert isinstance(ds.time.values[0], np.datetime64)
+    assert ds.zone.size == 927
+
+
+def test_load_grid_wrong_metadata():
+    ds = gm.load_marthe_grid('./tests/data/test_multilay_nest_no_metadata.permh')
+    varn = 'permh'
+    assert 'time' in ds.dims
+    assert ds.sizes['time'] == 1
+    assert varn in ds.keys()
+    assert ds[varn].size == 2533420
+    assert np.max(ds['z'].values) == 10
 
 
 def run_all():

@@ -3,8 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# C extensions
+# C/F90 extensions
 *.so
+*.o
 *.mod
 *.pyd
 *.dll
@@ -114,8 +115,6 @@ celerybeat.pid
 env/
 venv/
 ENV/
-env.bak/
-venv.bak/
 .venvrc
 
 # Spyder project settings
@@ -145,7 +144,7 @@ cython_debug/
 # vscodes
 .vscode
 
-
 *.bak
-dev/
 *.out
+dev/
+test-read

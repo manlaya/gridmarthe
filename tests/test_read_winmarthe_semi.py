@@ -16,7 +16,7 @@ def test_read_sem_shallow_only():
     xfile = 'tests/data/test_shallow.trc_r'
     res = _read_marthe_grid(xfile, varname='', shallow_only=True)
     ds = gm.load_marthe_grid(xfile, shallow_only=True)
-    x=ds['variable'].data[0,:]
+    x=ds['trc_r'].data[0,:]
     assert len(x[x!=0]) > 0
     # xx = gm.assign_coords(ds)['variable']
     # xx = xx.where(xx > 0)
