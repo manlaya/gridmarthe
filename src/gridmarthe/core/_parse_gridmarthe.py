@@ -223,7 +223,17 @@ def _get_id_grid(dims):
     for igig in range(len(dims)):
         id_grids.append(np.tile(igig, np.prod(dims[igig])))
     id_grids = np.hstack(id_grids)
-    return id_grids
+    return id_grids.astype(np.int32)
+
+
+def _get_2d_id(dims):
+    # set unique id for 2D layers (different only for each grid)
+    # repeat for every line
+    id_2d = []
+    for igig in range(len(dims)):
+        id_2d.append(np.repeat(np.arange(dims[igig][0]), dims[igig][1]))
+    id_2d = np.hstack(id_2d)
+    return id_2d.astype(np.int32)
 
 
 def _get_dims_from_attrs(str_dims):
