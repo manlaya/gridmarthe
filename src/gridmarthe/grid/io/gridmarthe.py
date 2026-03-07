@@ -52,7 +52,6 @@ from ..grid_utils import (
     dropna,
     fillna,
     replace,
-    deprecated_alias,
     get_default_variable
 )
 
@@ -62,6 +61,8 @@ from ..conventions import (
     _parse_global_attrs,
     VARS_ATTRS
 )
+
+from .._pkg_utils import deprecated_alias, _check_args
 
 
 @deprecated_alias(nanval='nan_value')
@@ -214,6 +215,9 @@ def load_marthe_grid(
         raise FileNotFoundError(
             "File : `{}` does not exist. Please check syntax/path.".format(filename)
         )
+
+    # check if no wrong argument is passed to function, suggest closest match if so
+    _check_args(load_marthe_grid, kwargs)
 
     if varname is None:
         if verbose:

@@ -22,56 +22,12 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import functools
 import re
-import warnings
 from datetime import datetime
-from typing import Any, Callable, Dict, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
-
-
-# decorator and deprecation argument from :
-# https://stackoverflow.com/questions/49802412/how-to-implement-deprecation-in-python-with-argument-alias
-def deprecated_alias(**aliases: str) -> Callable:
-    """Decorator for deprecated function and method arguments.
-
-    Use as follows:
-
-    @deprecated_alias(old_arg='new_arg')
-    def myfunc(new_arg):
-        ...
-
-    """
-
-    def deco(f: Callable):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            rename_kwargs(f.__name__, kwargs, aliases)
-            return f(*args, **kwargs)
-        return wrapper
-    return deco
-
-
-def rename_kwargs(func_name: str, kwargs: Dict[str, Any], aliases: Dict[str, str]):
-    """Helper function for deprecating function arguments."""
-    for alias, new in aliases.items():
-        if alias in kwargs:
-            if new in kwargs:
-                raise TypeError(
-                    f"{func_name} received both {alias} and {new} as arguments!"
-                    f" {alias} is deprecated, use {new} instead."
-                )
-            warnings.warn(
-                message=(
-                    f"`{alias}` is deprecated as an argument to `{func_name}`; "
-                    f" Please use `{new}` as a replacement."
-                ),
-                category=DeprecationWarning,
-                stacklevel=3,
-            )
-            kwargs[new] = kwargs.pop(alias)
 
 
 def _is_sorted(a):

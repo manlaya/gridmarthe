@@ -32,8 +32,9 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from gridmarthe.grid.grid_utils import _get_scale, deprecated_alias, get_default_variable
+from gridmarthe.grid.grid_utils import _get_scale, get_default_variable
 from .plot_utils import _set_map_lims
+from ..grid._pkg_utils import deprecated_alias
 
 
 """ Module for visualisation of gridmarthe files
