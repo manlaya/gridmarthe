@@ -1,9 +1,9 @@
 import os
 
-from .functions import (
+from gridmarthe.core import (
     _calc_riv_network,
 )
-from gridmarthe import calc_flow_directions
+from gridmarthe.grid.processing.flowdirections import calc_flow_directions
 import gridmarthe as gm
 
 def calc_river_network(
