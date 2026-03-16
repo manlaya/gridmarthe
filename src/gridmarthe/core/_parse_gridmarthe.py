@@ -264,6 +264,17 @@ def _calc_flow_directions(file_presence, file_topo, file_out_direct, file_out_to
     res.append(dims)
     return res
 
+def _calc_riv_network(file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach, n_neigh_station, file_exis_riv_in,
+                      file_drainage_surf_in, file_xy_surf_hydro_station, file_col_row_sous_bv_in, file_nb_sous_bv_out,  
+                      file_exis_riv_out, file_drainage_surf_out, file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out, 
+                      file_histo_out, file_sous_bassin_out, file_listing):
+
+    modgridmarthe.calc_riv_network(file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach, n_neigh_station, file_exis_riv_in,
+                      file_drainage_surf_in, file_xy_surf_hydro_station, file_col_row_sous_bv_in, file_nb_sous_bv_out, 
+                      file_exis_riv_out, file_drainage_surf_out, file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out, 
+                      file_histo_out, file_sous_bassin_out,  file_listing)
+    
+
 if __name__ == '__main__':
 
     # print(_lecsem.__doc__)

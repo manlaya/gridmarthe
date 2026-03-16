@@ -427,6 +427,9 @@
 !            et reprend l'�tat initial
 !           ============================================================
             MINI_OBTENU = MINI_NON_DEF
+            IF (.NOT. ALLOCATED(TOPO_INIT)) THEN
+               STOP "TOPO_INIT not allocated before assignment"
+            ENDIF
             TOPO = TOPO_INIT
 !           ==================
 !            Retour passage 2

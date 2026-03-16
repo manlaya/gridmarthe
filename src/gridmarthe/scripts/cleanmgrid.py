@@ -85,6 +85,7 @@ MARTGRID_FILES = {
     'z_dra' : 'ALTIT_DRAIN',
     'meteo' : 'ZONE_METEO',
     #'d_ava' : 'DIRECT_AVAL', d_ava file does not follow grid conventions with layers
+    'riv' : 'INDIC_RIVI',
     'v_rui' : 'VITESS_RUISS',
     'ruiss' : 'RUISSEL',
     'recha' : 'RECHARGE',

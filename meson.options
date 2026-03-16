@@ -3,3 +3,5 @@ option('condabuild', type: 'boolean', value: false,
         description: 'Option for conda-build. If set, the windows build will not be statically linked.')
 option('pip_edit_mode', type : 'boolean', value: false,
         description: 'Option to check if editable mode is on in meson build')
+option('english', type: 'boolean', value: false,
+        description: 'Enable English language messages')

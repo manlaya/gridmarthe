@@ -33,7 +33,7 @@ largs = []  # link args
 
 if fc.get_id() == 'gcc'
   
-  fargs += ['-fdefault-real-8']
+  fargs += ['-cpp', '-fdefault-real-8']
   # fargs += ['-O2']  # fix warning 'use builtin O3, deactivate this line"
   fargs += ['-ffree-line-length-none']
   
@@ -70,6 +70,9 @@ else
 
 endif
 
+if get_option('english')
+  fargs += ['-DENGLISH']
+endif
 
 fortran_args = fc.get_supported_arguments(fargs)
 link_args = fc.get_supported_link_arguments(largs)
