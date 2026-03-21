@@ -89,7 +89,7 @@ def load_marthe_grid(
     },
     engine: str = 'xarray',
     verbose: bool=False,
-    **kwargs,
+    **kwargs
 ):
     """ Read Marthe Grid File as xarray.Dataset
 
@@ -101,6 +101,19 @@ def load_marthe_grid(
     Before plot operations, user can assign coordinates (set x,y
     as dimension coordinates and drop zone) to get 2-D arrays (or
     3D arrays if multilayer) for every timesteps.
+
+    Notes
+    -----
+
+    - A former known issue with some version of Marthe is that field name is
+    not written in metadata as number of nested grids or number of layers, which
+    can lead to some bug in gridmarthe.
+    As of `gridmarthe` version 0.4, if no varname is scanned in file and/or number of layer/grids
+    are missing, these informations are guessed when parsing data, which are stored in
+    a variable named 'variable' and a warning is raised to alert user to rename the
+    variable later. This is only valid for parameters grids (with only one timestep).
+    In case of remaining errors, the command line tool `cleanmgrid`
+    (provided with gridmarthe) can still be used to clean the file and add missing metadata.
 
     Parameters
     ----------
@@ -230,17 +243,7 @@ def load_marthe_grid(
         varname = scan_var(filename)
         if verbose:
             print('Variables founded: ', varname)
-        if len(varname) >= 1:
-            varname = varname[0]
-        else:
-            varname = ''
-            # if no varname read from scan, it can be a bug (some version of marthe
-            # did not write field name in metadata)
-            if not shallow_only:
-                raise ValueError(
-                    'No variable founded in file, please consider check file or clean it '
-                    '(cleanmgrid util or winmarthe)'
-                )
+        varname = varname[0] if len(varname) >= 1 else ''
 
     elif varname.lower() == 'all':
         varname  = scan_var(filename)
@@ -286,7 +289,16 @@ def load_marthe_grid(
     yligs, dylus = _transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
 
     if varname == '':
-        varname = 'variable'  # security if force mode
+        _, ext = os.path.splitext(filename)
+        varname = ext.replace('.', '').upper()
+        warnings.warn(
+            f'No variable name found. Using file extension (`{varname}`), which is not a valid '
+            'MARTHE variable name. Please rename variable after reading dataset. '
+            'To permanently remove this warning, please fix the current grid file using either '
+            'gridmarthe command line tool `cleanmgrid` or WinMarthe GUI.',
+            category=UserWarning,
+            stacklevel=1
+        )
 
     # Get attributes
     vattrs = VARS_ATTRS.get(varname.lower(), {})

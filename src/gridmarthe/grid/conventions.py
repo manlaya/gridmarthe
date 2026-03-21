@@ -93,6 +93,24 @@ VARS_ATTRS = {
         'missing_value': 0.,
         'standard_name': 'Flow direction'
     },
+    'indic_rivi' : {
+        'varname': 'INDIC_RIVI',
+        'unit': '-',
+        'missing_value': 0.,
+        'standard_name': 'river_index'
+    },
+    'afflu_rivi' : {
+        'varname': 'AFFLU_RIVI',
+        'unit': '-',
+        'missing_value': 0.,
+        'standard_name': 'river_affluent_number'
+    },
+    'tronc_rivi' : {
+        'varname': 'TRONC_RIVI',
+        'unit': '-',
+        'missing_value': 0.,
+        'standard_name': 'river_reach_number'
+    },
 }
 
 # add variants for variable names

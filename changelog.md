@@ -15,6 +15,8 @@ of '1850-01-01' fake date.
 * add: `drop_time` argument to `gridmarthe.load_marthe_grid` to drop dummy time
 dimension
 * refact: code refactoring/reorganization with new fortran subroutines
+* add/fix: reading grid with bad metadata (variable name, number of grids/layers)
+is now possible with fortran core module (fix_metada subroutine)
 
 
 v0.3.0

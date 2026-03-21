@@ -17,7 +17,6 @@ def plot_nested():
     plt.show()
 
 
-
 def plot_outcrop():
     grid = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', drop_nan=True)
     surf = gm.get_surface_layer(ds=grid)
@@ -91,6 +90,7 @@ def plot_quiver():
     headsim2d['charge'].plot(ax=ax, cmap='coolwarm')
     gm.plot_veloc_quiver(ds, ax=ax, xyfreq=5, loc_scale_xy=(0.8,0.1))
     plt.show()
+
 
 if __name__ == '__main__':
     plot_nested()

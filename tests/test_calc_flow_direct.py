@@ -14,7 +14,7 @@ def test_calc_flow_direct():
     file_presence = os.path.join(os.path.abspath(DATA_PATH), "craie_npc.topog")
     file_topo = os.path.join(os.path.abspath(DATA_PATH), "craie_npc.topog")
 
-    ds = calc_flow_directions(file_presence,file_topo)
+    ds = calc_flow_directions(file_topo, file_presence)
     assert isinstance(ds, xr.Dataset)
 
     # write ds to grid data
@@ -34,5 +34,5 @@ def test_calc_flow_direct():
     assert np.allclose(topo_correct_python.values, topo_correct_ref_fortran.values, rtol=1e-05, atol=1e-08, equal_nan=True)
 
 if __name__ == "__main__":
-    DATA_PATH = './data'
+    # DATA_PATH = './data'
     test_calc_flow_direct()
