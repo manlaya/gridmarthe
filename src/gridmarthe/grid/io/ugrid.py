@@ -5,6 +5,7 @@ import numpy as np
 import xarray as xr
 
 from ..grid_utils import get_default_variable
+from ..conventions import UGRID_ATTRS
 
 
 def _create_corners(ds):
@@ -63,31 +64,16 @@ def _create_ugrid_dataset(values, varname, xc, yc, nodes, faces, times, layers=N
     _ = attrs.pop('conventions')  # remove previous conventions from attrs
     uds = xr.Dataset(
         data_vars={
-            "mesh_topology": ([], 0, {
-                "cf_role": "mesh_topology",
-                "standard_name": "mesh_topology",
-                "long_name" : "mesh topology",
-                "topology_dimension": 2,
-                "node_coordinates": "node_x node_y",
-                "node_dimension": "n_nodes",
-                "face_coordinates": "face_x face_y",
-                "face_dimension": "n_faces",
-                "face_node_connectivity": "face_node_connectivity",
-                'max_face_nodes_dimension': 'n_max_face_nodes',
-            }),
-            "face_node_connectivity": (("n_faces", "n_max_face_nodes"), faces.astype(np.float32), {
-                "cf_role": "face_node_connectivity",
-                "standard_name" : "face_node_connectivity",
-                "start_index": 0,
-                # "_FillValue" : 'NaN',
-                "units": "nondimensional",
-            }),
-            "nodes_per_face": (("n_faces",), np.repeat(4, len(faces)), {
-                "cf_role": "n_nodes_per_face",
-                "standard_name" : "nodes_per_face",
-                "long_name" : "number of nodes per face",
-                "units": "nondimensional",
-            }),
+            "mesh_topology": ([], 0, UGRID_ATTRS.get('mesh_topology')),
+            "face_node_connectivity": (
+                ("n_faces", "n_max_face_nodes"),
+                faces.astype(np.float32),
+                UGRID_ATTRS.get('face_node_connectivity')
+            ),
+            "nodes_per_face": (
+                ("n_faces",), np.repeat(4, len(faces)),
+                UGRID_ATTRS.get('nodes_per_face')
+            ),
             varname: (data_dims, values.astype(np.float64), {
                 "mesh": "mesh_topology",
                 "location": "face",

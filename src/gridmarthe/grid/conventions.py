@@ -156,6 +156,35 @@ COOR_ATTRS = {
 }
 
 
+UGRID_ATTRS = {
+    'mesh_topology': {
+        "cf_role": "mesh_topology",
+        "standard_name": "mesh_topology",
+        "long_name" : "mesh topology",
+        "topology_dimension": 2,
+        "node_coordinates": "node_x node_y",
+        "node_dimension": "n_nodes",
+        "face_coordinates": "face_x face_y",
+        "face_dimension": "n_faces",
+        "face_node_connectivity": "face_node_connectivity",
+        "max_face_nodes_dimension": "n_max_face_nodes",
+    },
+    'face_node_connectivity': {
+        "cf_role": "face_node_connectivity",
+        "standard_name" : "face_node_connectivity",
+        "start_index": 0,
+        # "_FillValue" : 'NaN',
+        "units": "nondimensional",
+    },
+    "nodes_per_face": {
+        "cf_role": "n_nodes_per_face",
+        "standard_name" : "nodes_per_face",
+        "long_name" : "number of nodes per face",
+        "units": "nondimensional",
+    },
+}
+
+
 def _assign_xy_attrs(epsg=27572):
     crs = pyproj.CRS(epsg)
     cf_attrs = crs.coordinate_system.to_cf()
