@@ -44,7 +44,6 @@ def test_load_with_drop_nan_removes_nan():
 
 
 def test_load_with_custom_nanval():
-    DATA_PATH = './tests/data/craie_npc_gig.permh'
     ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True, nan_value=0.)
     arr = ds[VAR.lower()].values
     assert not np.any(arr == 0.)
