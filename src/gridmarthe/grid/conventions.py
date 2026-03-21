@@ -187,12 +187,15 @@ UGRID_ATTRS = {
 
 
 def _assign_xy_attrs(epsg=27572):
-    crs = pyproj.CRS(epsg)
-    cf_attrs = crs.coordinate_system.to_cf()
-    xy_attrs = {
-        'x' : cf_attrs[0],
-        'y' : cf_attrs[1],
-    }
+    if epsg is not None:
+        crs = pyproj.CRS(epsg)
+        cf_attrs = crs.coordinate_system.to_cf()
+        xy_attrs = {
+            'x' : cf_attrs[0],
+            'y' : cf_attrs[1],
+        }
+    else:
+        xy_attrs = {k: v for k, v in COOR_ATTRS.items() if k in ['x', 'y']}
     return xy_attrs
 
 
@@ -227,7 +230,7 @@ def _parse_global_attrs(
     #   - for reduced-horizontal-grid https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch08s02.html
     #   - for timeseries https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ch09s05.html
     """
-    crs = pyproj.CRS(epsg)
+    crs = pyproj.CRS(epsg) if epsg is not None else None
 
     prologue = {
         'conventions'         :'CF-1.10',  # check https://cfconventions.org/
@@ -238,12 +241,16 @@ def _parse_global_attrs(
         ),
     }
     grid_attrs = {
-        'crs': str(crs.to_cf()),
+        'crs': str(crs.to_cf()) if epsg is not None else '',
+        'grid_mapping': 'crs',
         'lon_resolution': ', '.join(map(str, np.unique(dxlus))),
         'lat_resolution': ', '.join(map(str, np.unique(dylus))),
-        'resolution_units': crs.coordinate_system.to_cf()[0].get('units', ''),
+        # 'spacing': '({}, {})'.format(dx, dy),
+        'resolution_units': crs.coordinate_system.to_cf()[0].get('units', '') if epsg is not None else '',
         'scale_factor'  : xyfactor,
+        # 'rotation': 0.0,
         'nested_grid'   : str(is_nested),
+        # 'origin': '({}, {})'.format(x0, y0),
         'extend'        : "xymin : {} {}; xymax: {} {}".format(
             np.min(xcols), np.min(yligs), np.max(xcols), np.max(yligs)
         ),
