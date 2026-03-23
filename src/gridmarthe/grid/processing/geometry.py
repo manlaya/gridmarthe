@@ -32,17 +32,29 @@ from .gis import to_geodataframe
 from ..grid_utils import _nearest_node, subset
 
 
-def _get_mask_array(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
+def _get_mask_zone(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
     """ Get mask array of active domain, from permh file (hydraulic conductivity)
+
+    Returns
+    -------
+    array:
+        array of valid zone id
     """
-    return ds.where(~ds[varname].isin(nanval), drop=True)
+    return ds.where(~ds[varname].isin(nanval), drop=True)['zone'].data
 
 
-def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_array=False, shp_file=None):
-    """ Filter dataset on non-nan values, and dissolve results to get a mask shape
+def get_active_mask(
+    ds, varname: str='permeab',
+    nanval: list=[-9999., 0.],
+    as_array=False, only_mask=False, shp_file=None
+):
+    """ Get the mask of active domain from hydraulic conductivity variable
+
+    This function (i) get the active mask as a 0/1 array and optionally
+    (ii) filter the dataset on valid values and dissolve results to get a mask shape
 
     Input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic
-    conductivity).
+    conductivity, **without** the dropnan option).
 
     Parameters
     ----------
@@ -52,29 +64,37 @@ def get_active_mask(ds, varname: str='permeab', nanval: list=[-9999., 0.], as_ar
     varname: str, optional
         default is 'permeab'
 
-    nanval: float or list, optional.
-        default are 'permeab' nan values : 0,-9999.
+    nanval: float or list, optional
+        default are 'permeab' nan values : 0, -9999.
 
     as_array: bool, optional.
-        default is False. Option to get result as a xr.Dataset and not geodataframe.
+        Option to get result as a xr.Dataset and not geodataframe.
+        Default is False.
+
+    only_mask: bool, optional
+        filter `ds` on active mask. Default is False, returns a dataset
+        with 'ibound' variable set to 1 (active domain) or 0.
 
     shp_file: str, optional.
         if set (and not `as_array`), used to stored result in a file.
 
     Returns
     -------
-    either a xr.Dataset filter to mask array or a
-    gpd.GeoDataFrame with active domain.
+    xr.Dataset with ibound field, or gpd.GeoDataFrame of active domain if `as_array`
+    is set to False.
     """
-    mask = _get_mask_array(ds, varname, nanval)
-    mask = ds.sel(zone=mask['zone'])
+
+    mask = _get_mask_zone(ds, varname, nanval)
+    ds_masked = ds.copy()
+    ds_masked['ibound'] = ('zone', np.where(np.isin(ds.zone.data, mask), 1, 0))
     if not as_array:
-        gdf  = to_geodataframe(mask)
+        ds_masked = ds_masked.sel(zone=mask)
+        gdf  = to_geodataframe(ds_masked)
         gdf  = gdf.dissolve()
         if shp_file is not None:
             gdf.to_file(shp_file)
         return gdf
-    return mask
+    return ds_masked if not only_mask else ds_masked.sel(zone=mask)
 
 
 def _get_true_topo(topo, key='h_topogr'):

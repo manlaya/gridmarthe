@@ -8,13 +8,13 @@ import gridmarthe as gm
 # np.set_printoptions(threshold=np.inf)
 
 def test_compute_geometry():
-    
+
     model_name = 'hallue_multilayer'
     hsubs = gm.load_marthe_grid('./tests/data/{}.hsubs'.format(model_name))
     topo  = gm.load_marthe_grid('./tests/data/{}.topog'.format(model_name))
     permh = gm.load_marthe_grid('./tests/data/{}.permh'.format(model_name), varname='PERMEAB')
 
-    mask = gm.get_active_mask(permh, as_array=True)['zone'].data
+    mask = gm.get_active_mask(permh, as_array=True, only_mask=True)['zone'].data
 
     # geom = gm.compute_geometry(topo, hsubs, mask)  # ok
     geom = gm.compute_geometry(topo, hsubs)  # ok
@@ -31,7 +31,7 @@ def test_compute_geometry():
     ), "depth does not match"
 
     assert np.allclose(
-        geom['thickness'].sel(zone=mask), 
+        geom['thickness'].sel(zone=mask),
         true_thick['trava'].sel(zone=mask)
     ), "thickness does not match"
 

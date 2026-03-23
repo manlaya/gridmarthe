@@ -110,8 +110,7 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
 
 def dropna(ds, varname: str, nanval: Union[list, float]):
     """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.)
-    for 1D (or 2D (time, zone)) array
-    zone must me a coordinate dimension.
+    for 1D (or 2D (time, zone)) array zone must be a coordinate dimension.
 
     Parameters
     ----------

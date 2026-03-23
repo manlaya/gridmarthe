@@ -39,8 +39,8 @@ from gridmarthe.core import (
     _get_id_grid,
     _get_col_and_lig,
     _decode_title,
-    _parse_dims_from_xr_attrs,
     _extract_zvar_from_ds,
+    get_dims_from_attrs,
     scan_var,
     FortranError
 )
@@ -585,7 +585,7 @@ def write_marthe_grid(
             ds2  = fillna(ds2, varname, nan_value)
 
     if dims is None:
-        dims = _parse_dims_from_xr_attrs(ds2.attrs.get('original_dimensions'))
+        dims = get_dims_from_attrs(ds2.attrs.get('original_dimensions'))
 
     # if after parsing, still None, raise error.
     if dims is None:

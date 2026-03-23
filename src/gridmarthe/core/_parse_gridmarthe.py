@@ -226,7 +226,7 @@ def _get_id_grid(dims):
     return id_grids
 
 
-def _parse_dims_from_xr_attrs(str_dims):
+def get_dims_from_attrs(str_dims):
     if str_dims is None:
         return None
     else:
