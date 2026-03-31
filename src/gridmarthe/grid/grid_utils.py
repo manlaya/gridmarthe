@@ -78,6 +78,10 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
         header=None,
         encoding=encoding
     ).squeeze('columns')
+    
+    if isinstance(pastp, pd.DataFrame):
+        # pastp needs to be a pd.Series
+        pastp = pastp.iloc[:, 0]
 
     # First, get steady state time
     idx_0  = pastp.loc[pastp.str.contains(r' \*\*\* D.*but de la simulation.*', regex=True)].index.values[0]
