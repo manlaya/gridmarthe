@@ -100,6 +100,13 @@ def test_load_grid_wrong_metadata():
     assert np.max(ds['z'].values) == 10
 
 
+def test_load_gm_with_path_object():
+    from pathlib import Path
+    ds = gm.load_marthe_grid(Path(DATA_PATH), drop_nan=True)
+    assert isinstance(ds, xr.Dataset)
+    assert ds.zone.size == 927
+
+
 def run_all():
     test_load_valid_grid_returns_xarray()
     test_load_grid_attrs_present()

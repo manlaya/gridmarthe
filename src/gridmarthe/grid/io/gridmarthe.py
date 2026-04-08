@@ -252,8 +252,9 @@ def load_marthe_grid(
     # Fortran error cause sys exit. To avoid this, we add a test on file first
     if not os.path.exists(filename):
         raise FileNotFoundError(
-            "File : `{}` does not exist. Please check syntax/path.".format(filename)
+            "File : `{}` does not exist. Please check syntax/path.".format(str(filename))
         )
+    _, ext = os.path.splitext(filename)
 
     # check if no wrong argument is passed to function, suggest closest match if so
     _check_args(load_marthe_grid, kwargs)
@@ -315,7 +316,6 @@ def load_marthe_grid(
     yligs, dylus = _transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
 
     if varname == '':
-        _, ext = os.path.splitext(filename)
         varname = ext.replace('.', '').upper()
         warnings.warn(
             f'No variable name found. Using file extension (`{varname}`), which is not a valid '
@@ -417,9 +417,8 @@ def load_marthe_grid(
             nan_value = list(nan_value)
 
         if (
-            (varname.lower() == 'permeab' or filename.endswith("permh"))
-            and is_nested
-            and -9999. not in nan_value
+            (varname.lower() == 'permeab' or ext == "permh")
+            and is_nested and -9999. not in nan_value
         ):
             nan_value += [-9999.]
 
