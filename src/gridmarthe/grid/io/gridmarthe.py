@@ -40,7 +40,7 @@ from gridmarthe.core import (
     _get_col_and_lig,
     _decode_title,
     _extract_zvar_from_ds,
-    get_dims_from_attrs,
+    _get_dims_from_attrs,
     scan_var,
     FortranError
 )
@@ -63,6 +63,27 @@ from ..conventions import (
 )
 
 from .._pkg_utils import deprecated_alias, _check_args
+
+
+def get_dims_from_attrs(ds):
+    """ Get Marthe grid dimensions from Dataset attributes
+
+    Grid(s) dimensions are stored as a string attribute in dataset read
+    by :py:func:`load_marthe_grid`. This function allow user to retrieve
+    these informations in a more pythonnic way, by getting a list of dimensions.
+
+    Parameters
+    ----------
+    ds: xr.Dataset
+        Input dataset, read by :py:func:`load_marthe_grid`
+    
+    Returns
+    -------
+    list:
+        A list of dimensions for each grid (main and nested). List will contains
+        `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
+    """
+    return _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
 
 
 @deprecated_alias(nanval='nan_value')
@@ -121,13 +142,18 @@ def load_marthe_grid(
         A path to marthegrid file (.permh, .out, etc.)
 
     varname : str, optional
-        variable to access in martgrid file, e.g ``CHARGE`` for groundwater head.
-        See marthegrid file content.
-        If None  is passed (default), function will scan all varnames in filename
+        Variable to access in martgrid file. See marthegrid (`filename`) file content.
+        
+        - If None  is passed (default), function will scan all varnames in filename
         and keep first only.
-        If 'all' is passed,  function will scan all varnames in filename and keep all.
+
+        - If a varname is passed, e.g ``CHARGE`` for groundwater head, the returned
+        dataset will contains only this variable.
+
+        - If 'all' is passed,  function will scan all varnames in filename and keep all.
         All datavars are added to dataset, using recursive call to func
-        if wrong variable name is passed, empty data will be returned.
+        
+        - If wrong variable name is passed, empty data will be returned.
 
     fpastp: str, optional
         A pastp file to read for dates
@@ -566,8 +592,10 @@ def write_marthe_grid(
         0 if everything's ok. 1 otherwise.
     """
     # TODO: infer nx, ny, nz, ngrid from ds ? --> allow to create a custom grid
-    varname = varname.lower() if varname is not None else get_default_variable(ds)
     ds2 = ds.copy()
+    # if isinstance(ds, xr.DataArray): # en fait, il faut x,y,dx,dy
+    #     ds2 = ds2.to_dataset()
+    varname = varname.lower() if varname is not None else get_default_variable(ds2)
     if 'time' not in ds2.dims:
         ds2 = ds2.expand_dims('time')
 
@@ -585,7 +613,7 @@ def write_marthe_grid(
             ds2  = fillna(ds2, varname, nan_value)
 
     if dims is None:
-        dims = get_dims_from_attrs(ds2.attrs.get('original_dimensions'))
+        dims = _get_dims_from_attrs(ds2.attrs.get('original_dimensions'))
 
     # if after parsing, still None, raise error.
     if dims is None:

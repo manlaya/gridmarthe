@@ -21,3 +21,4 @@ Useful functions
     
     read_dates_from_pastp
     
+    get_dims_from_attrs

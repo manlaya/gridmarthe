@@ -111,6 +111,7 @@ def run_all():
     test_load_with_varname_all_returns_multiple()
     test_load_nonexistent_file_raises()
     test_load_invalid_varname_raises()
+    test_load_grid_with_time_dimension()
     print("=============================")
     print("gridmarthe reader test passed")
     return

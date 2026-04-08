@@ -226,11 +226,12 @@ def _get_id_grid(dims):
     return id_grids
 
 
-def get_dims_from_attrs(str_dims):
+def _get_dims_from_attrs(str_dims):
     if str_dims is None:
         return None
     else:
-        return [list(map(int, x.split(' '))) for x in str_dims.strip('x, y, z [grids]: ').split('; ')]
+        _tmp = str_dims.replace('x, y, z [grids]: ', '').split('; ')
+        return [list(map(int, x.split(' '))) for x in _tmp]
 
 
 # def sort_data(ds):

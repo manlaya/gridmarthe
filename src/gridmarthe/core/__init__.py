@@ -10,7 +10,7 @@ from ._parse_gridmarthe import (
     _extract_zvar_from_ds,
     _calc_flow_directions,
     _calc_riv_network,
-    get_dims_from_attrs,
+    _get_dims_from_attrs,
     scan_var,
     FortranError
 )
