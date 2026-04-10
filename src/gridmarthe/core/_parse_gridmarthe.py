@@ -230,7 +230,7 @@ def _get_dims_from_attrs(str_dims):
     if str_dims is None:
         return None
     else:
-        _tmp = str_dims.replace('x, y, z [grids]: ', '').split('; ')
+        _tmp = str_dims.replace('x,y,z [grids]: ', '').split('; ')
         return [list(map(int, x.split(' '))) for x in _tmp]
 
 

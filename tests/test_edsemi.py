@@ -7,7 +7,7 @@ import numpy as np
 import gridmarthe as gm
 from gridmarthe.core import (
     _extract_zvar_from_ds,
-    _parse_dims_from_xr_attrs,
+     _get_dims_from_attrs,
     # modgridmarthe
 )
 
@@ -17,7 +17,7 @@ def test_extract_var():
     varname  = 'PERMEAB'
 
     ds = gm.load_marthe_grid(martfile, varname)
-    dims = _parse_dims_from_xr_attrs(ds.attrs.get('original_dimensions'))
+    dims =  _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
     (
         zvar, zdates,
         zxcol, zylig, zdxlu, zdylu,
