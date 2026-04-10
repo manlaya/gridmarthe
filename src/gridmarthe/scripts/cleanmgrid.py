@@ -146,11 +146,21 @@ def parse_geom(layer_str:str):
     return layers, ngrid
 
 
-def read_rma(frma):
+def read_rma(frma: str) -> list:
+    """
+    Parses an RMA file to extract filenames and constant grid values.
+
+    Args:
+        frma: Path to the RMA file to be read.
+
+    Returns:
+        list: A list of strings containing the parsed filenames/constant values.
+    """
     rma = fread(frma)
-    files = re.finditer(r'^=?(\S+)\s*=\s+.*$', rma)
-    files = [ x.group(1).strip().replace('=', '') for x in files]
+    files = re.finditer(r'^=?(\S+)\s*=\s+.*$', rma, re.MULTILINE)
+    files = [ x.group(1).strip() for x in files]
     files = [ x for x in files if len(x) > 0]
+
     return files
 
 
