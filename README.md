@@ -49,6 +49,8 @@ Users can install it with:
 
 ```bash
 pip install gridmarthe
+# or with all optional dependencies
+pip install gridmarthe[opt]
 ```
 
 For GNU/Linux and MacOS, the package needs gforran/gcc shared libraries to run.
@@ -94,41 +96,46 @@ cd gridmarthe
 ##### With pip (Unix-like OS)
 
 On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile
-Fortran sources and install **in development mode** the package.
+Fortran sources and install **in development mode** (i.e. **with** editable flag) the package.
 
 ```bash
+make requirements
 make
 ```
 
-or, without the development mode :
+or, *without* the development/editable mode :
 
 ```bash
 pip install .
 ```
 
-On a windows machine, it is possible to compile with gfortran
-(mingw project https://mingw-w64.org/ or https://winlibs.com/#download-release ; or `choco install mingw`).
-Neverless, the simpliest way is to use a conda environment (miniforge with mambalib is recommended) to install gcc/gfortran,
-and install the project.
+On a Windows machine, it is possible to compile with gfortran/gcc
+(mingw project https://mingw-w64.org/ or https://winlibs.com/#download-release ;
+it can also be installed with chocolatey `choco install mingw`, or with conda
+with conda-forge packages `mingw-w64`, `gcc` and `gfortran`).
+
 
 ##### With conda (recommended on Windows)
 
-It is also possible to install gridmarthe in a conda environment. An environment file is provided (example with mamba):
+It is also possible to install gridmarthe in a conda environment.
+An environment file is provided (example with mamba):
 
 ```bash
 mamba env create -n gm -f environment.yml
 mamba activate gm
-pip install --no-deps .
+make
 ```
 
-Here, the development mode is *not* available (yet, with the meson build).
-One can add the `-e` flag in pip command, or use `conda-build`:
+This will install the library using pip editable mode, but with dependencies
+installed from conda-forge.
+
+Alternatively, you can use `conda-build`:
 
 ```bash
 mamba env create -n gm -f environment.yml
 mamba activate gm
 mamba install conda-build
-make lib
+make lib  # only compile shared library for python bindings
 conda develop src/
 ```
 
@@ -147,7 +154,15 @@ This program is free software and released under the terms of the
 
 ## Authors and acknowledgment
 
-A. Manlay and J.P. Vergnes, (c) BRGM
+gridmarthe is released by (C) BRGM, French Geological Survey
+ 
+Authors and contributors:
+
+- A. Manlay,
+- J.P. Vergnes,
+- S. Wang,
+- S. Lopez,
+- S. Magne
 
 
 ## References

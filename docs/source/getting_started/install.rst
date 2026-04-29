@@ -10,6 +10,8 @@ and can be installed with:
 .. code-block:: bash
     
     pip install gridmarthe
+    # or with all optional dependencies
+    pip install gridmarthe[opt]
 
 
 From conda-forge (with conda or mamba)
@@ -56,10 +58,11 @@ the compilation process and python installation.
 
 .. code-block:: bash
     
+    make requirements
     make
 
 
-Or, for a standard installation (*not with editable flag*):
+Or, for a standard installation (*without editable flag*):
 
 .. code-block:: bash
     
@@ -75,16 +78,19 @@ Alternatively, you can use a conda environment. For example with miniforge/mamba
     
     mamba env create -n gm -f environment.yml
     mamba activate gm
-    pip install --no-deps .
+    make
 
-For the editable/developper mode, one can add the `-e` flag in pip command, or use ``conda-build``:
+This will install the library using pip editable mode, but with dependencies
+installed from conda-forge.
+
+Alternatively, you can use `conda-build`:
 
 .. code-block:: bash
 
     mamba env create -n gm -f environment.yml
     mamba activate gm
     mamba install conda-build
-    # Compile lecsem lib
+    # Compile fortran shared lib and python bindings
     make lib
     # add develop path
     conda develop src/

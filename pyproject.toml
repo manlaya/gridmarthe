@@ -7,7 +7,6 @@ requires = [
     "wheel",
     "cibuildwheel",
     "charset_normalizer",
-    "spin",
     "numpy",
     "meson",
     "meson-python",
@@ -47,7 +46,7 @@ keywords = ["hydrology", "groundwater", "modelling"]
 
 requires-python = ">=3.10"
 dependencies = [
-    "numpy",
+    "numpy>=1.26,<3.0",
     "pandas<3.0",
     "h5netcdf",
     "xarray",
@@ -58,10 +57,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# install with `pip install gridmarthe[gis]`
-gis = ["rioxarray", "rasterio", "vtkwriters"]
+# install with `pip install gridmarthe[ext]`
+opt = ["rioxarray", "rasterio", "vtkwriters"]
 doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
-dev = ['gridmarthe[gis,doc]', 'pytest']
+dev = ['gridmarthe[opt,doc]', 'pytest']
 
 [project.scripts]
 ncmart = "gridmarthe:scripts.ncmart.main"
