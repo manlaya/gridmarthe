@@ -50,7 +50,7 @@ def plot_nested_grid(ds, ax=None, varname=None, **kwargs):
     ds: xr.Dataset
         the dataset MUST be a 2D array, with dims = x,y.
         In other words, you may need to sel z and time before plot, and you need to apply
-        :py:func:`gridmarthe.assign_coord`
+        :py:func:`gridmarthe.assign_coords`
 
     ax: matplotlib axe, optional.
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
@@ -182,7 +182,7 @@ def plot_outcrop(
     Parameters
     ----------
     ds_outcrop: xr.Dataset
-        output of :py:func:`gridmarthe.get_surface_mask`
+        output of :py:func:`gridmarthe.get_surface_layer`
 
     fig: matplotlib figure, Optional.
         if provided, data are plotted on this figure, otherwise fig, ax instances will be created
@@ -325,7 +325,7 @@ def plot_veloc_quiver(
         - `vy`: velocity in y direction
         - `vmod`: velocity module
 
-        See :py:func:`gm.read_velocity` to get velocity dataset from file.
+        See :py:func:`gridmarthe.read_velocity` to get velocity dataset from file.
 
     ax: matplotlib.axes, optional
         if not provided, an ax will be created and returned.
@@ -433,7 +433,7 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
     See Also
     --------
     gridmarthe.slice_cross_section : Function to create cross-section dataset.
-    gridmarthe.operasem.xsection._mk_cross_section_geom : Function to create cross-section geometry.
+    gridmarthe.grid.processing.xsection._mk_cross_section_geom : Function to create cross-section geometry.
     """
     from gridmarthe.grid.processing.xsection import _mk_cross_section_geom
 

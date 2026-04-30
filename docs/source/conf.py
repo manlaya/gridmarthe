@@ -32,6 +32,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 import os, sys
+from datetime import datetime
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath("sphinxext"))
@@ -42,7 +43,7 @@ from gridmarthe import __version__
 project = 'gridmarthe'
 authors = 'Adrien Manlay, Jean-Pierre Vergnes'
 # copyright = '2024,  BRGM.\nAuthors: {}'.format(authors)
-copyright = '2024-2025,  BRGM'
+copyright = '2024-{},  BRGM'.format(datetime.now().year)
 
 release = __version__
 language = 'en'
@@ -221,7 +222,7 @@ linkcode_resolve = make_linkcode_resolve(
 intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/master/',  None),
     'python': ('https://docs.python.org/3', None),
-    'numpy' : ('https://docs.scipy.org/doc/numpy', None),
+    'numpy' : ('https://numpy.org/doc/stable/', None),
     'pandas': ("https://pandas.pydata.org/docs/", None),
     # 'xarray': ("https://docs.xarray.dev/", None),
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-gridmarthe.operasem.vtk_writer
+gridmarthe.grid.io.vtk_writer
 
 Export gridmarthe grid to vtk format, using `vtkwriters` python library
 (https://gitlab.com/brgm/geomodelling/io/vtkwriters)

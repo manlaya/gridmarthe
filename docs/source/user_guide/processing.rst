@@ -1,7 +1,7 @@
 .. _userguide:
 
-Processing
-----------
+Grid processing
+---------------
 
 
 .. toctree::

@@ -6,9 +6,16 @@
   border-radius: 3px !important;
 }
 
+html[data-theme="light"] {
+    --pst-color-secondary: var(--bs-blue) !important;
+}
+html[data-theme="dark"] {
+    --pst-color-secondary: var(--bs-blue) !important;
+}
+
 /* fly you fool ! survol */
 .sd-card:hover {
-    border-color: var(--bs-purple) !important;
+    border-color: var(--bs-blue) !important;
     /* sinon voir les couleurs de _static/pydata-sphinx-theme.css à la build */
 }
 

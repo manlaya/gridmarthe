@@ -36,7 +36,7 @@ gridmarthe
 **Date** : |today| **Version**: |release|
 
 
-`gridmarthe` is a Python project for (fast) operations on Marthe grid files.
+*gridmarthe* is a Python project for (fast) operations on Marthe grid files.
 
 `Marthe <https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows>`_
 is a hydrogeological modelling code developped at BRGM, French Geological Survey

@@ -123,12 +123,12 @@ def load_marthe_grid(
     as dimension coordinates and drop zone) to get 2-D arrays (or
     3D arrays if multilayer) for every timesteps.
 
-    Notes
-    -----
+    Note
+    ----
 
-    - A former known issue with some version of Marthe is that field name is
-    not written in metadata as number of nested grids or number of layers, which
-    can lead to some bug in gridmarthe.
+    A former known issue with some version of Marthe is that field name is
+    not written in metadata, as number of nested grids or number of layers., which
+    This can cause some bug when reading grids with gridmarthe.
     As of `gridmarthe` version 0.4, if no varname is scanned in file and/or number of layer/grids
     are missing, these informations are guessed when parsing data, which are stored in
     a variable named 'variable' and a warning is raised to alert user to rename the
@@ -228,6 +228,7 @@ def load_marthe_grid(
         ... }
 
         For example, if your data is associated with a reference (report, paper, etc.):
+        
         >>> {
         ...    'references': 'https://doi.org/...'
         ... }
@@ -446,7 +447,7 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     Join is performed with xy[z] (if xy are present in coords) or zone
     to get zone back in full domain (if dropped, or nan were dropped, etc.).
 
-    If nan were dropped during :py:func:`gridmarthe.load_grid_marthe`, 'zone_all'
+    If nan were dropped during :py:func:`gridmarthe.load_marthe_grid`, 'zone_all'
     was added and will be used (this variable store the zone index before the reindexing
     during :py:func:`gridmarthe.dropna`).
 
