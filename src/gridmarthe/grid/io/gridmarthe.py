@@ -76,7 +76,7 @@ def get_dims_from_attrs(ds):
     ----------
     ds: xr.Dataset
         Input dataset, read by :py:func:`load_marthe_grid`
-    
+
     Returns
     -------
     list:
@@ -143,7 +143,7 @@ def load_marthe_grid(
 
     varname : str, optional
         Variable to access in martgrid file. See marthegrid (`filename`) file content.
-        
+
         - If None  is passed (default), function will scan all varnames in filename
         and keep first only.
 
@@ -152,7 +152,7 @@ def load_marthe_grid(
 
         - If 'all' is passed,  function will scan all varnames in filename and keep all.
         All datavars are added to dataset, using recursive call to func
-        
+
         - If wrong variable name is passed, empty data will be returned.
 
     fpastp: str, optional
@@ -228,7 +228,7 @@ def load_marthe_grid(
         ... }
 
         For example, if your data is associated with a reference (report, paper, etc.):
-        
+
         >>> {
         ...    'references': 'https://doi.org/...'
         ... }
@@ -410,7 +410,7 @@ def load_marthe_grid(
         if nan_value is None:
              # if no  user defined nanval, try to get corresponding val in dict
              # other, default to 9999.
-            nan_value = vattrs.get('missing_value', 9999.)
+            nan_value = vattrs.get('mart_missing_value', 9999.)
 
         if not isinstance(nan_value, (list, tuple)):
             nan_value = [nan_value]
@@ -427,10 +427,6 @@ def load_marthe_grid(
         # add range zone of active cells. memo: remove tuple to set as dimension
         ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))
 
-    # FIXME better, prevent bug at write :
-    # https://github.com/pydata/xarray/issues/7722
-    # https://stackoverflow.com/questions/65019301/variable-has-conflicting-fillvalue-and-missing-value-cannot-encode-data-when
-    # del ds[varname.lower()].encoding['missing_value']
     return ds
 
 
@@ -599,7 +595,8 @@ def write_marthe_grid(
     if 'time' not in ds2.dims:
         ds2 = ds2.expand_dims('time')
 
-    nan_value = VARS_ATTRS.get(varname, {}).get('missing_value', 9999.) if nan_value is None else nan_value
+    nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.) \
+        if nan_value is None else nan_value
 
     if file_permh is not None:
         # if permeab, fill_na with permh file (because either 0 or -9999.)
@@ -609,7 +606,7 @@ def write_marthe_grid(
         if not _fill_na:
             # if not permh variable, fill nan with constant values, based on variable
             if nan_value is None:
-                nan_value = VARS_ATTRS.get(varname, {}).get('missing_value', 9999.)
+                nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.)
             ds2  = fillna(ds2, varname, nan_value)
 
     if dims is None:
