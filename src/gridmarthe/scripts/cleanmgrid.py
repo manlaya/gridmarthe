@@ -166,8 +166,7 @@ def read_rma(frma: str) -> list:
 
 def read_files_from_rma(frma):
 
-    root = os.path.dirname(frma)
-    # root = os.getcwd()
+    root = os.path.dirname(os.path.abspath(frma))
     files = read_rma(frma)
 
     # get all gridded files
@@ -179,7 +178,7 @@ def read_files_from_rma(frma):
 
     # get layers, ngrid infos
     layer =  [x for x in files if x.endswith('layer')][0]
-    layer =  fread("{}/{}".format(root, layer))
+    layer =  fread(os.path.join(root, layer))
     layers, ngrid = parse_geom(layer)
     return res, layers, ngrid
 
