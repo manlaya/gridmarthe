@@ -141,7 +141,7 @@ def main():
         ds.attrs = {**ds.attrs, **_attrs}
 
     encode = {
-        x: {'zlib': True, 'complevel': 6} for x in ds.keys()
+        x: {'zlib': True, 'complevel': 6} for x in ds
     }
     ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
     return 0

@@ -30,9 +30,9 @@ import numpy as np
 import pandas as pd
 
 
-def _is_sorted(a):
+def _is_sorted(a, asc=True):
     # https://stackoverflow.com/questions/47004506/check-if-a-numpy-array-is-sorted
-    return np.all(a[:-1] <= a[1:])
+    return np.all(a[:-1] <= a[1:]) if asc else np.all(a[:-1] >= a[1:])
 
 
 def _get_scale(da):
@@ -78,7 +78,7 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
         header=None,
         encoding=encoding
     ).squeeze('columns')
-    
+
     if isinstance(pastp, pd.DataFrame):
         # pastp needs to be a pd.Series
         pastp = pastp.iloc[:, 0]
@@ -211,7 +211,7 @@ def fillna(ds, varname, value):
     return ds
 
 
-def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zone_label='zone'):
+def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zone_label='zone'):
     """ Assign coordinates from variables to dimensions
 
     This function transform a 1D or 2D (time, zone dimensions) array to 3D or 4D
@@ -250,9 +250,8 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
     coords_attrs = [ds.x.attrs, ds.y.attrs]
 
     da = ds.assign_coords(
-        #x=(zone_label, np.around(da_in[coords[0]].data, 1) ),
-        x=(zone_label, ds[coords[0]].data ),
-        y=(zone_label, ds[coords[1]].data ),
+        x=(zone_label, ds[coords[0]].data),
+        y=(zone_label, ds[coords[1]].data),
     )
     dims = ['y', 'x']
 
@@ -274,7 +273,7 @@ def assign_coords(ds, add_lay=True, coords=['x', 'y', 'z'], keep_zone=False, zon
     return da.sortby(dims).sortby('y', ascending=False)
 
 
-def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
+def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
     """ Transform a 3 or 4D aray into 1 or 2D array
     inverse of  :py:func:`assign_coords`
 
@@ -306,7 +305,7 @@ def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
     based on z,y,x order AND dx, dy scale (larger scale first, then smaller)
     """
     # create zone index
-    coords = [d for d in coords if d in ds.coords.keys()]  # make sure to drop coords that are not present
+    coords = [d for d in coords if d in ds.coords]  # make sure to drop coords that are not present
     dims = np.prod([len(ds[d]) for d in coords])  # create new zone dim
     # dims = np.prod(list(ds.sizes.values()))  # ok -eq
     zone = np.arange(1, dims + 1)
@@ -333,5 +332,5 @@ def stack_coords(ds, coords=['z', 'y', 'x'], dropna=False):
 def get_default_variable(ds):
     """ Get the first non coordinate variable in xarray Dataset
     """
-    _vars = [x for x in ds.keys() if x not in ['z', 'y', 'x', 'dx', 'dy', 'zone', 'time']]
+    _vars = [x for x in ds if x not in ['z', 'y', 'x', 'dx', 'dy', 'zone', 'time']]
     return _vars[0]

@@ -11,7 +11,6 @@ def _check_times(times):
     assert 'date' in times.columns
     assert times['timestep'].dtype == 'int64'
     assert times['date'].dtype == 'datetime64[ns]'
-    
 
 
 def test_read_times():

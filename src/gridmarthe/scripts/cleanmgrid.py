@@ -173,7 +173,7 @@ def read_files_from_rma(frma):
     res = []
     for fgrid in files:
         kind = os.path.splitext(fgrid)[-1].replace('.', '')
-        if kind in MARTGRID_FILES.keys():
+        if kind in MARTGRID_FILES:
             res.append((kind, fgrid, MARTGRID_FILES.get(kind)))
 
     # get layers, ngrid infos

@@ -62,7 +62,7 @@ dependencies = [
 # install with `pip install gridmarthe[ext]`
 opt = ["rioxarray", "rasterio", "vtkwriters"]
 doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
-dev = ['gridmarthe[opt,doc]', 'pytest']
+dev = ['gridmarthe[opt,doc]', 'ruff', 'pytest', 'pytest-cov', 'pytest-benchmark']
 
 [project.scripts]
 ncmart = "gridmarthe:scripts.ncmart.main"
@@ -113,7 +113,7 @@ archs = ["arm64"]
 
 
 [tool.pytest.ini_options]
-addopts = "-s -v"
+addopts = "-v --cov=gridmarthe tests/"  # -s
 testpaths = [
     "tests",
 ]

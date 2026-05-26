@@ -81,7 +81,7 @@ def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
     )
 
     if fmt == "wide" and 'time' in ds.dims:
-        # here no wide fmt if no time, so no if 'time' in ds.dims.keys():
+        # here no wide fmt if no time, so no if 'time' in ds.dims:
         gdf = gdf.unstack('time')
         gdf.columns = [
             '{}_{}'.format(x, y.strftime('%Y%m%d'))\

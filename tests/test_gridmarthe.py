@@ -14,6 +14,12 @@ DATA_WITH_TIME = './tests/data/chasim_hallue.out'
 FPASTP = './tests/data/hallue.pastp'
 VAR = "CHARGE"
 
+try:
+    import pytest_benchmark  # noqa: F401
+    BENCHMARK_AVAILABLE = True
+except ImportError:
+    BENCHMARK_AVAILABLE = False
+
 
 def test_load_valid_grid_returns_xarray():
     ds = gm.load_marthe_grid(DATA_PATH, VAR)
@@ -90,6 +96,7 @@ def test_load_grid_with_time_dimension():
     assert ds.zone.size == 927
 
 
+@pytest.mark.filterwarnings("ignore:No variable name found.")
 def test_load_grid_wrong_metadata():
     ds = gm.load_marthe_grid('./tests/data/test_multilay_nest_no_metadata.permh')
     varn = 'permh'
@@ -105,6 +112,12 @@ def test_load_gm_with_path_object():
     ds = gm.load_marthe_grid(Path(DATA_PATH), drop_nan=True)
     assert isinstance(ds, xr.Dataset)
     assert ds.zone.size == 927
+
+
+@pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark not found")
+@pytest.mark.benchmark
+def test_perf_read_grid(benchmark):
+    benchmark(gm.load_marthe_grid, DATA_WITH_TIME, drop_nan=True)
 
 
 def run_all():

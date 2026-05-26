@@ -477,9 +477,9 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
         verbose=False
     )
 
-    if 'x' in da.coords.keys():
+    if 'x' in da.coords:
         da = stack_coords(da, dropna=True)
-        coords = [x for x in da.coords.keys() if x in ['x', 'y', 'z']]  # if xy assert only existing coords in xyz
+        coords = [x for x in da.coords if x in ['x', 'y', 'z']]  # if xy assert only existing coords in xyz
     else:
         coords = ['zone']
 
