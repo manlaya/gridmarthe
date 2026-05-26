@@ -44,7 +44,7 @@ The `x`, and `y` coordinates are the center of cell. `dx`, `dy` are the dimensio
 ### From pip
 
 
-On pip, `gridmarthe` is available for GNU/Linux, macOS and Windows for python >=3.10.
+On pip, `gridmarthe` is available for GNU/Linux, and Windows for python >=3.10.
 Users can install it with:
 
 ```bash
@@ -53,24 +53,19 @@ pip install gridmarthe
 pip install gridmarthe[opt]
 ```
 
-For GNU/Linux and MacOS, the package needs gforran/gcc shared libraries to run.
-
-Linux, example with debian/ubuntu:
+For UNIX systems, the package needs gfortran/gcc shared libraries to run.
+For example, using a Debian-based GNU/Linux distribution, one can install
+gcc with:
 
 ```bash
 sudo apt install gcc gfortran
 ```
 
 
-MacOS:
-
-```bash
-brew install gcc gfortran
-```
-
 ### From conda-forge
 
-`gridmarthe` is also available in the `conda-forge` channel. Conda users can install it with:
+`gridmarthe` is also available in the `conda-forge` channel (Linux, Windows).
+Conda users can install it with:
 
 ```bash
 conda install gridmarthe
@@ -82,7 +77,7 @@ mamba install gridmarthe
 ### From sources
 
 `gridmarthe` use some Fortran modules which need to be compiled before local installation,
-hence user/developer who want to install from sources will need a Fortran an C compiler.
+hence user/developer who want to install from sources will need a Fortran and a C compiler.
 
 #### Compilation and installation
 
@@ -155,7 +150,7 @@ This program is free software and released under the terms of the
 ## Authors and acknowledgment
 
 gridmarthe is released by (C) BRGM, French Geological Survey
- 
+
 Authors and contributors:
 
 - A. Manlay,

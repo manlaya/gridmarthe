@@ -23,8 +23,9 @@
 * fix: using `load_marthe_grid` with a Path object [#14](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/14)
 * fix: bad return array with `get_active_mask` [#13](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/13)
 * fix: order of y coordinates in stack coords [#11](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/11)
-* fix: cleanmgrid script [#10](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/10) [#15](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/15)
+* fix: cleanmgrid script [#10](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/10) [#15](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/15) [#17](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/17)
 * fix: ncmart script [#9](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/9)
+* fix: netcdf attrs conflict with missing value [#16](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/16)
 
 
 ## [0.3.0] - 2025-12-09

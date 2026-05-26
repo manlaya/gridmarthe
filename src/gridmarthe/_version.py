@@ -22,4 +22,4 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-__version__ = '0.4.0_dev'
+__version__ = '0.4.0'
