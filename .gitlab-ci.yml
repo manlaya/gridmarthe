@@ -1,0 +1,70 @@
+image: debian:stable
+# image: condaforge/miniforge3:latest
+
+variables:
+  PIP_ROOT_USER_ACTION: ignore
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  VENV_PATH: "$CI_PROJECT_DIR/venv"
+
+stages:
+  - build
+  - test
+
+.version_tag:
+  # see https://peps.python.org/pep-0440/
+  # courtesy of T. Janvier (brgm)
+  only:
+    variables:
+      - $CI_COMMIT_TAG =~ /^(?P<epoch>\D+)?(?P<version>(?P<release>\d+(?:\.\d+)*)(?P<pre>(?:a|b|rc)\d+?)?((?P<post>\.post\d+))?(?P<dev>\.dev\d+)?(?P<build>\+\S+)?)$/
+  except:
+    - branches
+
+
+.apt-env: &apt-env
+  - apt-get clean
+  - apt-get update -y
+  - apt install -y python3 python3-pip python3-venv
+  - apt install -y gfortran gcc ninja-build
+
+
+.install-env: &install-env
+  - python3 -m venv $VENV_PATH
+  - source $VENV_PATH/bin/activate
+  - pip install --upgrade pip setuptools wheel
+
+
+before_script:
+  - *apt-env
+  - *install-env
+
+
+build:
+  stage: build
+  only:
+    - main
+    - tags
+  script:
+    - pip install build cibuildwheel
+    - python3 -m cibuildwheel --output-dir ./dist
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 24 hours
+
+
+test:
+  stage: test
+  image: python:${PYTHON_VERSION}
+  parallel:
+    matrix:
+      - PYTHON_VERSION: ["3.11", "3.12", "3.13", "3.14"]
+  only:
+   - main
+   - tags
+   - merge_requests
+    # - python3 -m pip install --no-index --no-deps dist/*none*.whl
+  script:
+    - pip install .[dev]
+    - pytest
+  # allow_failure: true
+
