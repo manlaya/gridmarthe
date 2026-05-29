@@ -95,9 +95,9 @@ include-package-data = true
 
 [tool.cibuildwheel]
 skip = "cp-39* cp-310* pp* *musl* *_i686 *_ppc64le *_s390x *_universal2"
-# skip = ["pp*", "*musl*"]
-# test-requires = "pytest"
-# test-command = "pytest {project}/tests"
+test-requires = ["pytest", "pytest-cov", "vtkwriters"]
+test-command = "cd {project} && pytest tests/test_gridmarthe.py"
+
 
 [tool.cibuildwheel.linux]
 archs = ["x86_64"]
