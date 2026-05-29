@@ -1,5 +1,4 @@
 image: debian:stable
-# image: condaforge/miniforge3:latest
 
 variables:
   PIP_ROOT_USER_ACTION: ignore
@@ -54,17 +53,18 @@ build:
 
 test:
   stage: test
-  image: python:${PYTHON_VERSION}
+  image: condaforge/miniforge3:latest
   parallel:
     matrix:
       - PYTHON_VERSION: ["3.11", "3.12", "3.13", "3.14"]
-  only:
-   - main
-   - tags
-   - merge_requests
-    # - python3 -m pip install --no-index --no-deps dist/*none*.whl
+  # only:
+  #  - main
+  #  - tags
+  #  - merge_requests
+  before_script:
+    - eval "$(mamba shell hook --shell bash)"
+    - mamba create -n gm -c conda-forge python=${PYTHON_VERSION} --file environment.yml
+    - mamba activate gm
   script:
     - pip install .[dev]
     - pytest
-  # allow_failure: true
-
