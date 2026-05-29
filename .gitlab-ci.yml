@@ -57,10 +57,10 @@ test:
   parallel:
     matrix:
       - PYTHON_VERSION: ["3.11", "3.12", "3.13", "3.14"]
-  # only:
-  #  - main
-  #  - tags
-  #  - merge_requests
+  only:
+   - main
+   - tags
+   - merge_requests
   before_script:
     - eval "$(mamba shell hook --shell bash)"
     - mamba create -n gm -c conda-forge python=${PYTHON_VERSION} --file environment.yml
