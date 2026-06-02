@@ -309,6 +309,19 @@ def _get_dims_from_attrs(str_dims):
         _tmp = str_dims.replace('x,y,z [grids]: ', '').split('; ')
         return [list(map(int, x.split(' '))) for x in _tmp]
 
+def _get_extend_from_attrs(attr):
+    if attr is None:
+        return None
+
+    parts = attr.split(";")
+
+    xmin_ymin = parts[0].split(":")[1].strip()
+    xmax_ymax = parts[1].split(":")[1].strip()
+
+    xmin, ymin = map(float, xmin_ymin.split())
+    xmax, ymax = map(float, xmax_ymax.split())
+
+    return xmin, ymin, xmax, ymax
 
 # def sort_data(ds):
     # TODO:
