@@ -1,0 +1,447 @@
+ Fichier Projet
+ #<V7.4a># --- Fin du texte libre --- ; Ne pas modifier/retirer cette ligne
+ *** Début de la simulation    à la date :      1840; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /%SATURAT/EDITION        I= 1;
+  /VITESSE/EDITION         I= 1 [C=       ;L=       ;P=       ;Gig=  ]
+  /DEBIT/MAILLE            C=     64L=     64P=      3V=         0; File= Prelevements_IdF.txt
+  /DEBIT/MAILLE            C=     57L=     67P=      3V=         0; File= Prelevements_IdF.txt; Col=2
+  /DEBIT/MAILLE            C=     74L=     72P=      3V=         0; File= Prelevements_IdF.txt; Col=3
+  /DEBIT/MAILLE            C=     75L=     70P=      3V=         0; File= Prelevements_IdF.txt; Col=4
+  /DEBIT/MAILLE            C=     76L=     71P=      3V=         0; File= Prelevements_IdF.txt; Col=5
+  /DEBIT/MAILLE            C=     84L=     72P=      3V=         0; File= Prelevements_IdF.txt; Col=6
+  /DEBIT/MAILLE            C=     67L=     73P=      3V=         0; File= Prelevements_IdF.txt; Col=7
+  /DEBIT/MAILLE            C=     88L=     75P=      3V=         0; File= Prelevements_IdF.txt; Col=8
+  /DEBIT/MAILLE            C=     68L=     78P=      3V=         0; File= Prelevements_IdF.txt; Col=9
+  /DEBIT/MAILLE            C=     84L=     80P=      3V=         0; File= Prelevements_IdF.txt; Col=10
+  /DEBIT/MAILLE            C=     87L=     79P=      3V=         0; File= Prelevements_IdF.txt; Col=11
+  /DEBIT/MAILLE            C=     83L=     92P=      3V=         0; File= Prelevements_IdF.txt; Col=12
+  /DEBIT/MAILLE            C=     96L=    114P=      3V=         0; File= Prelevements_IdF.txt; Col=13
+  /DEBIT/MAILLE            C=     55L=     66P=      3V=         0; File= Prelevements_IdF.txt; Col=14
+  /DEBIT/MAILLE            C=     59L=     69P=      3V=         0; File= Prelevements_IdF.txt; Col=15
+  /DEBIT/MAILLE            C=     61L=     69P=      3V=         0; File= Prelevements_IdF.txt; Col=16
+  /DEBIT/MAILLE            C=     78L=     72P=      3V=         0; File= Prelevements_IdF.txt; Col=17
+  /DEBIT/MAILLE            C=     83L=     72P=      3V=         0; File= Prelevements_IdF.txt; Col=18
+  /DEBIT/MAILLE            C=     73L=     73P=      3V=         0; File= Prelevements_IdF.txt; Col=19
+  /DEBIT/MAILLE            C=     76L=     75P=      3V=         0; File= Prelevements_IdF.txt; Col=20
+  /DEBIT/MAILLE            C=     82L=     75P=      3V=         0; File= Prelevements_IdF.txt; Col=21
+  /DEBIT/MAILLE            C=     84L=     73P=      3V=         0; File= Prelevements_IdF.txt; Col=22
+  /DEBIT/MAILLE            C=     85L=     75P=      3V=         0; File= Prelevements_IdF.txt; Col=23
+  /DEBIT/MAILLE            C=     87L=     75P=      3V=         0; File= Prelevements_IdF.txt; Col=24
+  /DEBIT/MAILLE            C=     82L=     77P=      3V=         0; File= Prelevements_IdF.txt; Col=25
+  /DEBIT/MAILLE            C=     82L=     79P=      3V=         0; File= Prelevements_IdF.txt; Col=26
+  /DEBIT/MAILLE            C=     84L=     78P=      3V=         0; File= Prelevements_IdF.txt; Col=27
+  /DEBIT/MAILLE            C=     86L=     78P=      3V=         0; File= Prelevements_IdF.txt; Col=28
+  /DEBIT/MAILLE            C=     79L=     86P=      3V=         0; File= Prelevements_IdF.txt; Col=29
+  /DEBIT/MAILLE            C=     80L=     92P=      5V=         0; File= Prelevements_IdF.txt; Col=30
+  /DEBIT/MAILLE            C=     72L=     71P=      3V=         0; File= Prelevements_IdF.txt; Col=31
+  /DEBIT/MAILLE            C=     90L=     72P=      3V=         0; File= Prelevements_IdF.txt; Col=32
+  /DEBIT/MAILLE            C=     77L=     76P=      3V=         0; File= Prelevements_IdF.txt; Col=33
+  /DEBIT/MAILLE            C=     85L=     74P=      3V=         0; File= Prelevements_IdF.txt; Col=34
+  /DEBIT/MAILLE            C=     86L=     76P=      3V=         0; File= Prelevements_IdF.txt; Col=35
+  /DEBIT/MAILLE            C=     90L=     76P=      3V=         0; File= Prelevements_IdF.txt; Col=36
+  /DEBIT/MAILLE            C=     67L=     78P=      3V=         0; File= Prelevements_IdF.txt; Col=37
+  /DEBIT/MAILLE            C=     85L=     79P=      3V=         0; File= Prelevements_IdF.txt; Col=38
+  /DEBIT/MAILLE            C=     86L=     80P=      3V=         0; File= Prelevements_IdF.txt; Col=39
+  /DEBIT/MAILLE            C=     92L=     78P=      3V=         0; File= Prelevements_IdF.txt; Col=40
+  /DEBIT/MAILLE            C=     86L=     87P=      3V=         0; File= Prelevements_IdF.txt; Col=41
+  /DEBIT/MAILLE            C=     88L=     90P=      3V=         0; File= Prelevements_IdF.txt; Col=42
+  /DEBIT/MAILLE            C=     90L=     93P=      5V=         0; File= Prelevements_IdF.txt; Col=43
+  /DEBIT/MAILLE            C=     73L=     84P=      3V=         0; File= Prelevements_IdF.txt; Col=44
+  /DEBIT/MAILLE            C=     70L=     93P=      3V=         0; File= Prelevements_IdF.txt; Col=45
+  /DEBIT/MAILLE            C=     52L=     63P=      3V=         0; File= Prelevements_horsIdF.txt
+  /DEBIT/MAILLE            C=     52L=     64P=      3V=         0; File= Prelevements_horsIdF.txt; Col=2
+  /DEBIT/MAILLE            C=     54L=     64P=      3V=         0; File= Prelevements_horsIdF.txt; Col=3
+  /DEBIT/MAILLE            C=    109L=    117P=      3V=         0; File= Prelevements_horsIdF.txt; Col=4
+  /DEBIT/MAILLE            C=    128L=    123P=      3V=         0; File= Prelevements_horsIdF.txt; Col=5
+  /DEBIT/MAILLE            C=    128L=    126P=      3V=         0; File= Prelevements_horsIdF.txt; Col=6
+  /DEBIT/MAILLE            C=    129L=    126P=      3V=         0; File= Prelevements_horsIdF.txt; Col=7
+  /DEBIT/MAILLE            C=    131L=    126P=      3V=         0; File= Prelevements_horsIdF.txt; Col=8
+  /DEBIT/MAILLE            C=    130L=    127P=      3V=         0; File= Prelevements_horsIdF.txt; Col=9
+  /DEBIT/MAILLE            C=    103L=    132P=      3V=         0; File= Prelevements_horsIdF.txt; Col=10
+  /DEBIT/MAILLE            C=    107L=    133P=      3V=         0; File= Prelevements_horsIdF.txt; Col=11
+  /DEBIT/MAILLE            C=    128L=    130P=      3V=         0; File= Prelevements_horsIdF.txt; Col=12
+  /DEBIT/MAILLE            C=    103L=    134P=      3V=         0; File= Prelevements_horsIdF.txt; Col=13
+  /DEBIT/MAILLE            C=    104L=    137P=      3V=         0; File= Prelevements_horsIdF.txt; Col=14
+  /DEBIT/MAILLE            C=    118L=    138P=      3V=         0; File= Prelevements_horsIdF.txt; Col=15
+  /DEBIT/MAILLE            C=    119L=    139P=      3V=         0; File= Prelevements_horsIdF.txt; Col=16
+  /DEBIT/MAILLE            C=     37L=     54P=      3V=         0; File= Prelevements_horsIdF.txt; Col=17
+  /DEBIT/MAILLE            C=    101L=    116P=      3V=         0; File= Prelevements_horsIdF.txt; Col=18
+  /DEBIT/MAILLE            C=    127L=    128P=      3V=         0; File= Prelevements_horsIdF.txt; Col=19
+  /DEBIT/MAILLE            C=     46L=     50P=      3V=         0; File= Prelevements_horsIdF.txt; Col=20
+  /DEBIT/MAILLE            C=    106L=    126P=      3V=         0; File= Prelevements_horsIdF.txt; Col=21
+  /DEBIT/MAILLE            C=    103L=    148P=      3V=         0; File= Prelevements_horsIdF.txt; Col=22
+  /DEBIT/MAILLE            C=    101L=    145P=      3V=         0; File= Prelevements_horsIdF.txt; Col=23
+  /DEBIT/MAILLE            C=    135L=    120P=      3V=         0; File= Prelevements_horsIdF.txt; Col=24
+  /DEBIT/MAILLE            C=    123L=    127P=      3V=         0; File= Prelevements_horsIdF.txt; Col=25
+  /DEBIT/MAILLE            C=     97L=    145P=      3V=         0; File= Prelevements_horsIdF.txt; Col=26
+  /DEBIT/MAILLE            C=     82L=    133P=      3V=         0; File= Prelevements_horsIdF.txt; Col=27
+  /DEBIT/MAILLE            C=    107L=    149P=      3V=         0; File= Prelevements_horsIdF.txt; Col=28
+  /DEBIT/MAILLE            C=     96L=    153P=      3V=         0; File= Prelevements_horsIdF.txt; Col=29
+  /DEBIT/MAILLE            C=     81L=    149P=      3V=         0; File= Prelevements_horsIdF.txt; Col=30
+  /DEBIT/MAILLE            C=     88L=    154P=      3V=         0; File= Prelevements_horsIdF.txt; Col=31
+  /DEBIT/MAILLE            C=     67L=    170P=      3V=         0; File= Prelevements_horsIdF.txt; Col=32
+  /DEBIT/MAILLE            C=     67L=    166P=      3V=         0; File= Prelevements_horsIdF.txt; Col=33
+  /DEBIT/MAILLE            C=     53L=     63P=      3V=         0; File= Prelevements_horsIdF.txt; Col=34
+  /*****/***** Fin de ce pas
+ *** Le pas :    1: se termine à la date :      1841; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    2: se termine à la date :      1842; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    3: se termine à la date :      1843; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    4: se termine à la date :      1844; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    5: se termine à la date :      1845; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    6: se termine à la date :      1846; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    7: se termine à la date :      1847; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    8: se termine à la date :      1848; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :    9: se termine à la date :      1849; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   10: se termine à la date :      1850; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   11: se termine à la date :      1851; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   12: se termine à la date :      1852; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   13: se termine à la date :      1853; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   14: se termine à la date :      1854; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   15: se termine à la date :      1855; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   16: se termine à la date :      1856; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   17: se termine à la date :      1857; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   18: se termine à la date :      1858; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   19: se termine à la date :      1859; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   20: se termine à la date :      1860; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   21: se termine à la date :      1861; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   22: se termine à la date :      1862; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   23: se termine à la date :      1863; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   24: se termine à la date :      1864; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   25: se termine à la date :      1865; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   26: se termine à la date :      1866; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   27: se termine à la date :      1867; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   28: se termine à la date :      1868; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   29: se termine à la date :      1869; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   30: se termine à la date :      1870; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   31: se termine à la date :      1871; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   32: se termine à la date :      1872; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   33: se termine à la date :      1873; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   34: se termine à la date :      1874; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   35: se termine à la date :      1875; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   36: se termine à la date :      1876; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   37: se termine à la date :      1877; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   38: se termine à la date :      1878; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   39: se termine à la date :      1879; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   40: se termine à la date :      1880; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   41: se termine à la date :      1881; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   42: se termine à la date :      1882; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   43: se termine à la date :      1883; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   44: se termine à la date :      1884; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   45: se termine à la date :      1885; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   46: se termine à la date :      1886; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   47: se termine à la date :      1887; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   48: se termine à la date :      1888; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   49: se termine à la date :      1889; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   50: se termine à la date :      1890; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   51: se termine à la date :      1891; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   52: se termine à la date :      1892; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   53: se termine à la date :      1893; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   54: se termine à la date :      1894; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   55: se termine à la date :      1895; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   56: se termine à la date :      1896; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   57: se termine à la date :      1897; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   58: se termine à la date :      1898; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   59: se termine à la date :      1899; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   60: se termine à la date :      1900; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   61: se termine à la date :      1901; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   62: se termine à la date :      1902; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   63: se termine à la date :      1903; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   64: se termine à la date :      1904; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   65: se termine à la date :      1905; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   66: se termine à la date :      1906; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   67: se termine à la date :      1907; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   68: se termine à la date :      1908; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   69: se termine à la date :      1909; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   70: se termine à la date :      1910; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   71: se termine à la date :      1911; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   72: se termine à la date :      1912; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   73: se termine à la date :      1913; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   74: se termine à la date :      1914; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   75: se termine à la date :      1915; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   76: se termine à la date :      1916; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   77: se termine à la date :      1917; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   78: se termine à la date :      1918; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   79: se termine à la date :      1919; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   80: se termine à la date :      1920; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   81: se termine à la date :      1921; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   82: se termine à la date :      1922; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   83: se termine à la date :      1923; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   84: se termine à la date :      1924; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   85: se termine à la date :      1925; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   86: se termine à la date :      1926; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   87: se termine à la date :      1927; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   88: se termine à la date :      1928; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   89: se termine à la date :      1929; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   90: se termine à la date :      1930; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   91: se termine à la date :      1931; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   92: se termine à la date :      1932; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   93: se termine à la date :      1933; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   94: se termine à la date :      1934; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   95: se termine à la date :      1935; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /*****/***** Fin de ce pas
+ *** Le pas :   96: se termine à la date :      1936; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   97: se termine à la date :      1937; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   98: se termine à la date :      1938; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :   99: se termine à la date :      1939; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  100: se termine à la date :      1940; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  101: se termine à la date :      1941; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  102: se termine à la date :      1942; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  103: se termine à la date :      1943; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  104: se termine à la date :      1944; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  105: se termine à la date :      1945; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  106: se termine à la date :      1946; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  107: se termine à la date :      1947; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  108: se termine à la date :      1948; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  109: se termine à la date :      1949; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  110: se termine à la date :      1950; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  111: se termine à la date :      1951; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  112: se termine à la date :      1952; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  113: se termine à la date :      1953; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  114: se termine à la date :      1954; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  115: se termine à la date :      1955; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  116: se termine à la date :      1956; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  117: se termine à la date :      1957; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  118: se termine à la date :      1958; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  119: se termine à la date :      1959; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  120: se termine à la date :      1960; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  121: se termine à la date :      1961; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  122: se termine à la date :      1962; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  123: se termine à la date :      1963; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  124: se termine à la date :      1964; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  125: se termine à la date :      1965; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  126: se termine à la date :      1966; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  127: se termine à la date :      1967; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  128: se termine à la date :      1968; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  129: se termine à la date :      1969; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  130: se termine à la date :      1970; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /VITESSE/EDITION         I= 1 [C=       ;L=       ;P=       ;Gig=  ]
+  /*****/***** Fin de ce pas
+ *** Le pas :  131: se termine à la date :      1971; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  132: se termine à la date :      1972; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  133: se termine à la date :      1973; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  134: se termine à la date :      1974; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  135: se termine à la date :      1975; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  136: se termine à la date :      1976; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  137: se termine à la date :      1977; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  138: se termine à la date :      1978; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  139: se termine à la date :      1979; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  140: se termine à la date :      1980; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  141: se termine à la date :      1981; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  142: se termine à la date :      1982; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  143: se termine à la date :      1983; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  144: se termine à la date :      1984; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  145: se termine à la date :      1985; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  146: se termine à la date :      1986; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  147: se termine à la date :      1987; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  148: se termine à la date :      1988; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  149: se termine à la date :      1989; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  150: se termine à la date :      1990; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  151: se termine à la date :      1991; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  152: se termine à la date :      1992; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  153: se termine à la date :      1993; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  154: se termine à la date :      1994; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  155: se termine à la date :      1995; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /VITESSE/EDITION         I= 1 [C=       ;L=       ;P=       ;Gig=  ]
+  /*****/***** Fin de ce pas
+ *** Le pas :  156: se termine à la date :      1996; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  157: se termine à la date :      1997; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  158: se termine à la date :      1998; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  159: se termine à la date :      1999; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  160: se termine à la date :      2000; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  161: se termine à la date :      2001; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  162: se termine à la date :      2002; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  163: se termine à la date :      2003; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  164: se termine à la date :      2004; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  165: se termine à la date :      2005; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /VITESSE/EDITION         I= 1 [C=       ;L=       ;P=       ;Gig=  ]
+  /*****/***** Fin de ce pas
+ *** Le pas :  166: se termine à la date :      2006; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  167: se termine à la date :      2007; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  168: se termine à la date :      2008; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  169: se termine à la date :      2009; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  170: se termine à la date :      2010; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  171: se termine à la date :      2011; ***
+  /*****/***** Fin de ce pas
+ *** Le pas :  172: se termine à la date :      2012; ***
+  /DEBIT/EDITION           *= 1;V= 1;L= 0;S= 1;Z= 0;
+  /CHARGE/EDITION          I= 1;
+  /%SATURAT/EDITION        I= 1;
+  /VITESSE/EDITION         I= 1 [C=       ;L=       ;P=       ;Gig=  ]
+  /*****/***** Fin de ce pas
+ ***        :     : Fin de la simulation :            ; ***

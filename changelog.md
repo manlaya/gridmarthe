@@ -1,6 +1,22 @@
 # gridmarthe changelog
 
-## Unreleased
+## [Unreleased]
+
+## Added
+
+- grid creation (from xy bounds or shape)
+- ugrid export for GIS visualization
+
+## Changed
+- dates argument in `gridmarthe.load_marthe_grid` is renamed `times` to be
+consistent with `time` dimension
+
+## Fixed
+- read int/float in times file (pastp)
+- compute geometry with other variable names
+
+
+## [0.4.0] - 2026-05-27
 
 ### Added
 
@@ -11,6 +27,7 @@
 
 ### Changed
 
+* change: drop support for python 3.10. Minimal requirement is now python 3.11
 * change: default to `varname=None` when writing a marthe grid file (and guess first non dim variable)
 * change: use integer as default dummy time dimension for parameters grid, instead of '1850-01-01' fake date.
 * refact: code refactoring/reorganization with new fortran subroutines

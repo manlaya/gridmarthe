@@ -70,7 +70,7 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     Returns
     -------
     pd.DataFrame
-        Dataframe with columns timestep, date
+        Dataframe with columns step, time
     """
     # reading file as raw df - not str ; faster with pandas func
     pastp = pd.read_csv(
@@ -85,31 +85,49 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
 
     # First, get steady state time
     idx_0  = pastp.loc[pastp.str.contains(r' \*\*\* D.*but de la simulation.*', regex=True)].index.values[0]
-    date_0 = re.findall(r'[0-9]+', pastp.iloc[idx_0] )
+
+    _match = re.search(
+        r':\s*(?P<time>\d+\.?\d+|\d{2}/\d{2}/\d{4}( \d{2}:\d{2})?)\s*;',
+        pastp.iloc[idx_0]
+    )
+    if _match:
+        date_0 = _match.group(1)
+    else:
+        raise ValueError("No date to parse in pastp file.")
+
+    _is_date = False
+    if re.match(r'(\d{2}/\d{2}/\d{4})( \d{2}:\d{2})?', date_0):
+        _is_date = True
+
+    if _is_date:
+        dt = datetime.strptime(date_0, '%d/%m/%Y')
+    else:
+        dt = float(date_0) if re.match(r'\d+\.\d+', date_0) else int(date_0)
 
     # convert as DF
-    timesteps = pd.DataFrame([{
-        'timestep': 0,
-        'date': datetime(int(date_0[2]), int(date_0[1]), int(date_0[0]) )
+    _steadystep = pd.DataFrame([{
+        'step': 0,
+        'time': dt
     }])
 
     # Then, get all ending times for transient state
     idx  = pastp.loc[pastp.str.contains(r'^ \*\*\* Le pas.*\d+: se termine.*', regex=True)]
-    # extract dates from strings
-    dates= pd.DataFrame(
-        idx.str.findall(r'[0-9]+').to_list(),
-        columns=['timestep', 'day', 'month', 'year'],
-        #dtype={'timestep':int, 'day':int, 'month':int, 'year':int}
-    )
+    # extract times from strings
+    times = pd.DataFrame(idx.str.findall(r'[0-9]+').to_list())
 
     # assign dtype
-    dates['timestep'] = pd.to_numeric(dates['timestep'])
-
     # convert data as datetime object
-    dates['date'] = pd.to_datetime(dates[['day', 'month', 'year']])
-    dates = dates.drop(['month','year', 'day'], axis=1)
+    if _is_date:
+        times.columns = ['step', 'day', 'month', 'year']
+        times['time'] = pd.to_datetime(times[['day', 'month', 'year']])
+        times = times.drop(['month','year', 'day'], axis=1)
+    else:
+        times.columns = ['step', 'time']
+        times['time'] = pd.to_numeric(times['time'])
 
-    return pd.concat([timesteps, dates], axis=0)
+    times['step'] = pd.to_numeric(times['step'])
+
+    return pd.concat([_steadystep, times], axis=0)
 
 
 def dropna(ds, varname: str, nanval: Union[list, float]):

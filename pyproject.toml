@@ -113,7 +113,7 @@ archs = ["arm64"]
 
 
 [tool.pytest.ini_options]
-addopts = "-v --cov=gridmarthe tests/"  # -s
+addopts = "-v --cov=gridmarthe"  # -s
 testpaths = [
     "tests",
 ]

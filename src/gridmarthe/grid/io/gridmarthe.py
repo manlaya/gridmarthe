@@ -88,11 +88,12 @@ def get_dims_from_attrs(ds):
 
 @deprecated_alias(nanval='nan_value')
 @deprecated_alias(keepligcol='add_col_row')
+@deprecated_alias(dates='times')
 def load_marthe_grid(
     filename: str,
     varname: Union[str, None] = None,
     fpastp: Union[str, None] = None,
-    dates=None,
+    times=None,
     drop_nan: bool = False,
     nan_value: Union[int, float, list, None] = None,
     xyfactor: Union[int, float] = 1.,
@@ -156,13 +157,13 @@ def load_marthe_grid(
         - If wrong variable name is passed, empty data will be returned.
 
     fpastp: str, optional
-        A pastp file to read for dates
+        A pastp file to read for times
 
-    dates: sequence, optional
+    times: sequence, optional
         Can be a pd.date_range, pd.Series, pd.DatetimeIndex, np.array or list of
         datetime/np.datetime objects.
-        If no dates (or no fpastp) is provided, a fake sequence of dates from
-        1850 to 1900 will be used for xarray object
+        If no times (or no fpastp) is provided, a fake sequence of int will be
+        used.
 
     drop_nan: bool, optional
         Drop nan values (corresponding to nan_value) in xarray object to return.
@@ -279,7 +280,7 @@ def load_marthe_grid(
         arrays = []
         for var in varname:
             arrays.append(load_marthe_grid(
-                filename, var, fpastp, dates, nan_value, drop_nan, xyfactor,
+                filename, var, fpastp, times, nan_value, drop_nan, xyfactor,
                 shallow_only, add_col_row, add_id_grid, title, var_attrs, epsg,
                 full_3d, drop_time, model_attrs, engine, verbose
             ))
@@ -361,31 +362,31 @@ def load_marthe_grid(
         dic_data['z'] = ("zone", zlus, _assign_z_attrs(full_3d)) # add lay
 
     if fpastp is not None:
-        # add dates from a pastp file, case of non-uniform timesteps
+        # add times from a pastp file, case of non-uniform timesteps
         # or edition not set every timestep
         timesteps = read_dates_from_pastp(fpastp)
-        dates = timesteps.loc[timesteps['timestep'].isin(isteps), 'date'].values
-        dates = pd.DatetimeIndex(dates) # only for frequency
-    elif dates is None:
+        times = timesteps.loc[timesteps['step'].isin(isteps), 'time'].values
+        times = pd.DatetimeIndex(times) # only for frequency
+    elif times is None:
         if verbose:
             warnings.warn(
-                'Warning: No dates or fpastp provided, using default (fake) dates'
+                'Warning: No times or fpastp provided, using default (fake) times'
                 'to constructed xarray object.',
                 category=UserWarning,
                 stacklevel=1
             )
         # dates = pd.date_range('1850', '1900', len(isteps))  // old v_<0.4
-        dates = np.arange(len(isteps))  # use integer for dummy time
+        times = np.arange(len(isteps))  # use integer for dummy time
 
     # --- Create xarray.Dataset object
     ds = xr.Dataset(
         data_vars=dic_data,
         coords={
-            'time': dates,
+            'time': times,
             'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32)
         },
         attrs={
-            **_parse_global_attrs(title, dims, xyfactor, dates, is_nested, dxlus, dylus, xcols, yligs, epsg),
+            **_parse_global_attrs(title, dims, xyfactor, times, is_nested, dxlus, dylus, xcols, yligs, epsg),
             **model_attrs
         }
     )
