@@ -46,7 +46,10 @@ def _get_mask_zone(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
 def get_active_mask(
     ds, varname: str='permeab',
     nanval: list=[-9999., 0.],
-    as_array=False, only_mask=False, shp_file=None
+    as_array=False,
+    only_mask=False,
+    shp_file=None,
+    epsg=27572
 ):
     """ Get the mask of active domain from hydraulic conductivity variable
 
@@ -78,6 +81,9 @@ def get_active_mask(
     shp_file: str, optional.
         if set (and not `as_array`), used to stored result in a file.
 
+    epsg: int, optional
+        if shp_file, use epsg to set projection.
+
     Returns
     -------
     xr.Dataset with ibound field, or gpd.GeoDataFrame of active domain if `as_array`
@@ -89,7 +95,7 @@ def get_active_mask(
     ds_masked['ibound'] = ('zone', np.where(np.isin(ds.zone.data, mask), 1, 0))
     if not as_array:
         ds_masked = ds_masked.sel(zone=mask)
-        gdf  = to_geodataframe(ds_masked)
+        gdf  = to_geodataframe(ds_masked, epsg=epsg)
         gdf  = gdf.dissolve()
         if shp_file is not None:
             gdf.to_file(shp_file)
@@ -113,7 +119,7 @@ def _get_true_topo(topo, key='h_topogr'):
     return ds
 
 
-def _get_upper_alt(topo, hsubs):
+def _get_upper_alt(topo, hsubs, hsubs_name='h_substrat', topo_name='h_topogr'):
     """ Compute upper altitude of cells by layer
     Topo should contains the same values in all layers, see :py_func:`_get_true_topo`
 
@@ -134,19 +140,19 @@ def _get_upper_alt(topo, hsubs):
     df = df.sort_values(by=['x', 'y', 'z']).copy()  # assure data are sort in this way
     # set nans for topo and hsubs
     # this is constant in Marthe / should not be changed by user
-    for x in ['h_substrat', 'h_topogr']:
+    for x in [hsubs_name, topo_name]:
         df[x] = df[x].replace(9999., np.nan)  # avoid doing this on full df, zone might be impacted
 
     # Compute z top of layers
-    df['h_topogr'] = df.groupby(['x', 'y'])['h_topogr'].transform('first')  # topo is always first of group
-    df['tmp']      = df.groupby(['x', 'y'])['h_substrat'].ffill()  # ffill z down for each group
+    df[topo_name] = df.groupby(['x', 'y'])[topo_name].transform('first')  # topo is always first of group
+    df['tmp']      = df.groupby(['x', 'y'])[hsubs_name].ffill()  # ffill z down for each group
     df['h_upper']  = df.groupby(['x', 'y'])['tmp'].shift(1)  # then shift to initiate z top
     # For the first layer (or if h_upper is NaN but h_substrat is valid), then h_topogr is z upper (first layer)
-    mask = (df['h_upper'].isna()) & (df['h_substrat'].notna())
-    df.loc[mask, 'h_upper'] = df.loc[mask, 'h_topogr']
+    mask = (df['h_upper'].isna()) & (df[hsubs_name].notna())
+    df.loc[mask, 'h_upper'] = df.loc[mask, topo_name]
 
     # # switch back to xarray backend
-    ds = df.set_index(_dims)[['h_topogr', 'h_substrat', 'h_upper']].to_xarray()
+    ds = df.set_index(_dims)[[topo_name, hsubs_name, 'h_upper']].to_xarray()
     return ds
 
 
@@ -163,7 +169,7 @@ def _get_depth(topo, h_upper):
     return topo - h_upper
 
 
-def compute_geometry(topo, hsubs, mask=None):
+def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varname='h_substrat'):
     """ Compute geometry attributes of Marthe domain
 
     Parameters
@@ -179,28 +185,34 @@ def compute_geometry(topo, hsubs, mask=None):
     -------
     xr.Dataset
         A new dataset with layer, depth, thickness, upper/lower altitude.
+
+    Notes
+    -----
+    - The time dimension is dropped during process
     """
 
     # compute elements of geometry
-    xtopo = _get_true_topo(topo)  # map topo values to all layers
+    xtopo = _get_true_topo(topo, key=topo_varname)  # map topo values to all layers
     xhsubs = hsubs.copy()
 
     if mask is not None:
         xtopo  = xtopo.sel(zone=mask)
         xhsubs = xhsubs.sel(zone=mask)
 
-    tmp   = _get_upper_alt(xtopo, xhsubs)
-    thick = _get_thickness(tmp['h_upper'].data, tmp['h_substrat'].data)
-    depth = _get_depth(tmp['h_topogr'].data, tmp['h_upper'].data)
+    tmp   = _get_upper_alt(xtopo, xhsubs, subs_varname, topo_varname)
+    thick = _get_thickness(tmp['h_upper'].data, tmp[subs_varname].data)
+    depth = _get_depth(tmp[topo_varname].data, tmp['h_upper'].data)
 
     # put values in xr.Dataset
     # ds = xr.combine_by_coords([ds, tmp])
     ds = xtopo.copy()
     dims = tuple(xtopo.dims)  # ('time', 'zone') in most cases, only 'zone' if no time
-    ds['z_lower']    = (dims, tmp['h_substrat'].data)
+    ds['z_lower']    = (dims, tmp[subs_varname].data)
     ds['z_upper']    = (dims, tmp['h_upper'].data)
     ds['thickness']  = (dims, thick)
     ds['depth']      = (dims, depth)
+    if 'time' in ds:
+        ds = ds.squeeze('time').drop_vars('time')
     return ds
 
 

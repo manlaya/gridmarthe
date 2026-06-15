@@ -25,7 +25,7 @@ def test_vtk_export():
     assert np.shape(cellnodes) == (len(geom.x), 8), 'Wrong number of cellnodes'
     assert celltype == 'voxel', 'Wrong celltype'
 
-    convert_grid_to_vtk(geom, 'z', time=0, output_tpl='tests/tmp_outputs/vtk_hallue')
+    convert_grid_to_vtk(geom, 'z', output_tpl='tests/tmp_outputs/vtk_hallue')
     print('vtk writer test passed!')
     return
 

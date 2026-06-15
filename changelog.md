@@ -14,6 +14,7 @@ consistent with `time` dimension
 ## Fixed
 - read int/float in times file (pastp)
 - compute geometry with other variable names
+- time dimension in vtk writer
 
 
 ## [0.4.0] - 2026-05-27

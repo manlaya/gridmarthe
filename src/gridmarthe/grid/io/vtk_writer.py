@@ -30,10 +30,12 @@ def _get_vertices_connectivity(geom):
     """
     # extract grid infos
     # nc = np.shape(geom['x'].data)[-1]  # here we have x (or y) for every center cells
+    if 'time' in geom and np.size(geom['time']) <= 1:
+        geom = geom.copy().squeeze('time').drop_vars('time')
     dx = geom['dx'].data
     dy = geom['dy'].data
-    dz = geom['z_upper'].data[0] - geom['z_lower'].data[0]  # only dt=0, assume no grid variation during time
-    zc = geom['z_upper'].data[0] - dz/2
+    dz = geom['z_upper'].data - geom['z_lower'].data
+    zc = geom['z_upper'].data - dz/2
     cc = np.stack((geom['x'].data, geom['y'].data, zc), axis=-1)  # center cells array
 
     # cell nodes (8 nodes per cell)
