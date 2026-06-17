@@ -62,6 +62,7 @@ def parse_args():
     parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
     parser.add_argument('--varname' , '-n', type=str, default=None, help='Variable Name (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
     parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension, ie reduced horizontal grid') #choices=('True','False'), dest='monnomdevariable'
+    parser.add_argument('--ugrid'   , '-u', action="store_const", const=True, default=False, help='Store grid with UGRID convention, for QGIS/MDAL compatibility. Default is False.') #choices=('True','False'), dest='monnomdevariable'
     parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
     parser.add_argument('--dump'    , '-H', action="store_const", const=True, default=False, help='Dump variables names, like ncdump -h FILE.')
     parser.add_argument('--attrs'   , '-a', type=str, default=None, help='Add global attributes. Comma separated for multiple attrs, = is the separator for key, value. Example: `-a "references=RP-XXXXX-FR,toto=tata"`')
@@ -129,6 +130,10 @@ def main():
             ds['dy'].data *= args.xyfactor
             ds.attrs['scale_factor'] = args.xyfactor
 
+    if args.ugrid:
+        ds = gm.create_ugrid(ds, args.varname)
+        args.as2d = False  # force false here
+
     if args.as2d:
         ds = gm.assign_coords(ds)
         # ds = ds.isel(Y=slice(None, None, -1))  # inverse Y-axis, eg for QGIS view
@@ -140,10 +145,13 @@ def main():
         _attrs = {k.strip(): v.strip() for k, v in _attrs}
         ds.attrs = {**ds.attrs, **_attrs}
 
-    encode = {
-        x: {'zlib': True, 'complevel': 6} for x in ds
-    }
-    ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
+    if not args.ugrid:
+        encode = {
+            x: {'zlib': True, 'complevel': 6} for x in ds
+        }
+        ds.to_netcdf(args.output, engine='h5netcdf', encoding=encode)
+    else:
+        ds.to_netcdf(args.output, engine='netcdf4')  # bug for ugrid wrote with h5 in qgis
     return 0
 
 
@@ -155,4 +163,3 @@ if __name__ == "__main__":
     """
     status = main()
     sys.exit(status)
-

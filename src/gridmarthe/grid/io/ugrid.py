@@ -43,11 +43,24 @@ def _create_faces(ds):
 def _create_ugrid_dataset(values, varname, xc, yc, nodes, faces, times, layers=None, **attrs):
     # help: https://ugrid-conventions.github.io/ugrid-conventions/#3d-layered-mesh-topology
     # https://ugrid-conventions.github.io/ugrid-conventions/#data-defined-on-unstructured-meshes
+    # https://ugrid-conventions.github.io/ugrid-conventions/#fully-3d-unstructured-ie-non-layered-mesh-topology
+    # TODO : epxlore the volume coords, volume_connectivity => might be a better solution
     data_dims = ["time", "n_faces"]
 
+    # comment this section as time attrs already written by xarray/netcdf4
+    # if datetime64 dtype
+    # time_attrs = {}
+    # if isinstance(times[0], np.datetime64):
+    #     init_time = str(times[0]).split('.')[0]
+    #     time_attrs = {
+    #         'units' : "days since {}".format(init_time),
+    #         'calendar' : "proleptic_gregorian"
+    #     }
+
     if layers is not None:
-        # future:
-        # nlay = len(np.unique(layers))
+        # TODO: use this in mulitlayered grids instead of adding a variable for
+        # each grids.
+        nlay = len(np.unique(layers))
         data_dims.insert(1, "layer")
         z_var = {
             "layer": (["layer"], layers, {
@@ -83,7 +96,11 @@ def _create_ugrid_dataset(values, varname, xc, yc, nodes, faces, times, layers=N
             **z_var
         },
         coords={
-            "time": times.astype(np.float64),
+            # "time": ("time", times.astype(np.float64), time_attrs),
+            # // edit, remove float64 conversion: take advantage of time writing
+            # with xarray/netcdf4. Keep this for memory as it leads to issue
+            # for visualization in QGIS.
+            "time": ("time", times),
             "node_x": (("n_nodes",), nodes[:, 0].astype(np.float32), {
                 "standard_name": "projection_x_coordinate",
                 "units": "m"
@@ -160,7 +177,6 @@ def create_ugrid(ds, varname=None):
 
     # if dataset has a z dimension, set it as dim to make a 3D-layered mesh
     if 'z' in ds:
-        # future:
         ds = (
             ds.rename({'z': 'layer'})
             .set_coords('layer')
@@ -168,17 +184,19 @@ def create_ugrid(ds, varname=None):
             .unstack('zone2')
         )
         layers = ds.layer.values
-        x = np.nanmean(ds.x.values,axis=0)  # aggregate to 2D
-        y = np.nanmean(ds.y.values,axis=0)  # aggregate to 2D
-        dx = np.nanmean(ds.dx.values,axis=0)  # aggregate to 2D
-        dy = np.nanmean(ds.dy.values,axis=0)  # aggregate to 2D
+        x = np.nanmean(ds.x.values, axis=0)    # aggregate to 2D
+        y = np.nanmean(ds.y.values, axis=0)
+        dx = np.nanmean(ds.dx.values, axis=0)
+        dy = np.nanmean(ds.dy.values, axis=0)
         ds['x'] = ('zone', x)
         ds['y'] = ('zone', y)
         ds['dx'] = ('zone', dx)
         ds['dy'] = ('zone', dy)
 
         # recursive call with new variable for each layer
-        # TODO find a better way of integrating 2D meshed layered data, with compat with QGIS/MDAL
+        # TODO find a better way of integrating 2D meshed layered data,
+        # Avoid loop and add a 3D array (time, layer, faces) ; find a
+        # a way to make it work with QGIS/MDAL
         res = []
         for z in layers:
             tmp = ds.sel(layer=z)

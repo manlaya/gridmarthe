@@ -150,7 +150,7 @@ COOR_ATTRS = {
         'units': '-',
         'axis': 'Z',
         'positive': 'down',
-        'standard_name': 'depth',
+        'standard_name': 'layer',
         'long_name': 'aquifer_layer'
     }
 }
