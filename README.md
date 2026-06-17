@@ -32,10 +32,6 @@ This means that the spatial domain is flatten in grid, and each point is associa
 with a index, a x coordinate, a y coordinate, eventually a z coordinate (number of layer
 in most cases), and dx, dy values.
 
-Still, as Marthe meshes are always parallelepiped, the array does *not* necessarily follow the
-[ugrid convention](https://ugrid-conventions.github.io/ugrid-conventions/).
-This may be an evolution for future version if required.
-
 The `x`, and `y` coordinates are the center of cell. `dx`, `dy` are the dimensions of the cell.
 
 
