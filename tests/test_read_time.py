@@ -36,3 +36,4 @@ def test_read_times_int_fmt():
 if __name__ == "__main__":
     test_read_times()
     test_read_times_messy_debug()
+    test_read_times_int_fmt()

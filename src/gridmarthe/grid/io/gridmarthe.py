@@ -366,7 +366,8 @@ def load_marthe_grid(
         # or edition not set every timestep
         timesteps = read_dates_from_pastp(fpastp)
         times = timesteps.loc[timesteps['step'].isin(isteps), 'time'].values
-        times = pd.DatetimeIndex(times) # only for frequency
+        if np.issubdtype(times.dtype, np.datetime64):
+            times = pd.DatetimeIndex(times)  # only for frequency
     elif times is None:
         if verbose:
             warnings.warn(

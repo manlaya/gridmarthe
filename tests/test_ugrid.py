@@ -50,7 +50,7 @@ def test_ugrid_with_time(write_to_disk=False):
     uds = gm.create_ugrid(ds, varname)
     _check_coords_attrs(ds, uds)
     assert len(uds.time) == 205
-    assert isinstance(uds.time.data[0], np.datetime64)
+    assert np.issubdtype(uds.time.data.dtype, np.datetime64)
     if write_to_disk:
         uds.to_netcdf('tests/nc_ugrid/test-2d-struct-with-time.nc', engine='netcdf4')
 

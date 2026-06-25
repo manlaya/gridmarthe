@@ -114,6 +114,15 @@ def test_load_gm_with_path_object():
     assert ds.zone.size == 927
 
 
+def test_read_grid_times_int_fmt():
+    head = gm.load_marthe_grid(
+        './tests/data/chasim_albien.out',
+        fpastp='./tests/data/albien.pastp',
+        xyfactor=1e3
+    )
+    assert np.allclose(head.time.data, np.array([1840, 1935, 1970, 1995, 2005, 2012]))
+
+
 @pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark not found")
 @pytest.mark.benchmark
 def test_perf_read_grid(benchmark):
@@ -132,6 +141,7 @@ def run_all():
     test_load_nonexistent_file_raises()
     test_load_invalid_varname_raises()
     test_load_grid_with_time_dimension()
+    test_read_grid_times_int_fmt()
     print("=============================")
     print("gridmarthe reader test passed")
     return
