@@ -50,11 +50,18 @@ def _find_nearest(array, value):
 
 
 def _nearest_node(node, nodes):
-    """ Get nearest value in an array of tuple, i.e closest euclidiant distance of XY in an array of XYs"""
+    """ Get nearest value in an array of tuple, i.e closest euclidiant distance
+    of XY in an array of XYs
+
+    Returns:
+        index of the nearest node
+        distance to the nearest node
+    """
     # https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
     nodes = np.asarray(nodes)
     dist_2 = np.sum((nodes - node)**2, axis=1)
-    return np.argmin(dist_2)
+    idx_nearest = np.argmin(dist_2)
+    return idx_nearest, np.sqrt(idx_nearest)
 
 
 def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
@@ -324,7 +331,7 @@ def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
     """
     # create zone index
     coords = [d for d in coords if d in ds.coords]  # make sure to drop coords that are not present
-    dims = np.prod([len(ds[d]) for d in coords])  # create new zone dim
+    dims = np.prod([np.size(ds[d]) for d in coords])  # create new zone dim
     # dims = np.prod(list(ds.sizes.values()))  # ok -eq
     zone = np.arange(1, dims + 1)
 
@@ -352,3 +359,130 @@ def get_default_variable(ds):
     """
     _vars = [x for x in ds if x not in ['z', 'y', 'x', 'dx', 'dy', 'zone', 'time']]
     return _vars[0]
+
+
+def _get_nearest_xy(ds, x, y):
+    """ Get the nearest (x, y) point in a 1D flattened xarray Dataset
+
+    Returns
+    -------
+    nearest_xy: array of two floats
+        The nearest (x, y) point in the dataset
+    nearest_idx: int
+        Index of the nearest point in the dataset
+    """
+    nearest, dist = _nearest_node(
+        np.array([(x, y)]),
+        np.array(list(zip(ds['x'].data, ds['y'].data)))
+    )
+    xy_arr = np.array([ds['x'].data, ds['y'].data]).T
+    _nearest_xy = xy_arr[nearest]
+    return _nearest_xy, nearest
+
+
+def sel_xy(dataset, x=None, y=None, z=None, method=None, tolerance=1e3, return_mask=False):
+    """ Filter a 1D flattened xarray Dataset by spatial (x, y) and/or z ranges.
+
+    When grid are stored as 1D vector for spatial dimension, `xarray.Dataset.sel`
+    method cannont be used on `x` and `y` coordinates. This function is a workaround
+    to select a point in the grid when coordinates ('x', 'y') are variables.
+
+    Parameters
+    ----------
+    dataset : xarray.Dataset
+        The input dataset with 1D 'zone' dimension and variables 'x', 'y', 'z'.
+    x : float or tuple, optional
+        x-coordinate: float for point selection, (xmin, xmax) for range.
+    y : float or tuple, optional
+        y-coordinate: float for point selection, (ymin, ymax) for range.
+    z : int or tuple, optional
+        z-level: int for exact, (zmin, zmax) for range.
+    method : str, optional
+        For point selection (x,y), use 'nearest' to find closest point.
+        Requires `tolerance` (max distance).
+    tolerance : float, optional
+        Max distance when using method='nearest' (in same units as x/y).
+        Default is 1e3 (meters).
+    return_mask: bool, optional
+        Option to return mask array
+
+    Returns
+    -------
+    xarray.Dataset
+        Filtered dataset with matching indices, still 1D.
+
+    Example
+    -------
+    Select by spatial box
+    >>> subset = sel_xy(dataset, x=(4.5e5, 5.0e5), y=(2.5e6, 2.6e6))
+    Select by z level
+    >>> subset = sel_xy(dataset, z=(1, 3))
+    Select by point (nearest)
+    >>> subset = sel_xy(dataset, x=4.35e5, y=2.58e6, method='nearest', tolerance=1e3)
+    Combine x, y, z
+    >>> subset = sel_xy(dataset, x=(4.5e5, 5.0e5), y=(2.5e6, 2.6e6), z=2)
+    """
+    mask = np.ones(len(dataset.zone), dtype=bool)
+
+    # Handle X and Y point selection with method='nearest'
+    # if (x is not None and isinstance(x, (int, float))) or (y is not None and isinstance(y, (int, float))):
+
+    if method == 'nearest':
+        if tolerance is None:
+            raise ValueError("tolerance is required when method='nearest'")
+
+        assert x is not None or y is not None, "At least one of x or y must be provided"
+
+        x_vals = dataset['x'].values if x is not None else None
+        y_vals = dataset['y'].values if y is not None else None
+
+        # Compute distances
+        dist_sq = 0.0
+        if x is not None:
+            dist_sq += (x_vals - x)**2
+        if y is not None:
+            dist_sq += (y_vals - y)**2
+
+        # Find the closest point
+        idx_min = np.argmin(dist_sq)
+        dist_min = np.sqrt(dist_sq[idx_min])
+
+        # Only keep it if within tolerance
+        if dist_min <= tolerance:
+            new_mask = np.zeros_like(mask)
+            new_mask[idx_min] = True
+            mask &= new_mask
+        else:
+            mask[:] = False  # No point within tolerance
+    else:
+        # Look for exact match
+        if isinstance(x, (int, (float, np.floating))):
+            mask &= np.isclose(dataset['x'].values, x)
+        if isinstance(y, (int, (float, np.floating))):
+            mask &= np.isclose(dataset['y'].values, y)
+
+        # Range or no selection
+        if isinstance(x, (tuple, list)) and len(x) == 2:
+            xmin, xmax = x
+            mask &= (dataset['x'].values >= xmin) & (dataset['x'].values <= xmax)
+        if isinstance(y, (tuple, list)) and len(y) == 2:
+            ymin, ymax = y
+            mask &= (dataset['y'].values >= ymin) & (dataset['y'].values <= ymax)
+
+    # Handle Z selection
+    if z is not None:
+        z_vals = dataset['z'].values
+        if isinstance(z, (int, np.integer)):
+            mask &= (z_vals == z)
+        elif isinstance(z, (tuple, list)) and len(z) == 2:
+            zmin, zmax = z
+            mask &= (z_vals >= zmin) & (z_vals <= zmax)
+        else:
+            raise ValueError("z must be an int or a 2-tuple (min, max)")
+
+    # Apply mask
+    filtered_dataset = dataset.isel(zone=mask)
+    if not return_mask:
+       return filtered_dataset
+    else:
+        return filtered_dataset, mask
