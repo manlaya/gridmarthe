@@ -16,8 +16,8 @@ def test_compute_geometry():
 
     mask = gm.get_active_mask(permh, as_array=True, only_mask=True)['zone'].data
 
-    # geom = gm.compute_geometry(topo, hsubs, mask)  # ok
     geom = gm.compute_geometry(topo, hsubs)  # ok
+    geom_mask = gm.compute_geometry(topo, hsubs, mask)  # ok
 
     # add tests
     # pour ça il faut un vrai topo et hsubs, (réalisé avec Winmarthe)
@@ -34,6 +34,10 @@ def test_compute_geometry():
         geom['thickness'].sel(zone=mask),
         true_thick['trava'].sel(zone=mask)
     ), "thickness does not match"
+
+    assert np.isin(geom_mask.zone.data, mask).all(), "mask does not match"
+    assert np.allclose(geom_mask['depth'].data, true_depth['trava'].sel(zone=mask))
+    assert np.allclose(geom_mask['thickness'].data, true_thick['trava'].sel(zone=mask))
 
     print("test_compute_geometry passed")
 
