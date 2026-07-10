@@ -29,7 +29,7 @@ import numpy as np
 import xarray as xr
 
 from .gis import to_geodataframe
-from ..grid_utils import _nearest_node, subset
+from ..grid_utils import _get_nearest_xy, subset, sel_by_coords
 
 
 def _get_mask_zone(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
@@ -145,8 +145,8 @@ def _get_upper_alt(topo, hsubs, hsubs_name='h_substrat', topo_name='h_topogr'):
 
     # Compute z top of layers
     df[topo_name] = df.groupby(['x', 'y'])[topo_name].transform('first')  # topo is always first of group
-    df['tmp']      = df.groupby(['x', 'y'])[hsubs_name].ffill()  # ffill z down for each group
-    df['h_upper']  = df.groupby(['x', 'y'])['tmp'].shift(1)  # then shift to initiate z top
+    df['tmp']     = df.groupby(['x', 'y'])[hsubs_name].ffill()  # ffill z down for each group
+    df['h_upper'] = df.groupby(['x', 'y'])['tmp'].shift(1)  # then shift to initiate z top
     # For the first layer (or if h_upper is NaN but h_substrat is valid), then h_topogr is z upper (first layer)
     mask = (df['h_upper'].isna()) & (df[hsubs_name].notna())
     df.loc[mask, 'h_upper'] = df.loc[mask, topo_name]
@@ -178,8 +178,18 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
         Topgraphy of the domain (stored in the first layer, in Marthe Conventions).
     hsubs : xr.Dataset
         altitude of all the lower boundary in the domain
-    mask : numpy.array
+    mask : numpy.array, optional
         list of indices (`zone`) to keep, if None (default) not used.
+        It is recommended to use this mask to avoid computing on invalid cells.
+        For example, values may be defined in masked cells of the model domain,
+        which will lead to incorrect results. Using the active domain as mask
+        is a good practice (See example)`.
+    topo_varname: str, optional
+        name of the variable containing the topography in the corresponding dataset,
+        allow custom name for marthe backward compatibility
+    subs_varname: str, optional
+        name of the variable containing the substratum in the corresponding dataset,
+        allow custom name for marthe backward compatibility
 
     Returns
     -------
@@ -188,7 +198,17 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
 
     Notes
     -----
+    - If mask is not provided, the input datasets should be sliced on valid
+      cells before calling this function for accurate results;
     - The time dimension is dropped during process
+
+    Examples
+    --------
+    >>> import gridmarthe as gm
+    >>> permh = gm.load_marthe_grid('data/craie_npc.permh', drop_nan=True)
+    >>> topo  = gm.load_marthe_grid('data/craie_npc.topog', varname='H_TOPOGR')
+    >>> hsub  = gm.load_marthe_grid('data/craie_npc.hsubs', varname='H_SUBSTRAT')
+    >>> geom = gm.compute_geometry(topo, hsub, mask=permh.zone.data)
     """
 
     # compute elements of geometry
@@ -204,7 +224,6 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
     depth = _get_depth(tmp[topo_varname].data, tmp['h_upper'].data)
 
     # put values in xr.Dataset
-    # ds = xr.combine_by_coords([ds, tmp])
     ds = xtopo.copy()
     dims = tuple(xtopo.dims)  # ('time', 'zone') in most cases, only 'zone' if no time
     ds['z_lower']    = (dims, tmp[subs_varname].data)
@@ -232,10 +251,10 @@ def get_surface_layer(ds, aquif_layers=None):
 
     Parameters
     ----------
-        ds: xr.Dataset
-        aquif_layers: sequence (list, tuple, array) of int
-            representing layers to subset ds. Only active domain must
-            be passed to function (ie drop nan first)
+    ds: xr.Dataset
+    aquif_layers: sequence (list, tuple, array) of int
+        representing layers to subset ds. Only active domain must
+        be passed to function (ie drop nan first)
 
     Returns
     -------
@@ -302,20 +321,20 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
     if x is not None:
         assert y is not None, 'if x is provided, y cannot be None'
-        ## mask = ds.sel(x=x, y=y, method='nearest') # possible uniquement si x,y sont des coordonnées/dim
-        nearest = _nearest_node(
-            np.array([(x, y)]),
-            np.array(list(zip(ds_search['x'].data, ds_search['y'].data)))
-        )
-        nearest_zone = ds_search.isel(zone=nearest)
+
+        nearest_xy, nearest_idx = _get_nearest_xy(ds_search, x, y)
 
         # check if xy is in a cell == dx and dy are not greater than grid resolution
+        nearest_zone = ds_search.isel(zone=nearest_idx)
         dx = np.abs(nearest_zone.x.data - x)
         dy = np.abs(nearest_zone.y.data - y)
-        mask = (
-            ds_search['zone'] == nearest_zone.zone if (dx <= nearest_zone.dx.data) &
-            (dy <= nearest_zone.dy.data) else ds_search['zone'].isnull()
-        )
+
+        # get mask of cell(s) (if several layers) matching xy
+        if dx <= nearest_zone.dx.data and dy <= nearest_zone.dy.data:
+            _, mask = sel_by_coords(ds_search, nearest_xy[0], nearest_xy[1], return_mask=True)
+            mask = xr.DataArray(mask, {"zone": ds_search.zone.data})  # as dataarray to use .where()
+        else:
+            mask = ds_search['zone'].isnull()
 
     if i is not None:
         assert j is not None, 'if i is provided, j cannot be None'

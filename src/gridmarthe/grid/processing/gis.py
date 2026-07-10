@@ -25,13 +25,14 @@
 """
 
 
+from typing_extensions import deprecated
 import numpy as np
 
 from pyproj import Transformer
 import geopandas as gpd
 import xarray as xr
 
-from ..grid_utils import assign_coords
+from ..grid_utils import assign_coords, stack_coords
 from .gutils import _polygonize
 
 
@@ -137,6 +138,7 @@ def clip_dataset(ds, gdf, crs=27572, engine='gdf'):
     return clipped_da
 
 
+@deprecated("Use `sel_by_coords` instead")
 def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax=None, ymax=None):
     """ subset DataArray or Dataset on rectangular shape, with gpd.GeoDataFrame or bounds
 
@@ -158,9 +160,10 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
     """
     if gdf is not None:
         # edit, one line with total_bounds attribute instead of bounds
-        # xmin, ymin, xmax, ymax = gdf.bounds.T.values # or .T.to_numpy(), in any case return np.array // total_bounds instead of bounds
+        # xmin, ymin, xmax, ymax = gdf.bounds.T.values
         # xmin, ymin, xmax, ymax = xmin[0], ymin[0], xmax[0], ymax[0]
-        xmin, ymin, xmax, ymax = gdf.total_bounds #gdf.bounds.T.values # or .T.to_numpy(), in any case return np.array // total_bounds instead of bounds
+        xmin, ymin, xmax, ymax = gdf.total_bounds #gdf.bounds.T.values
+        # or .T.to_numpy(), in any case return np.array // total_bounds instead of bounds
     else:
         assert xmin is not None, "When using manual bounds, all must be set"
         assert xmax is not None, "When using manual bounds, all must be set"
@@ -172,8 +175,8 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
 
     # imin, imax = np.where(da[var[0]].values==xmin)[0], np.where(da[var[0]].values==xmax)[0]
     # jmin, jmax = np.where(da[var[1]].values==ymin)[0], np.where(da[var[1]].values==ymax)[0]
-
-    # sub_da = da.isel(i=slice(int(imin), int(imax)+1), j=slice(int(jmax), int(jmin)+1)) # j in reverse order / +1 on imax, jmin because upper is exclude in py slicing
+    # sub_da = da.isel(i=slice(int(imin), int(imax)+1), j=slice(int(jmax), int(jmin)+1))
+    # # j in reverse order / +1 on imax, jmin because upper is exclude in py slicing
 
     return da.where(mask_lon & mask_lat, drop=True)
 
