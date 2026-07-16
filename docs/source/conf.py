@@ -4,7 +4,7 @@
 #
 #    This file is part of gridmarthe.
 #
-#    gridmarthe is a python library to manage grid files for 
+#    gridmarthe is a python library to manage grid files for
 #    MARTHE hydrogeological computer code from French Geological Survey (BRGM).
 #    Copyright (C) 2025  BRGM
 #
@@ -64,6 +64,7 @@ extensions = [
     'sphinx.ext.duration',
     'sphinx.ext.autodoc',           # Core library for html generation from docstrings
     'sphinx.ext.autosummary',       # Create neat summary tables, by importing code. autoapi just parse the code
+    'numpydoc',                     # Support of Numpy docstring, should be load after autodoc (from mpl doc)
     'sphinx.ext.mathjax',
     'sphinx.ext.doctest',
     # 'sphinx.ext.viewcode',        # view source code in doc
@@ -83,6 +84,11 @@ highlight_language = 'python'
 exclude_patterns = []
 todo_include_todos = False  # Do not show TODOs in docs
 
+source_suffix = {
+    '.rst': 'restructuredtext',
+    # '.md': 'markdown',
+    '.ipynb': 'myst-nb',
+}
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -180,6 +186,7 @@ autosummary_template = 'autosummary/module.rst'  # add template to always show d
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
 
 autodoc_member_order = 'bysource'
+autodoc_docstring_signature = True
 #autodoc_default_options = {"members":True}#, "show-inheritance":True}  # could be enought instead of tpl ?
 autodoc_typehints = 'none' # signature, description, none, both
 autoclass_content = 'class'
@@ -224,7 +231,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'numpy' : ('https://numpy.org/doc/stable/', None),
     'pandas': ("https://pandas.pydata.org/docs/", None),
-    # 'xarray': ("https://docs.xarray.dev/", None),
+    'xarray': ('https://docs.xarray.dev/en/stable/', None),
 }
 
 intersphinx_cache_limit = 5

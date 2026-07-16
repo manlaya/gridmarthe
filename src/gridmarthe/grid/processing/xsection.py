@@ -14,7 +14,7 @@ def slice_cross_section(grid, x=None, y=None, agg_along_axis=None):
 
     Parameters
     ----------
-    grid: xr.Dataset
+    grid: xarray.Dataset
         Dataset with geometry infos, x,y as dimensions.
 
     x, y : float, optional
@@ -28,8 +28,8 @@ def slice_cross_section(grid, x=None, y=None, agg_along_axis=None):
     xr.Dataset
         Dataset for cross section transect.
 
-    Example
-    -------
+    Examples
+    --------
     >>> geom = gm.compute_geometry(topo, hsub, mask.zone)
     >>> ds_2d = gm.assign_coords(geom)
     >>> ds_xsection = slice_cross_section(ds_2d, x=6.116e5)

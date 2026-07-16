@@ -15,6 +15,7 @@ help:
 # override clean for bash completion
 clean:
 	rm -rf build/
+	rm -rf source/api/generated/*
 
 .PHONY: help clean Makefile
 

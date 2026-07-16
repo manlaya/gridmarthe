@@ -62,32 +62,33 @@ def get_active_mask(
     Parameters
     ----------
 
-    ds : xr.Dataset
+    ds : xarray.Dataset
 
-    varname: str, optional
+    varname : str, optional
         default is 'permeab'
 
-    nanval: float or list, optional
+    nanval : float or list, optional
         default are 'permeab' nan values : 0, -9999.
 
-    as_array: bool, optional.
+    as_array : bool, optional.
         Option to get result as a xr.Dataset and not geodataframe.
         Default is False.
 
-    only_mask: bool, optional
+    only_mask : bool, optional
         filter `ds` on active mask. Default is False, returns a dataset
         with 'ibound' variable set to 1 (active domain) or 0.
 
-    shp_file: str, optional.
+    shp_file : str, optional.
         if set (and not `as_array`), used to stored result in a file.
 
-    epsg: int, optional
+    epsg : int, optional
         if shp_file, use epsg to set projection.
 
     Returns
     -------
-    xr.Dataset with ibound field, or gpd.GeoDataFrame of active domain if `as_array`
-    is set to False.
+    xr.Dataset
+        Dataset with ibound field, or gpd.GeoDataFrame of active domain if `as_array`
+        is set to False.
     """
 
     mask = _get_mask_zone(ds, varname, nanval)
@@ -113,7 +114,7 @@ def _get_true_topo(topo, key='h_topogr'):
         zdim = 1
     else:
         zdim = len(np.unique(topo.z.data))
-    true_topo = subset(topo, 'z', 1)[key].data  # true topo is only 1st layer
+    true_topo = subset(topo, 1, 'z')[key].data  # true topo is only 1st layer
     true_topo = np.tile(true_topo, zdim)  # set topo for all layers
     ds[key] = (tuple(topo.dims), true_topo)
     return ds
@@ -124,9 +125,6 @@ def _get_upper_alt(topo, hsubs, hsubs_name='h_substrat', topo_name='h_topogr'):
     Topo should contains the same values in all layers, see :py_func:`_get_true_topo`
 
     TODO: make valid version with time (if topo change with times)
-
-    Parameters
-    ----------
 
     Returns
     -------
@@ -174,26 +172,26 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
 
     Parameters
     ----------
-    topo : xr.Dataset
+    topo : xarray.Dataset
         Topgraphy of the domain (stored in the first layer, in Marthe Conventions).
-    hsubs : xr.Dataset
+    hsubs : xarray.Dataset
         altitude of all the lower boundary in the domain
     mask : numpy.array, optional
         list of indices (`zone`) to keep, if None (default) not used.
         It is recommended to use this mask to avoid computing on invalid cells.
         For example, values may be defined in masked cells of the model domain,
         which will lead to incorrect results. Using the active domain as mask
-        is a good practice (See example)`.
-    topo_varname: str, optional
+        is a good practice (See example).
+    topo_varname : str, optional
         name of the variable containing the topography in the corresponding dataset,
         allow custom name for marthe backward compatibility
-    subs_varname: str, optional
+    subs_varname : str, optional
         name of the variable containing the substratum in the corresponding dataset,
         allow custom name for marthe backward compatibility
 
     Returns
     -------
-    xr.Dataset
+    xarray.Dataset
         A new dataset with layer, depth, thickness, upper/lower altitude.
 
     Notes
@@ -251,14 +249,14 @@ def get_surface_layer(ds, aquif_layers=None):
 
     Parameters
     ----------
-    ds: xr.Dataset
-    aquif_layers: sequence (list, tuple, array) of int
+    ds : xarray.Dataset
+    aquif_layers : sequence (list, tuple, array) of int
         representing layers to subset ds. Only active domain must
         be passed to function (ie drop nan first)
 
     Returns
     -------
-        surface_mask: xr.Dataset
+    surface_mask: xarray.Dataset
     """
     ds = ds.copy()
     _dims = tuple(ds.dims)
@@ -279,22 +277,23 @@ def get_surface_layer(ds, aquif_layers=None):
 
 
 def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
-    """ search zone number in marthe grid,
-    based on xy or ij (col, lig)
+    """ Search zone number in marthe grid, based on xy or ij (col, lig)
 
     This function can be used to search zone number from coordinates or indices.
     You must provide either (i,j) or (x,y).
 
-    Note
-    ----
+    Notes
+    -----
 
     - if ds is multilayered, you need to provide the layer you want (z arg., int type)
     - ds should contains dx and dy
-    - ds should not have assigned coords (x and y are variables, zone is the dimension coordinates (with time))
+    - ds should not have assigned coords (x and y are variables, zone is the
+    dimension coordinates (with time))
+
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset with zone, x, y, dx, dy variables.
     i : int, optional
         column index to search zone.
@@ -309,10 +308,10 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
     Returns
     -------
-    zone : xr.Dataset
-        dataset with zone variable, containing the zone number(s) corresponding to the provided coordinates.
-        If no zone is found, an empty dataset is returned.
-        If multiple zones are found, all of them are returned.
+    zone : xarray.Dataset
+        dataset with zone variable, containing the zone number(s) corresponding
+        to the provided coordinates. If no zone is found, an empty dataset is
+        returned. If multiple zones are found, all of them are returned.
     """
     ds_search = ds.copy()
 

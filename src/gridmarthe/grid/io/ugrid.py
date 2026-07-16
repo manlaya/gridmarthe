@@ -146,7 +146,7 @@ def create_ugrid(ds, varname=None):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         A Marthe Dataset as read by gridmarthe
     varname : str, optional
         variable to use in Dataset, by default None (the first non coordinate

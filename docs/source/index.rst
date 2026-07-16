@@ -12,7 +12,7 @@
 
    ..  This file is part of gridmarthe.
 
-   ..  gridmarthe is a python library to manage grid files for 
+   ..  gridmarthe is a python library to manage grid files for
    ..  MARTHE hydrogeological computer code from French Geological Survey (BRGM).
    ..  Copyright (C) 2024  BRGM
 
@@ -42,12 +42,13 @@ gridmarthe
 is a hydrogeological modelling code developped at BRGM, French Geological Survey
 :cite:`2020:thiery_guidelines`.
 
-This library is open-source and released under the GNU General Public License (v3+).
+This library is open-source and released under the `GNU General Public License (v3+)
+<https://spdx.org/licenses/GPL-3.0-or-later.html>`_.
 
 
 .. check :doc:`getting_started/install`. // no extension
 .. with extension autosectionlabel :ref:`leTitreVisé`
-   
+
  ..  to add image => :img-top: _static/index_getting_started.svg
 
 
@@ -55,7 +56,7 @@ This library is open-source and released under the GNU General Public License (v
 
 .. grid:: 1 1 2 2
    :gutter: 2
-   
+
    .. grid-item-card:: Getting started
       :link: getting_started/index
       :link-type: doc
@@ -88,7 +89,7 @@ This library is open-source and released under the GNU General Public License (v
    Getting Started <getting_started/index>
    User guide <user_guide/index>
    API Reference <api/index>
-   Release history <changelog> 
+   Release history <changelog>
    About <references>
 
 .. .. include:: ../../README.md

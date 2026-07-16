@@ -74,7 +74,7 @@ def get_dims_from_attrs(ds):
 
     Parameters
     ----------
-    ds: xr.Dataset
+    ds: xarray.Dataset
         Input dataset, read by :py:func:`load_marthe_grid`
 
     Returns
@@ -124,8 +124,8 @@ def load_marthe_grid(
     as dimension coordinates and drop zone) to get 2-D arrays (or
     3D arrays if multilayer) for every timesteps.
 
-    Note
-    ----
+    Notes
+    -----
 
     A former known issue with some version of Marthe is that field name is
     not written in metadata, as number of nested grids or number of layers., which
@@ -139,7 +139,7 @@ def load_marthe_grid(
 
     Parameters
     ----------
-    filename: str
+    filename : str
         A path to marthegrid file (.permh, .out, etc.)
 
     varname : str, optional
@@ -156,20 +156,20 @@ def load_marthe_grid(
 
         - If wrong variable name is passed, empty data will be returned.
 
-    fpastp: str, optional
+    fpastp : str, optional
         A pastp file to read for times
 
-    times: sequence, optional
+    times : sequence, optional
         Can be a pd.date_range, pd.Series, pd.DatetimeIndex, np.array or list of
         datetime/np.datetime objects.
         If no times (or no fpastp) is provided, a fake sequence of int will be
         used.
 
-    drop_nan: bool, optional
+    drop_nan : bool, optional
         Drop nan values (corresponding to nan_value) in xarray object to return.
         Default is False (keep nan values).
 
-    nan_value: float or list of float, optional
+    nan_value : float or list of float, optional
         A code value for nan values. The default value is inferred from field name.
         E.g. of default nan values:
 
@@ -183,43 +183,43 @@ def load_marthe_grid(
 
         - any other: 9999.
 
-    xyfactor: int or float, optional
+    xyfactor : int or float, optional
         factor to transform X and Y values. e.g.: 1000 to convert km XY to meters.
         Default is 1.
 
-    shallow_only: bool, optional
+    shallow_only : bool, optional
         Boolean to read only the first layer. Default is False.
         Warning: only valid for NON nested grids for now.
 
-    add_col_row: bool, optional
+    add_col_row : bool, optional
         Add columns (col) and rows (row, formerly lig (v<=0.1.3)) index (from 1 to n).
         Default is False.
 
-    add_id_grid: bool, optional
+    add_id_grid : bool, optional
         Add grid id (from 0 to n), useful for nested grids.
         0 is main grid, Default is False
 
-    title: str , optional
+    title : str , optional
         Title for grid attributes. Default is None (not used)
 
-    var_attrs: dict, optional
+    var_attrs : dict, optional
         Dictionnary of attributes to add to variable DataArray.
 
-    epsg: int, optional
+    epsg : int, optional
         EPSG code for projection. Default is 27572 for legacy reasons (Lambert 2 Etendu,
         for France). Used to write CRS information in attributes. Useful for GUI
         (eg visualisation in QGIS).
 
-    full_3d: bool, optional
+    full_3d : bool, optional
         Is z dimension an aquifer layer or real Z axis (in meters for exemple)
         Default is False (z is aquifer layer number)
 
-    drop_time: bool, optional
+    drop_time : bool, optional
         Drop time dimension even if only one timestep is present.
         Default is False. If True and only one timestep, time dimension is removed.
         Useful for parameters grids.
 
-    model_attrs: dict, optional
+    model_attrs : dict, optional
         Dictionnary of attributes to add to Dataset.
         by default, gis attrs are added and can be modified
 
@@ -234,19 +234,19 @@ def load_marthe_grid(
         ...    'references': 'https://doi.org/...'
         ... }
 
-    engine: str, optional
+    engine : str, optional
         Engine to use for returned object. Default is 'xarray', which return
         xarray.Dataset object.
         Another option is 'numpy', which return a list of numpy arrays :
         [zvar, zdates, isteps, zxcol, zylig, zdxlu, zdylu, ztitle, dims]
 
-    verbose: bool, optional
+    verbose : bool, optional
         Print some information about execution in stdout.
         Default is False.
 
     Returns
     -------
-    ds: xr.Dataset
+    ds : xarray.Dataset
         A xarray.Dataset object containing values and attributes read from Marthe
         grid file.
     """
@@ -425,7 +425,7 @@ def load_marthe_grid(
         ):
             nan_value += [-9999.]
 
-        ds = dropna(ds, varname, nan_value)
+        ds = dropna(ds, nan_value, varname)
         # add range zone of active cells. memo: remove tuple to set as dimension
         ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))
 
@@ -439,8 +439,8 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
     (if NaN were dropped for example), before writting marthe grid, where the full
     domain is needed (including non active cells).
 
-    Note
-    ----
+    Notes
+    -----
 
     Join is performed with xy[z] (if xy are present in coords) or zone
     to get zone back in full domain (if dropped, or nan were dropped, etc.).
@@ -451,15 +451,15 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
 
     Parameters
     ----------
-    ds: xr.Dataset
+    ds : xarray.Dataset
 
-    path_to_permh: str
+    path_to_permh : str
         path to the .permh file containing domain
 
-    variable: str
+    variable : str
         variable (ds key) containing data
 
-    fillna: bool (optional)
+    fillna : bool (optional)
         to fillna WITH permh nan value.
         permh nan value are used because it can contain different nan values
         (0 and -9999 for nested grids)
@@ -467,7 +467,8 @@ def reset_geometry(ds, path_to_permh: str, variable='permeab', fillna=False):
 
     Returns
     -------
-        xr.Dataset containing original variables and geometry read from permh file
+    xr.Dataset
+        dataset containing original variables and geometry read from permh file
     """
     da = ds.copy()
     # All values (nan, nested grid margins) should be included in permh dataset.
@@ -546,42 +547,46 @@ def write_marthe_grid(
 
     Parameters
     ----------
-    ds: xr.Dataset
+    ds : xarray.Dataset
         dataset containing data, coordinates (x,y[,z]), dx,dy and dimensions (in attrs).
         Data needs to be a reduced horizontal grid (see :py:func:`stack_coords` if needed).
 
-    fileout: str
+    fileout : str
         filename to write
 
-    varname: str, optional
+    varname : str, optional
         variable name (key) containing values. Default is None and variable will
         be inferred from dataset (first non coordinates/dimension variable name).
 
-    file_permh: str, optional
+    file_permh : str, optional
         path to the permh file corresponding to current Marthe model.
         Needed to recreate full dimension if NaN dropped before.
 
-    nan_value: float, optional
+    nan_value : float, optional
         custom value to fillna, when using a `permh` field to reset geometry
 
-    title: str, optional
+    title : str, optional
         title written in marthe grid file
 
-    dims: list of array, optional
-        list containing array of dimension for every grid (ie len(dims) > 1 if nested grid)
+    dims : list of array, optional
+        list containing array of dimension for every grid (ie len(dims) > 1 if
+        nested grid):
 
         - format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
         eg. `[[354,252,2], [182,156,2]]`
-        - if only main grid : `[[nx,ny,nz]]`
-        - if None (default, dims will be parsed from `ds.attrs['original_dimensions']` which is added
-        when read with :py:func:`gridmarthe.load_marthe_grid`. If not present (lost in some computation for example),
-        please use py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
 
-    force_full_grid: bool, optional
+        - if only main grid : `[[nx,ny,nz]]`
+
+        - if None (default, dims will be parsed from `ds.attrs['original_dimensions']`
+        which is added when read with :py:func:`gridmarthe.load_marthe_grid`.
+        If not present (lost in some computation for example), please use
+        py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
+
+    force_full_grid : bool, optional
         force to write full grid (even if grid is constant). Default is False
         By default, Marthe will write a compact form of grid is constant.
 
-    debug: bool, optional
+    debug : bool, optional
         print debug informations. Default is False
 
     Returns
@@ -609,7 +614,7 @@ def write_marthe_grid(
             # if not permh variable, fill nan with constant values, based on variable
             if nan_value is None:
                 nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.)
-            ds2  = fillna(ds2, varname, nan_value)
+            ds2  = fillna(ds2, nan_value, varname)
 
     if dims is None:
         dims = _get_dims_from_attrs(ds2.attrs.get('original_dimensions'))

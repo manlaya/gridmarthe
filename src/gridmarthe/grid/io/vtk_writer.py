@@ -19,7 +19,7 @@ def _get_vertices_connectivity(geom):
 
     Parameters
     ----------
-    geom : xr.Dataset
+    geom : xarray.Dataset
         The grid to convert. Needs to have all geometry informations/variables.
         See :py:func:`gridmarthe.compute_geometry`
 
@@ -63,11 +63,11 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
 
     Parameters
     ----------
-    grid : gridmarthe.GridMarthe
+    grid : xarray.Dataset
         The grid to convert, with variable to export `varname`
         In addition, it needs to have all geometry informations/variables.
-        See :py:func:`gridmarthe.compute_geometry`
-    varname: str
+        See :py:func:`gridmarthe.grid.processing.geometry.compute_geometry`
+    varname : str
        name of the variable to export
     time : str or datetime, optional
         time to export, by default None (all times)
@@ -81,8 +81,8 @@ def convert_grid_to_vtk(grid, varname, time=None, output_tpl='output/gm_vtk'):
     None
         Write pvu/pvd files to output directory
 
-    Example
-    -------
+    Examples
+    --------
 
     >>> import gridmarthe as gm
     >>> model_name = 'hallue_multilayer'

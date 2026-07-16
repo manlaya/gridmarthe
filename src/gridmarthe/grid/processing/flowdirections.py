@@ -87,7 +87,7 @@ def calc_flow_directions(
 
     Returns
     -------
-    ds: xr.Dataset
+    ds: xarray.Dataset
         A xarray.Dataset object containing flow direction values and attributes.
 
     Three files are saved automatically.
