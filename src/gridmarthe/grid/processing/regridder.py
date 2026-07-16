@@ -28,7 +28,7 @@
 import numpy as np
 import xarray as xr #needs netcdf4, rioxarray
 
-from ..grid_utils import _get_scale, get_default_variable
+from ..grid_utils import _get_scale, get_default_variable, assign_coords
 
 
 def get_new_coords(ds, res=1000):
@@ -47,7 +47,7 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
 
     Parameters
     ----------
-    da: xr.Dataset
+    da: xarray.Dataset
         the input dataset to interpolate on new coordinates.
     new_x: array-like
         the new x-axis coordinate to use
@@ -70,16 +70,37 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
     return da.interp(x=new_x, y=new_y, method=method, **kwargs)
 
 
-def rescale_grid(da, res=1000, **kwargs):
-    """ Wrapper function that uses `get_new_coords()` and `interp_grid()` together
+def rescale_grid(ds, res=1000, **kwargs):
+    """ Coarse a gridmarthe dataset with a new homogeneous resolution
+
+    This is a wrapper function that uses :py:func:`get_new_coords` and
+    :py:func:`interp_grid` together
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+        Input dataset to coarse
+    res : int, optional
+        New resolution
+    **kwargs
+        Any additional arguments to pass to :py:func:`interp_grid`
+
+
+    Returns
+    -------
+    xarray.Dataset
+       Coarsed dataset
 
     See also
     --------
-    `get_new_coords`
-    `interp_grid`
+    - :py:func:`get_new_coords`
+    - :py:func:`interp_grid`
     """
-    new_x, new_y = get_new_coords(da, res)
-    new_da = interp_grid(da, new_x, new_y, **kwargs) # here da with assign coords
+    _ds = ds.copy()
+    if 'x' not in ds.dims:
+        _ds = assign_coords(_ds)
+    new_x, new_y = get_new_coords(_ds, res)
+    new_da = interp_grid(_ds, new_x, new_y, **kwargs) # here da with assign coords
     return new_da
 
 

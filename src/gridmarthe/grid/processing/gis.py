@@ -28,7 +28,7 @@
 from typing_extensions import deprecated
 import numpy as np
 
-from pyproj import Transformer
+from pyproj import Transformer, CRS
 import geopandas as gpd
 import xarray as xr
 
@@ -181,62 +181,90 @@ def subset_with_coords(da, dims=['x', 'y'], gdf=None, xmin=None, ymin=None, xmax
     return da.where(mask_lon & mask_lat, drop=True)
 
 
-def _transf_proj_xy(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
-    """ Transform coordinates of a dataset using pyproj.
-
-    **!** return more unique points than initial due to projection deformation
+def _transf_proj_regrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", decimals=None):
+    """ Recreate a transformed grid based on dx, dy and x0, y0
     """
     transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-    x_source, y_source = ds.x.data, ds.y.data
-    x_target, y_target = transformer.transform(x_source, y_source)
-    ds = ds.copy()
-    ds['x'].data, ds['y'].data = np.astype(x_target, np.float32), np.astype(y_target, np.float32)
-    ds.attrs['projection'] = to_epsg
-    return ds
+    crs = CRS(to_epsg)
 
-# def _transf_proj_regrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
-    # """ Recreate a transformed grid based on dx,dy and x0,y0"
-    # transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-    # nx, ny = len(x), len(y)
-    # x0, y0 = np.nanmin(x), np.nanmin(y)
-    # x1, y1 = np.nanmax(x), np.nanmax(y)
+    ds_2d = assign_coords(ds) if 'x' not in ds.dims else ds.copy()
+    grid_2d = ds_2d.copy(deep=True)  # deep to avoid side effect with dx
+    if 'z' in ds_2d.dims:
+        # as x, y are the same in along z dimension in marthe grids:
+        grid_2d = grid_2d.isel(z=0)
+
+    nx, ny = len(grid_2d.x), len(grid_2d.y)
+    x0, y0 = np.nanmin(grid_2d.x), np.nanmin(grid_2d.y)
+    x1, y1 = np.nanmax(grid_2d.x), np.nanmax(grid_2d.y)
+    dx, dy = grid_2d.dx.data[0,:], grid_2d.dy.data[:,0]
+    # dx, dy = grid_2d.dx.data, grid_2d.dy.data
+    dx[0], dy[0] = 0, 0
+    dxc, dyc = np.cumsum(dx), np.cumsum(dy)
+
+    new_xy0 = transformer.transform(x0, y0)
+    if isinstance(decimals, int):
+        new_xy0 = np.round(new_xy0, decimals)
     # dx, dy = ds['dx'].data, ds['dy'].data
-    # return
+    # new_x = np.linspace(new_xy0[0], new_xy0[0] + nx * dx, nx)
+    new_x = new_xy0[0] + dxc
+    new_y = new_xy0[1] + dyc
 
-def _transf_proj_meshgrid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154"):
-    """ Transform grid of a dataset using pyproj,
-    using meshgrid
+    ds_reproj = ds_2d.copy()  # back with z dim if present
+    ds_reproj['x'] = new_x
+    ds_reproj['y'] = new_y[::-1]  # y is reversed order
+
+    # reset to reduced grid
+    ds_reproj = stack_coords(ds_reproj)
+    if np.size(ds_reproj.zone.data) != np.size(ds.zone.data):
+        ds_reproj = ds_reproj.dropna(dim='zone')
+
+    # update attrs
+    cf_attrs = crs.coordinate_system.to_cf()
+    ds_reproj.attrs['crs'] = crs.to_cf()
+    ds_reproj.x.attrs = cf_attrs[0]
+    ds_reproj.y.attrs = cf_attrs[1]
+
+    return ds_reproj
+
+
+def reproj_grid(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='regrid', decimals=None):
+    """  Transform the projection of a dataset using pyproj
+
+    Warnings
+    --------
+    - (!) NaN should not have been removed before (full x,y,dx,dy are needed)
+    - This is only valid for regular grids.
+    - If used with 'rioxarray' mode, it should be only used for visualization purposes.
+      For rewriting a Marthe grid with another projection, further tests are required.
+    - This function is still EXPERIMENTAL and should be used with caution.
+
+    Parameters
+    ----------
+    ds : xarray.Dataset
+       Dataset to transform
+    from_epsg : str
+        EPSG code of input data
+    to_epsg : str
+        targeted EPSG code
+    engine : str, optional
+        Engine to use, either 'rioxarray' or 'regrid' (default)
+    decimals : int, optional
+        Number of decimals to round the coordinates to (default is None, not used).
+        E.g use `decimals=0` to round at meters scale for EPSG 27572, 2154 (Lambert
+        projections).
+
+    Returns
+    -------
+    xarray.Dataset
+        Dataset with new coordinates in the targeted projection
     """
-    x, y = np.unique(ds['x'].data), np.unique(ds['y'].data)
-    transformer = Transformer.from_crs(from_epsg, to_epsg, always_xy=True)
-
-    xx, yy = np.meshgrid(x, y)
-    xx_transformed, yy_transformed = transformer.transform(xx, yy)
-    data_transformed = xr.DataArray(
-        assign_coords(ds)['permeab'].data,
-        dims=["y", "x"],
-        coords={"y": yy_transformed[:, 0], "x": xx_transformed[0, :]}
-    )
-    return data_transformed
-
-
-def transf_proj(ds, from_epsg="EPSG:27572", to_epsg="EPSG:2154", engine='rioxarray'):
-    """  Transform grid of a dataset using pyproj
-
-    engine: rioxarray, meshgrid, xy
-
-    Data (ds) needs to be a 2D array with xy as coords dimensions and time sliced.
-    If needed, use :py:func:`gridmarthe.assign_coords` first.
-
-    Warning: IN DEVELOPMENT, not tested yet // USE WITH CAUTION
-    """
-    if engine == 'rioxarray':
+    if engine.lower() in ['rioxarray', 'rasterio']:
         _check_rioxarray()
-        ds_transf = ds.rio.write_crs(from_epsg).rio.reproject(to_epsg)
-    elif engine == 'meshgrid':
-        ds_transf = _transf_proj_meshgrid(ds, from_epsg, to_epsg)
-    elif engine == 'xy':
-        ds_transf = _transf_proj_xy(ds, from_epsg, to_epsg)
+        grid_2d = assign_coords(ds) if 'x' not in ds.dims else ds.copy()
+        ds_transf = grid_2d.rio.write_crs(from_epsg).rio.reproject(to_epsg)
+        ds_transf = stack_coords(ds_transf)
+    else:
+        ds_transf = _transf_proj_regrid(ds, from_epsg, to_epsg, decimals)
     return ds_transf
 
 
