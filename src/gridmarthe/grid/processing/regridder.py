@@ -28,7 +28,7 @@
 import numpy as np
 import xarray as xr #needs netcdf4, rioxarray
 
-from ..grid_utils import _get_scale, get_default_variable, assign_coords
+from ..grid_utils import _get_scale, get_default_variable, assign_coords, stack_coords
 
 
 def get_new_coords(ds, res=1000):
@@ -70,7 +70,7 @@ def interp_grid(da, new_x=None, new_y=None, method='nearest', **kwargs):
     return da.interp(x=new_x, y=new_y, method=method, **kwargs)
 
 
-def rescale_grid(ds, res=1000, **kwargs):
+def rescale_grid(ds, res=1000, stack=False, **kwargs):
     """ Coarse a gridmarthe dataset with a new homogeneous resolution
 
     This is a wrapper function that uses :py:func:`get_new_coords` and
@@ -82,6 +82,9 @@ def rescale_grid(ds, res=1000, **kwargs):
         Input dataset to coarse
     res : int, optional
         New resolution
+    stack : bool, optional
+        Option to stack coordinates as 1D vector for new dataset.
+        Default is False.
     **kwargs
         Any additional arguments to pass to :py:func:`interp_grid`
 
@@ -101,7 +104,32 @@ def rescale_grid(ds, res=1000, **kwargs):
         _ds = assign_coords(_ds)
     new_x, new_y = get_new_coords(_ds, res)
     new_da = interp_grid(_ds, new_x, new_y, **kwargs) # here da with assign coords
+    new_da = _reset_dx_dy(new_da, res)
+    if stack:
+        new_da = stack_coords(new_da, dropna=True)
     return new_da
+
+
+def _reset_dx_dy(da, res):
+    """ reset dx and dy attributes """
+    dx, dy = np.diff(da.x.data), np.diff(da.y.data)
+    dx, dy = np.insert(dx, 0, res), np.insert(dy, 0, res)
+
+    # tile along other dims
+    nx, ny = len(da.x.data), len(da.y.data)
+    dx = np.tile(dx, ny).reshape((ny, nx))
+    dy = np.repeat(dy, nx).reshape((ny, nx))
+
+    if 'z' in da.dims:
+        nz = len(da.z.data)
+        tmpx, tmpy = np.zeros_like(da.dx.data), np.zeros_like(da.dy.data)
+        tmpx[:, ...], tmpy[:, ...] = dx, dy
+        dx, dy = tmpx, tmpy  # swap variables with z dimension
+
+    # replace data in dataset
+    da.dx.data = dx
+    da.dy.data = dy
+    return da
 
 
 def coarse_nested_grid(da, varname=None, dx=None, dy=None):
