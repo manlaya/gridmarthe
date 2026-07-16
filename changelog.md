@@ -2,19 +2,28 @@
 
 ## [Unreleased]
 
-## Added
+### Added
 
 - grid creation (from xy bounds or shape)
 - ugrid export for GIS visualization
+- `sel_by_coords` function to allow selection of a subset of the grid with x, y [z] coordinates,
+  on a 1D-spatial dataset, without requiring `assign_coords`.
 
-## Changed
+### Changed
+
 - dates argument in `gridmarthe.load_marthe_grid` is renamed `times` to be
 consistent with `time` dimension
+- `subset_by_coords` is deprecated in favor of `sel_by_coords`
+- `gm.plot_nested_grid` calling without `assign_coords` is now allowed
+- `layer` and `time` dimensions can be query in `gm.plot_nested_grid`
 
-## Fixed
+
+### Fixed
+
 - read int/float in times file (pastp)
 - compute geometry with other variable names
 - time dimension in vtk writer
+- search_zone now returns a list of indices if query with xy on multilayer grids
 
 
 ## [0.4.0] - 2026-05-27

@@ -31,7 +31,7 @@ def intersect_grid(ds, df, method='nearest', agg='mean', value='value', epsg='EP
     agg : str, optional
         Aggregation method to use for data regrouped by grid cell. By default,
         the mean is used.
-    value: str, optional
+    value : str, optional
         Name of the variable to aggregate in `df` (name of the column). By
         default 'value'.
     epsg : str or int, optional

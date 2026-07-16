@@ -56,13 +56,23 @@ dependencies = [
     "shapely",
     "matplotlib",
     "geopandas",
+    'vtkwriters',
+    "scipy"
 ]
 
 [project.optional-dependencies]
-# install with `pip install gridmarthe[ext]`
-opt = ["rioxarray", "rasterio", "vtkwriters"]
-doc = ['sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton', 'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb']
-dev = ['gridmarthe[opt,doc]', 'ruff', 'pytest', 'pytest-cov', 'pytest-benchmark']
+# install with `pip install gridmarthe[dev]`
+opt = ["rioxarray", "rasterio"]
+doc = [
+    'sphinx', 'pydata_sphinx_theme', 'sphinx-copybutton',
+    'sphinx_design', 'sphinxcontrib-bibtex', 'myst_nb',
+    'numpydoc'
+]
+dev = [
+    'gridmarthe[opt,doc]',
+    'ruff', 'pytest', 'pytest-cov',
+    'pytest-benchmark'
+]
 
 [project.scripts]
 ncmart = "gridmarthe:scripts.ncmart.main"
