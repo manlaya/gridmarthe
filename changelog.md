@@ -15,6 +15,7 @@ consistent with `time` dimension
 - read int/float in times file (pastp)
 - compute geometry with other variable names
 - time dimension in vtk writer
+- `gridmarthe.compute_geometry` on single layer models (no `z` coordinate)
 
 
 ## [0.4.0] - 2026-05-27

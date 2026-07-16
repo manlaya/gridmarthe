@@ -110,9 +110,8 @@ def _get_true_topo(topo, key='h_topogr'):
     # to allow vectorized operations.
     ds = topo.copy()
     if 'z' not in list(topo.dims) + list(topo.keys()):
-        zdim = 1
-    else:
-        zdim = len(np.unique(topo.z.data))
+        return ds  # single layer model, topo already covers the whole domain
+    zdim = len(np.unique(topo.z.data))
     true_topo = subset(topo, 'z', 1)[key].data  # true topo is only 1st layer
     true_topo = np.tile(true_topo, zdim)  # set topo for all layers
     ds[key] = (tuple(topo.dims), true_topo)
@@ -137,7 +136,8 @@ def _get_upper_alt(topo, hsubs, hsubs_name='h_substrat', topo_name='h_topogr'):
     if 'time' in _dims:
         ds.isel(time=0)  # only for first time, topo is mainly constant in time in Marthe
     df = ds.to_dataframe().reset_index()
-    df = df.sort_values(by=['x', 'y', 'z']).copy()  # assure data are sort in this way
+    _sort_by = ['x', 'y', 'z'] if 'z' in df.columns else ['x', 'y']  # no z for single layer model
+    df = df.sort_values(by=_sort_by).copy()  # assure data are sort in this way
     # set nans for topo and hsubs
     # this is constant in Marthe / should not be changed by user
     for x in [hsubs_name, topo_name]:
