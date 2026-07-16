@@ -32,7 +32,7 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from gridmarthe.grid.grid_utils import _get_scale, get_default_variable
+from gridmarthe.grid.grid_utils import _get_scale, get_default_variable, assign_coords
 from .plot_utils import _set_map_lims
 from ..grid._pkg_utils import deprecated_alias
 
@@ -42,22 +42,33 @@ from ..grid._pkg_utils import deprecated_alias
 
 
 @deprecated_alias(var='varname')
-def plot_nested_grid(ds, ax=None, varname=None, **kwargs):
+def plot_nested_grid(ds, ax=None, varname=None, itime=None, layer=None, **kwargs):
     """ Usefull function to plot nested grids, keeping heterogeneous resolution
 
     Parameters
     ----------
-    ds: xr.Dataset
-        the dataset MUST be a 2D array, with dims = x,y.
-        In other words, you may need to sel z and time before plot, and you need to apply
-        :py:func:`gridmarthe.assign_coords`
+    ds : xarray.Dataset
+        the dataset must be a 2D array, with dims = x, y, for plotting a mesh
+        field. In other words, you may need to sel z and time before plot, and
+        you need to apply :py:func:`gridmarthe.assign_coords`.
+        If not, assigning coords will be automatic and you may need to use
+        `itime` and `layer` argument to select which 2D array to plot.
 
-    ax: matplotlib axe, optional.
-        if provided, data are plotted on this axis, otherwise fig, ax instances will be created.
+    ax : matplotlib axe, optional.
+        if provided, data are plotted on this axis, otherwise fig, ax instances
+        will be created.
 
-    varname: str, optional
+    varname : str, optional
         the variable to plot in dataset. Default is None, which means the first
         non coordinates variable found in dataset.
+
+    itime : int, optional
+       the time index to plot. Default is None (not used). Only required if
+       'time' is a dimension of `ds` input.
+
+    layer : int, optional
+        the Z dimension to plot. Default is None (not used). Only required if
+        'z' is not selected before calling this function.
 
     **kwargs
         any keywords argument from `xr.Dataset.plot.pcolormesh`
@@ -66,9 +77,18 @@ def plot_nested_grid(ds, ax=None, varname=None, **kwargs):
     -------
     ax: matplotlib axis.
     """
-    da = ds.copy()
+    da = ds.copy(deep=True)
+    if 'x' not in da.dims:
+        da = assign_coords(da).isel(time=itime).sel(z=layer)
     if varname is None:
         varname = get_default_variable(da)
+
+    if 'z' in da.dims:
+        assert layer is not None, 'Z dimension is present in input dataset, please specify layer to plot'
+        da = da.sel(z=layer)
+    if 'time' in da.dims:
+        assert itime is not None, 'Time dimension is present in input dataset, please specify time step'
+        da = da.isel(time=itime)
 
     vmin, vmax = da[varname].min(), da[varname].max()
     vmin, vmax = kwargs.pop('vmin', vmin), kwargs.pop('vmax', vmax) # replace with user defined, if defined
@@ -117,26 +137,26 @@ def plot_mesh_time_serie(*args, zone: int, varname=None, show=False, figsize=(12
     Parameters
     ----------
 
-    *args: xr.Dataset,
+    *args : xarray.Dataset,
         any datasets (you can pass multiple datasets, eg.
         `plot_mesh_time_serie(ds1, ds2, ds3, ... zone=32)`
 
-    zone: int
+    zone : int
         zone value (dimension) to select data
 
-    varname: str, optional
+    varname : str, optional
         Variable to plot. Must be a key of all dataset passed as *arg.
         Default is None, which means the first non coordinates variable
         found in the first dataset.
 
-    show: bool, optional.
+    show : bool, optional.
         show plot using `plt.show()`
 
-    figsize: tuple[int], optional.
+    figsize : tuple[int], optional.
         figsize argument for matplotlib.
 
     **kwargs
-        any keywords argument for `xr.Dataset.plot()` method
+        any keywords argument for :py:func:`xarray.Dataset.plot` method
 
     Returns
     -------
@@ -172,8 +192,9 @@ def plot_outcrop(
     used need to be multilayer) and user need to assign coords before and **keep**
     the z dimension as a variable (see Note).
 
-    Note
-    ----
+    Notes
+    -----
+
     If input is a `xarray.Dataset` instance, `ds_outcrop` need to get coords before
     but keep `z` as a variable. To do so, use:
 
@@ -181,25 +202,25 @@ def plot_outcrop(
 
     Parameters
     ----------
-    ds_outcrop: xr.Dataset
+    ds_outcrop : xarray.Dataset
         output of :py:func:`gridmarthe.get_surface_layer`
 
-    fig: matplotlib figure, Optional.
+    fig : matplotlib figure, Optional.
         if provided, data are plotted on this figure, otherwise fig, ax instances will be created
 
-    ax: matplotlib axe, Optional.
+    ax : matplotlib axe, Optional.
         if provided, data are plotted on this axis, otherwise fig, ax instances will be created
 
-    cbar_width: str, Optional.
+    cbar_width : str, Optional.
         width of colorbar, as a percentage of the main axis. Default is '3'
 
-    labels: list, Optional.
+    labels : list, Optional.
         labels for layers in colorbar
 
-    file_out: str, Optional.
+    file_out : str, Optional.
         If not None (default), file name to write plot
 
-    show: bool, Optional.
+    show : bool, Optional.
         Show result (`plt.show()`), default is False.
 
     **kwargs
@@ -210,8 +231,8 @@ def plot_outcrop(
     -------
     fig, ax, ax_cbar if not `show`, otherwise return None
 
-    Example
-    -------
+    Examples
+    --------
 
     xarray version:
 
@@ -319,7 +340,7 @@ def plot_veloc_quiver(
 
     Parameters
     ----------
-    ds: xr.Dataset
+    ds : xarray.Dataset
         input dataset with velocity variables. Expected variables are:
         - `vx`: velocity in x direction
         - `vy`: velocity in y direction
@@ -327,19 +348,19 @@ def plot_veloc_quiver(
 
         See :py:func:`gridmarthe.read_velocity` to get velocity dataset from file.
 
-    ax: matplotlib.axes, optional
+    ax : matplotlib.axes, optional
         if not provided, an ax will be created and returned.
 
-    xyfreq: int, optional
+    xyfreq : int, optional
         filter velocity data every X cell.
 
-    veclenght: float, optional
+    veclenght : float, optional
         vector scale legend. Default is 1.
 
-    color_mod: bool, optional
+    color_mod : bool, optional
         use velocity module as color field. Default is False.
 
-    sqrt_norm: bool, optional
+    sqrt_norm : bool, optional
         Norm the velocity data `u` and `v`, with
 
         .. math::
@@ -350,13 +371,13 @@ def plot_veloc_quiver(
 
         Default is True (recommended).
 
-    loc_scale_xy: list or tuple, optional
+    loc_scale_xy : list or tuple, optional
         coordinates (X, Y) in Axes dimension (from 0 to 1) where to add
         the velocity scale.
 
     Returns
     -------
-    ax: matplotlib.axes
+    ax : matplotlib.axes
     """
     if ax is None:
         fig, ax = plt.subplots()
