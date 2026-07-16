@@ -137,20 +137,18 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     return pd.concat([_steadystep, times], axis=0)
 
 
-def dropna(ds, varname: str, nanval: Union[list, float]):
+def dropna(ds, nanval: Union[list, float], varname: str = None):
     """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.)
     for 1D (or 2D (time, zone)) array zone must be a coordinate dimension.
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset of marthe variable(s)
-
-    varname : str
-        variable name in dataset to treat
-
     nanval : list or float
         value to consider as NaN
+    varname : str, optional
+        variable name in dataset to treat
 
     Returns
     -------
@@ -161,25 +159,27 @@ def dropna(ds, varname: str, nanval: Union[list, float]):
     elif isinstance(nanval, tuple):
         nanval = list(nanval)  # convert to list to be mutated
     nanval += [1.e+20]
+    if varname is None:
+        varname = get_default_variable(ds)
     mask = ds[varname.lower()].where(~ds[varname.lower()].isin(nanval)).dropna(dim='zone') # drop nanval
     ds_no_nan = ds.sel(zone=mask['zone'])
     return ds_no_nan
 
 
-def subset(ds, varname: str, value: Union[list, float]):
+def subset(ds,  value: Union[list, float], varname: str = None):
     """ Subset dataset based on variable name and value.
     --> inverse of :py:func:`dropna`
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
        dataset of marthe variable(s)
-
-    varname : str
-      variable name in dataset to treat
 
     value: list or float
       value to keep
+
+    varname : str, optional
+      variable name in dataset to treat
 
     Returns
     -------
@@ -187,21 +187,20 @@ def subset(ds, varname: str, value: Union[list, float]):
     """
     if isinstance(value, (float, int, str)):
         value = [value]
+    if varname is None:
+        varname = get_default_variable(ds)
     mask = ds[varname.lower()].where(ds[varname.lower()].isin(value)).dropna(dim='zone')
     ds_filter = ds.sel(zone=mask['zone'])
     return ds_filter
 
 
-def replace(ds, varname: str, value: float, replace: float):
+def replace(ds, value: float, replace: float, varname: str = None):
     """ Replace a value in xr.Dataset for a variable
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset of marthe variable(s)
-
-    varname : str
-        variable name
 
     value: float
         value to replace
@@ -209,29 +208,36 @@ def replace(ds, varname: str, value: float, replace: float):
     replace: float
         value to replace with
 
+    varname : str, optional
+        variable name
+
     Returns
     -------
     dataset with replaced value
     """
+    if varname is None:
+        varname = get_default_variable(ds)
     ds[varname].data = np.where(ds[varname].data == value, replace, ds[varname].data)
     return ds
 
 
-def fillna(ds, varname, value):
+def fillna(ds, value, varname=None):
     """ Replace real nan (np.nan) value in dataset[varname],
     edge case of :py:func:`gridmarthe.replace`
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset of marthe variable(s)
-
-    varname : str
-       variable name
 
     value: float
        value to replace NaN with
+
+    varname : str, optional
+       variable name to replace NaN with value
     """
+    if varname is None:
+        varname = get_default_variable(ds)
     ds[varname].data = np.where(np.isnan(ds[varname].data), value, ds[varname].data)
     return ds
 
@@ -246,7 +252,7 @@ def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zon
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset of Marthe variable(s)
     add_lay : bool, optional
         Boolean to treat `z` (layer) as a dimension (True) or a variable (False)
@@ -304,7 +310,7 @@ def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
 
     Parameters
     ----------
-    ds : xr.Dataset
+    ds : xarray.Dataset
         dataset of Marthe variable(s)
     coords : list, optional
         list of coordinates to stack. Default is `['z', 'y', 'x']`
