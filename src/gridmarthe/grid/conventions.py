@@ -115,6 +115,7 @@ VARS_ATTRS = {
 
 # add variants for variable names
 VARS_ATTRS['geom_zone'] = VARS_ATTRS['zone_geom']  # english variant in MARTHE code
+VARS_ATTRS['permh'] = VARS_ATTRS['permeab']  # variant for common variable if varname is not specified
 
 
 # For memory only, now with pyproj

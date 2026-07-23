@@ -321,7 +321,8 @@ def load_marthe_grid(
         varname = ext.replace('.', '').upper()
         warnings.warn(
             f'No variable name found. Using file extension (`{varname}`), which is not a valid '
-            'MARTHE variable name. Please rename variable after reading dataset. '
+            'MARTHE variable name. Please consider that `drop_nan` option will probably fail.'
+            'You can/may also rename variable after reading dataset. '
             'To permanently remove this warning, please fix the current grid file using either '
             'gridmarthe command line tool `cleanmgrid` or WinMarthe GUI.',
             category=UserWarning,
@@ -412,7 +413,16 @@ def load_marthe_grid(
         if nan_value is None:
              # if no  user defined nanval, try to get corresponding val in dict
              # other, default to 9999.
-            nan_value = vattrs.get('mart_missing_value', 9999.)
+            nan_value = vattrs.get('mart_missing_value')
+            if nan_value is None:
+                warnings.warn(
+                    '`drop_nan` set but No NaN value defined for variable {}'
+                    '(and no default). Fallback to 9999. If this is not the '
+                    'correct value, please provided one using `nan_value`',
+                    category=UserWarning,
+                    stacklevel=1
+                )
+                nan_value = 9999.
 
         if not isinstance(nan_value, (list, tuple)):
             nan_value = [nan_value]

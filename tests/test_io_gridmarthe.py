@@ -43,16 +43,42 @@ def test_load_with_varname_all_returns_multiple():
 
 
 def test_load_with_drop_nan_removes_nan():
+    # default version, with 9999.
     ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True)
     arr = ds[VAR.lower()].values
     assert not np.any(np.isnan(arr))
     assert not np.any(arr == 9999.)  # here 9999. is the default nanval
 
+    # other variables, with 0. with automatic detection
+    ds = gm.load_marthe_grid('tests/data/hallue.permh', drop_nan=True)
+    arr = ds['permeab'].values
+    assert not np.any(np.isnan(arr))
+    assert not np.any(arr == 0.)  # here 9999. is the default nanval
+
+    # same but nested
+    ds = gm.load_marthe_grid('tests/data/Somme_V3_Surfex.permh', drop_nan=True, xyfactor=1e3)
+    arr = ds['permeab'].values
+    assert not np.any(np.isnan(arr))
+    assert not np.any(arr == 0.)  # here 9999. is the default nanval
+
+    # same but multilayer
+    ds = gm.load_marthe_grid('tests/data/craie_npc_nogig.permh', drop_nan=True)
+    arr = ds['permeab'].values
+    assert not np.any(np.isnan(arr))
+    assert not np.any(arr == 0.)
+
+    # same but multilayer AND nested grid
+    ds = gm.load_marthe_grid('tests/data/craie_npc_gig.permh', drop_nan=True)
+    arr = ds['permeab'].values
+    assert not np.any(np.isnan(arr))
+    assert not np.any(arr == 0.)
+
 
 def test_load_with_custom_nanval():
-    ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_nan=True, nan_value=0.)
+    ds = gm.load_marthe_grid('tests/data/chasim_hallue_fake_8888.out', VAR, drop_nan=True, nan_value=8888.)
     arr = ds[VAR.lower()].values
     assert not np.any(arr == 0.)
+    assert np.any(arr == 9999.)  # here 9999. should still be present
 
 
 def test_load_with_adds_col_row():
