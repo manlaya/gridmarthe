@@ -24,6 +24,7 @@ consistent with `time` dimension
 - compute geometry with other variable names
 - time dimension in vtk writer
 - search_zone now returns a list of indices if query with xy on multilayer grids
+- `gridmarthe.compute_geometry` on single layer models (no `z` coordinate)
 
 
 ## [0.4.0] - 2026-05-27
