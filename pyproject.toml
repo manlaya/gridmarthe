@@ -69,7 +69,7 @@ doc = [
     'numpydoc'
 ]
 dev = [
-    'gridmarthe[opt,doc]',
+    'gridmarthe[opt]',
     'ruff', 'pytest', 'pytest-cov',
     'pytest-benchmark'
 ]

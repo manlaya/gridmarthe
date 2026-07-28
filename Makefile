@@ -15,6 +15,12 @@ else
     PY := python3
 endif
 
+PIP := $(PY) -m pip
+# switch to uv backend if present
+ifneq (, $(shell which uv))
+	PIP := uv pip
+endif
+
 F2PY = $(PY) -m numpy.f2py
 
 ###### SOURCES ########
@@ -23,7 +29,7 @@ F90SRCDIR := $(MAINDIR)/src/gridmarthe/core
 
 F90FILES  := $(F90SRCDIR)/lecsem/lecsem.f90 \
 			 $(F90SRCDIR)/lecsem/edsemigl.f90 \
-             $(F90SRCDIR)/utils/xy_dxdy.f90 \
+			 $(F90SRCDIR)/utils/xy_dxdy.f90 \
 			 $(F90SRCDIR)/flowdirect/analy_topo.f90 \
 			 $(F90SRCDIR)/flowdirect/calc_direct_drainage.f90 \
 			 $(F90SRCDIR)/flowdirect/num_8_voisins.f90 \
@@ -72,7 +78,8 @@ doc:
 	cd docs; $(MAKE) html
 
 requirements:
-	$(PY) -m pip install charset_normalizer numpy meson meson-python pytest
+	$(PIP) install charset_normalizer numpy meson meson-python pytest
+	$(PIP) install -r pyproject.toml --extra dev  # --all-extras
 
 conda-req:
 	mamba install charset-normalizer numpy meson meson-python pytest h5netcdf xarray pandas geopandas
@@ -91,7 +98,7 @@ lecsem.so:
 
 # meson editable for dev/testing
 editable:
-	$(PY) -m pip install --no-build-isolation --no-deps \
+	$(PIP) install --no-build-isolation --no-deps \
 		--config-settings=editable-verbose=true \
 		--config-settings=setup-args='-Dpip_edit_mode=true' \
 		--editable . \
@@ -101,11 +108,11 @@ meson:
 	rm -rf build/ ; meson setup build; cd build; meson compile
 
 wheel:
-	$(PY) -m pip install build
+	$(PIP) install build
 	$(PY) -m build -w
 
 sdist:
-	$(PY) -m pip install build
+	$(PIP) install build
 	$(PY) -m build -s
 
 clean:
