@@ -495,27 +495,35 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
 
         assert x is not None or y is not None, "At least one of x or y must be provided"
 
-        x_vals = ds['x'].values if x is not None else None
-        y_vals = ds['y'].values if y is not None else None
+        x_only = x is not None and y is None
+        y_only = y is not None and x is None
 
-        # Compute distances
-        dist_sq = 0.0
-        if x is not None:
-            dist_sq += (x_vals - x)**2
-        if y is not None:
-            dist_sq += (y_vals - y)**2
-
-        # Find the closest point
-        idx_min = np.argmin(dist_sq)
-        dist_min = np.sqrt(dist_sq[idx_min])
-
-        # Only keep it if within tolerance
-        if dist_min <= tolerance:
-            new_mask = np.zeros_like(mask)
-            new_mask[idx_min] = True
-            mask &= new_mask
+        if x_only or y_only:
+            # Single-axis nearest: return all points sharing the nearest value
+            val = x if x_only else y
+            key = 'x' if x_only else 'y'
+            vals = ds[key].values
+            idx_min = np.argmin(np.abs(vals - val))
+            nearest_val = vals[idx_min]
+            dist_min = np.abs(nearest_val - val)
+            if dist_min <= tolerance:
+                mask &= np.abs(vals - nearest_val) < 1e-10
+            else:
+                mask[:] = False
         else:
-            mask[:] = False  # No point within tolerance
+            # Both axes nearest: return single closest point
+            x_vals = ds['x'].values
+            y_vals = ds['y'].values
+            dist_sq = (x_vals - x)**2 + (y_vals - y)**2
+            idx_min = np.argmin(dist_sq)
+            dist_min = np.sqrt(dist_sq[idx_min])
+
+            if dist_min <= tolerance:
+                new_mask = np.zeros_like(mask)
+                new_mask[idx_min] = True
+                mask &= new_mask
+            else:
+                mask[:] = False
     else:
         # Look for exact match
         if isinstance(x, (int, (float, np.floating))):
