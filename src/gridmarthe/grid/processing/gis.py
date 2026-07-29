@@ -300,7 +300,7 @@ def to_raster(
         The name of the x dimension, by default 'x'.
     y_dim : str, optional
         The name of the y dimension, by default 'y'.
-    time : str, list
+    time : str, list, optional
         time or list of time from `da.time`
     epsg : int, optional
         The EPSG code for the coordinate reference system, by default 27572.
@@ -329,13 +329,13 @@ def to_raster(
         da = da.expand_dims('time')
 
     if time is None:
-        time = da.times  # if not defined, get all available times
-    elif isinstance(time, str):  # make sure to get a iterable for slicing
+        time = da.time  # if not defined, get all available times
+    elif isinstance(time, str):  # make sure to get an iterable for slicing
         time = [time]
 
     for t in time:
         _single_grid_to_raster(
-            da.sel(time=slice(t)),
+            da.sel(time=t),
             x_dim, y_dim, epsg,
             "{}_{}.tiff".format(filename_tpl, t)
         )
