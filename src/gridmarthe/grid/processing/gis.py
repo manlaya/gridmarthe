@@ -26,6 +26,7 @@
 
 
 from typing_extensions import deprecated
+import re
 import numpy as np
 
 from pyproj import Transformer, CRS
@@ -326,17 +327,29 @@ def to_raster(
         raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
 
     if 'time' not in da.dims:
-        da = da.expand_dims('time')
-
-    if time is None:
-        time = da.time  # if not defined, get all available times
-    elif isinstance(time, str):  # make sure to get an iterable for slicing
-        time = [time]
-
-    for t in time:
         _single_grid_to_raster(
-            da.sel(time=t),
+            da,
             x_dim, y_dim, epsg,
-            "{}_{}.tiff".format(filename_tpl, t)
+            f"{filename_tpl}.tiff"
         )
+    else:
+        if time is None:
+            # if not defined, get all available times
+            time = da.time
+        elif isinstance(time, str):
+            # make sure to get an iterable for slicing
+            time = [time]
+
+        for i, t in enumerate(time):
+            _single_grid_to_raster(
+                da.sel(time=t),
+                x_dim, y_dim, epsg,
+                # check for valid filename of time as string
+                f"{filename_tpl}_{t}.tiff"
+                # https://stackoverflow.com/a/47455094
+                if re.match(r'^[^<>:;,?"*|]+$', f"{filename_tpl}_{t}.tiff")
+                # otherwise use integer index instead
+                else f"{filename_tpl}_{i}.tiff"
+            )
+
     return None
