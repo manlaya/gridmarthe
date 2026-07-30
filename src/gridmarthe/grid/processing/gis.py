@@ -347,7 +347,7 @@ def to_raster(
                 # check for valid filename of time as string
                 f"{filename_tpl}_{t}.tiff"
                 # https://stackoverflow.com/a/47455094
-                if re.match(r'^[^<>:;,?"*|/\\]+$', f"{filename_tpl}_{t}.tiff")
+                if re.match(r'^[^<>:;,?"*|]+$', f"{filename_tpl}_{t}.tiff")
                 # otherwise use integer index instead
                 else f"{filename_tpl}_{i}.tiff"
             )
