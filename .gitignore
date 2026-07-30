@@ -145,7 +145,6 @@ cython_debug/
 .vscode
 
 *.bak
-*.out
 dev/
 test-read
 Cal_river_network.listing
