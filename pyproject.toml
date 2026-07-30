@@ -57,7 +57,8 @@ dependencies = [
     "matplotlib",
     "geopandas",
     'vtkwriters',
-    "scipy"
+    "scipy",
+    "typing_extensions"
 ]
 
 [project.optional-dependencies]
