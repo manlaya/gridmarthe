@@ -326,17 +326,26 @@ def to_raster(
         raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
 
     if 'time' not in da.dims:
-        da = da.expand_dims('time')
-
-    if time is None:
-        time = da.time  # if not defined, get all available times
-    elif isinstance(time, str):  # make sure to get an iterable for slicing
-        time = [time]
-
-    for t in time:
         _single_grid_to_raster(
-            da.sel(time=t),
+            da,
             x_dim, y_dim, epsg,
-            "{}_{}.tiff".format(filename_tpl, t)
+            f"{filename_tpl}.tiff"
         )
+    else:
+        if time is None:
+            # if not defined, get all available times
+            time = da.time
+        elif isinstance(time, str):
+            # make sure to get an iterable for slicing
+            time = [time]
+        # make sure to get a DataArray to query its values attribute
+        time = xr.DataArray(time)
+
+        for t in time.values:
+            _single_grid_to_raster(
+                da.sel(time=t),
+                x_dim, y_dim, epsg,
+                f"{filename_tpl}_{t}.tiff"
+            )
+
     return None
