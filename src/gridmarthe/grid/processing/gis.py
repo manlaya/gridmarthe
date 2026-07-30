@@ -26,6 +26,7 @@
 
 
 from typing_extensions import deprecated
+import re
 import numpy as np
 
 from pyproj import Transformer, CRS
@@ -338,14 +339,17 @@ def to_raster(
         elif isinstance(time, str):
             # make sure to get an iterable for slicing
             time = [time]
-        # make sure to get a DataArray to query its values attribute
-        time = xr.DataArray(time)
 
-        for t in time.values:
+        for i, t in enumerate(time):
             _single_grid_to_raster(
                 da.sel(time=t),
                 x_dim, y_dim, epsg,
+                # check for valid filename of time as string
                 f"{filename_tpl}_{t}.tiff"
+                # https://stackoverflow.com/a/47455094
+                if re.match(r'^[^<>:;,?"*|/\\]+$', f"{filename_tpl}_{t}.tiff")
+                # otherwise use integer index instead
+                else f"{filename_tpl}_{i}.tiff"
             )
 
     return None
