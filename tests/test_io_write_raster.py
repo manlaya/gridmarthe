@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import xarray as xr
 import gridmarthe as gm
 
 
