@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import os
+import xarray as xr
 import gridmarthe as gm
 
 
 DATA_CHARGE = './tests/data/chasim_hallue.nc'
-DATA_PASTP = './tests/data/hallue.pastp'
 DATA_PERMEA = './tests/data/hallue.permh'
 
 
@@ -24,7 +24,7 @@ def test_to_raster_without_time():
 
 
 def test_to_raster_with_time():
-    ds = gm.load_marthe_grid(DATA_CHARGE, fpastp=DATA_PASTP, drop_nan=True)
+    ds = xr.open_dataset(DATA_CHARGE)
     ds = gm.assign_coords(ds.isel(time=[0, 1, 2]), add_lay=False)
 
     # test without specifying time values explicitly
