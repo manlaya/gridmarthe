@@ -50,6 +50,28 @@ def _check_fortran_status(status, msg):
     return None
 
 
+def _check_path_len(**kwargs):
+    """ Check value lenght for a dict of parameters: value.
+
+    # https://stackoverflow.com/questions/10724495
+    usage: in a function _check_path_len(**locals())
+           or with inspect:
+           _check_path_len(**inspect.getargvalues(inspect.currentframe()).locals)
+
+    argument need to contains "file" in its name.
+    """
+    MAX_FORTRAN_LENGTH=132
+    for k, v in kwargs.items():
+        if 'file' not in k:
+            continue
+        if len(str(v)) > MAX_FORTRAN_LENGTH:
+            raise ValueError(
+                f'Path is {len(str(v))} characters, exceeding the '
+                f'{MAX_FORTRAN_LENGTH}-character limit of the Fortran layer, '
+                f'and would be silently truncated: {v[:MAX_FORTRAN_LENGTH-1]}'
+            )
+
+
 def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
     # Memo: here, origin should be defined from pastp (time since timestep 0)
     idate = (zdates - np.datetime64(origin)) / np.timedelta64(1, 's')
@@ -286,6 +308,9 @@ def _calc_flow_directions(
     file_presence, file_topo, file_out_direct,
     file_out_topo, file_listing, ityp_direct, eps_top
 ):
+
+    _check_path_len(**locals())
+
     _res1 = modgridmarthe.calc_flow_direct(
         file_presence, file_topo, file_out_direct,
         file_out_topo, file_listing, ityp_direct, eps_top
@@ -317,7 +342,7 @@ def _calc_riv_network(
     file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out,
     file_histo_out, file_sous_bassin_out, file_listing
 ):
-
+    _check_path_len(**locals())
     modgridmarthe.calc_riv_network(
         file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach,
         n_neigh_station, file_exis_riv_in, file_drainage_surf_in,

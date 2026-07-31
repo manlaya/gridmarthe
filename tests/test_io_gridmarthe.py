@@ -155,6 +155,21 @@ def test_perf_read_grid(benchmark):
     benchmark(gm.load_marthe_grid, DATA_WITH_TIME, drop_nan=True)
 
 
+def test_path_134():
+    # up to version 0.4.0, max paths lenght in Fortran was 132
+    # this test checks that for version > 0.4.0, the file is read even with
+    # a path length of more than 132
+    import shutil
+    from pathlib import Path
+    d = Path('./tests/tmp_outputs', 'y' * 140)
+    d.mkdir(exist_ok=True)
+    f = Path(d, 'g.out')                     # len(p) == 153
+    shutil.copy('./tests/data/chasim_hallue_2var.out', f)
+    ds = gm.load_marthe_grid(f, 'CHARGE')
+    f.unlink()
+    d.rmdir()
+
+
 def run_all():
     test_load_valid_grid_returns_xarray()
     test_load_grid_attrs_present()

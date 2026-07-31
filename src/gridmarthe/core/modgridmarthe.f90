@@ -94,7 +94,7 @@ CONTAINS
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN) :: XFILE
+        CHARACTER (LEN=*), INTENT(IN) :: XFILE
         INTEGER, INTENT(OUT) :: KNU_ZOOMX
         !
         INTEGER :: INUMSTEP
@@ -143,8 +143,8 @@ CONTAINS
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE
-        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
+        CHARACTER (LEN=*),   INTENT(IN)        :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)        :: XTYP_DON
         ! INTEGER, INTENT(IN)                           :: KNU_ZOOMX
         ! INTEGER, DIMENSION(KNU_ZOOMX + 1, 3), INTENT(OUT) :: KDIMEN
         INTEGER, DIMENSION(99, 3), INTENT(OUT) :: KDIMEN
@@ -241,7 +241,8 @@ CONTAINS
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
+        CHARACTER (LEN=*), INTENT(IN)                 :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
         INTEGER, INTENT(IN)                           :: KNBTOT
         INTEGER, INTENT(IN)                           :: KNBSTEP
         INTEGER, INTENT(IN)                           :: KNU_ZOOMX
@@ -419,7 +420,8 @@ CONTAINS
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
+        CHARACTER (LEN=*), INTENT(IN)                 :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
         INTEGER, INTENT(IN)                           :: KNBTOT
         INTEGER, INTENT(IN)                           :: KNBSTEP
         INTEGER, INTENT(IN)                           :: KN_COUCHMX
@@ -536,7 +538,7 @@ CONTAINS
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)                 :: XFILE
+        CHARACTER (LEN=*), INTENT(IN)                   :: XFILE
         CHARACTER (LEN=13) , DIMENSION(99), INTENT(OUT) :: ZTYP_DON
         !
         INTEGER :: IT
@@ -623,8 +625,9 @@ CONTAINS
         real(kind=8), intent(in), dimension(NSTEPS, NVAL) :: ZVAR
         real(kind=4), intent(in), dimension(NVAL)         :: DXLU, DYLU, XCOL, YLIG
         real(kind=4), intent(in), dimension(NSTEPS)       :: DATES
+        character(len=*)   , intent(in)              :: XFILE
+        character(len=132) , intent(in)              :: TITSEM
         character(len=13)  , intent(in)              :: TYP_DON
-        character(len=132) , intent(in)              :: TITSEM, XFILE
         logical, optional                            :: FORCE_FULL_GRID, DEBUG
         !
         !outputs
