@@ -11,7 +11,7 @@ XFILE, VAR = './tests/data/chasim_hallue_2var.out', "CHARGE"
 def test_lecsem_scan_dim():
 
     nu_zoomx = core.modgridmarthe.scan_nu_zoomx(XFILE) # scan nb of nested grids (gig)
-    dims, nbsteps = core.modgridmarthe.scan_dim(XFILE, VAR)  # nu_zoomx
+    dims, nbsteps, iostat = core.modgridmarthe.scan_dim(XFILE, VAR)  # nu_zoomx
 
     assert isinstance(dims, np.ndarray)
     # assert dims.shape[0] == nu_zoomx + 1
@@ -23,7 +23,7 @@ def test_lecsem_scan_dim():
 
 def test_lecsem_scan_typevar():
 
-    var = core.modgridmarthe.scan_typevar(XFILE)
+    var, iostat = core.modgridmarthe.scan_typevar(XFILE)
     var = np.char.strip(np.char.decode(var, 'utf-8'))
     var = var[var != '']
 

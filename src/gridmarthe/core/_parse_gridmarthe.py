@@ -28,6 +28,12 @@ import numpy as np
 from .coremod import modgridmarthe         # compiled fortran module
 
 
+IOFortranError = (
+    "IOFortranError: error with file {}."
+    "Possible cause: file not found or not readable, unbounded array/allocation."
+)
+
+
 class FortranError(Exception):
     def __init__(self, message, iostat):
         self.message = message
@@ -36,6 +42,12 @@ class FortranError(Exception):
 
     def __str__(self):
         return f"Error Code: {self.iostat}: {self.message}"
+
+
+def _check_fortran_status(status, msg):
+    if status != 0:
+        raise FortranError(msg, status)
+    return None
 
 
 def _datetime64_to_float(zdates, origin='1970-01-01T00:00:00'):
@@ -59,7 +71,8 @@ def _scan_dim_py(xfile):
 
 def scan_var(xfile):
     """ List all variables stored in a Marthe grid file """
-    var = modgridmarthe.scan_typevar(xfile)  # get a list of unique type_var that are in xfile
+    var, iostat = modgridmarthe.scan_typevar(xfile)  # get a list of unique type_var that are in xfile
+    _check_fortran_status(iostat, msg=IOFortranError.format(xfile))
     var = np.char.strip(np.char.decode(var, 'ISO-8859-1'))  # decode byte array provided by f2py
     var = var[var != '']  # get rid of empty element provided by fortran code
     return var
@@ -99,9 +112,10 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
         list of dimensions of grid [maingrid[x, y, z], nestedgrid1[...], ...]
     """
     # nu_zoomx = modgridmarthe.scan_nu_zoomx(xfile)  # scan nb of nested grids (gig)
-    dims, nbsteps = modgridmarthe.scan_dim(
+    dims, nbsteps, status = modgridmarthe.scan_dim(
         xfile, varname if varname is not None else ''
     )
+    _check_fortran_status(status, msg=IOFortranError.format(xfile))
 
     dims = dims[~np.all(dims == 0, axis=1), :]  # filter out dims, as fortran initiate large array with 0
     nu_zoomx = dims.shape[0] - 1  # update nb of nested grids (gig) from dims
@@ -126,6 +140,9 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
         res = list(modgridmarthe.read_grid_shallow(xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx))
     else:
         res = list(modgridmarthe.read_grid(xfile, varname, nbsteps, nbtot, nu_zoomx))
+
+    iostat = res.pop(-1)
+    _check_fortran_status(iostat, msg=IOFortranError.format(xfile))
 
     res.append(dims)
     return res
@@ -156,7 +173,7 @@ def _transform_ycoords(zxcol, zylig, zdylu, nlayer=1, factor=1):
     zylig = zylig[~np.all(zylig == 1e+20, axis=1)]  # filter out zxcol, as fortran initiate large array with 1e+20
     for igig in range(zylig.shape[0]):
         yligs2, dylus2 = [], []
-        for i in range(len(zxcol[igig][zxcol[igig] != 1e+20])):
+        for _i in range(len(zxcol[igig][zxcol[igig] != 1e+20])):
             tmp1 = zylig[igig][zylig[igig] != 1e+20]
             tmp2 = zdylu[igig][zdylu[igig] != 1e+20]
             if nlayer > 1:
@@ -226,16 +243,6 @@ def _get_id_grid(dims):
     return id_grids.astype(np.int32)
 
 
-def _get_2d_id(dims):
-    # set unique id for 2D layers (different only for each grid)
-    # repeat for every line
-    id_2d = []
-    for igig in range(len(dims)):
-        id_2d.append(np.repeat(np.arange(dims[igig][0]), dims[igig][1]))
-    id_2d = np.hstack(id_2d)
-    return id_2d.astype(np.int32)
-
-
 def _get_dims_from_attrs(str_dims):
     if str_dims is None:
         return None
@@ -274,37 +281,51 @@ def _extract_zvar_from_ds(ds, varname):
         ztitle, izdates
     )
 
+
 def _calc_flow_directions(
     file_presence, file_topo, file_out_direct,
     file_out_topo, file_listing, ityp_direct, eps_top
 ):
-    res1 = modgridmarthe.calc_flow_direct(
+    _res1 = modgridmarthe.calc_flow_direct(
         file_presence, file_topo, file_out_direct,
         file_out_topo, file_listing, ityp_direct, eps_top
     )
     # nu_zoomx = modgridmarthe.scan_nu_zoomx(file_out_direct)  # scan nb of nested grids (gig)
     varname = ''
-    dims, nbsteps = modgridmarthe.scan_dim(file_out_direct, varname) # nu_zoomx
+    dims, nbsteps, iostat = modgridmarthe.scan_dim(file_out_direct, varname) # nu_zoomx
+    _check_fortran_status(iostat, IOFortranError.format(file_out_direct))
+
     nu_zoomx = dims.shape[0] - 1  # update nb of nested grids (gig) from dims
     dims = dims[~np.all(dims == 0, axis=1), :]  # filter out dims, as fortran initiate large array with 0
     dims[0][-1] = 1
     nbtot = np.prod(dims, axis=1).sum()
 
     res = list(modgridmarthe.read_grid(file_out_direct, varname, nbsteps, nbtot, nu_zoomx))
+    iostat = res.pop(-1)
     # print(res)
     # dims[0][-1] = 0
     res.append(dims)
     return res
 
-def _calc_riv_network(file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach, n_neigh_station, file_exis_riv_in,
-                      file_drainage_surf_in, file_xy_surf_hydro_station, file_col_row_sous_bv_in, file_nb_sous_bv_out,
-                      file_exis_riv_out, file_drainage_surf_out, file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out,
-                      file_histo_out, file_sous_bassin_out, file_listing):
 
-    modgridmarthe.calc_riv_network(file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach, n_neigh_station, file_exis_riv_in,
-                      file_drainage_surf_in, file_xy_surf_hydro_station, file_col_row_sous_bv_in, file_nb_sous_bv_out,
-                      file_exis_riv_out, file_drainage_surf_out, file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out,
-                      file_histo_out, file_sous_bassin_out,  file_listing)
+def _calc_riv_network(
+    file_presence_in, file_flowdir_in, ityp_dir, surf_riv,
+    nperio_reach, n_neigh_station, file_exis_riv_in,
+    file_drainage_surf_in, file_xy_surf_hydro_station,
+    file_col_row_sous_bv_in, file_nb_sous_bv_out,
+    file_exis_riv_out, file_drainage_surf_out,
+    file_riv_branch_tree_out, file_num_afflu_out, file_riv_tronc_out,
+    file_histo_out, file_sous_bassin_out, file_listing
+):
+
+    modgridmarthe.calc_riv_network(
+        file_presence_in, file_flowdir_in, ityp_dir, surf_riv, nperio_reach,
+        n_neigh_station, file_exis_riv_in, file_drainage_surf_in,
+        file_xy_surf_hydro_station, file_col_row_sous_bv_in, file_nb_sous_bv_out,
+        file_exis_riv_out, file_drainage_surf_out, file_riv_branch_tree_out,
+        file_num_afflu_out, file_riv_tronc_out, file_histo_out,
+        file_sous_bassin_out, file_listing
+    )
 
 
 if __name__ == '__main__':
