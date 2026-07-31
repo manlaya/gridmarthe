@@ -53,7 +53,7 @@ def _get_vertices_connectivity(geom):
     vertices = np.reshape(cn, (-1, 3))
     # cell nodes connectivity: self-explicit no nodes is duplicated
     connectivity = np.arange(vertices.shape[0])
-    connectivity.shape = -1, 8
+    connectivity = connectivity.reshape((-1, 8))
 
     return vertices, connectivity, "voxel"
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import pytest
 import numpy as np
 import gridmarthe as gm
 
@@ -44,6 +45,7 @@ def test_search_zone_xy_nearest():
     assert idx.permeab == 3.46e-3
 
 
+@pytest.mark.filterwarnings("ignore:No variable name found.")
 def test_search_zone_xyz():
     ftest = 'tests/data/albien.hsubs'
     xm, ym = 533, 2527
@@ -54,6 +56,7 @@ def test_search_zone_xyz():
     assert idx.zone == 170567
 
 
+@pytest.mark.filterwarnings("ignore:No variable name found.")
 def test_search_zone_xy_multiple_layer():
     ftest = 'tests/data/albien.hsubs'
     xm, ym = 533, 2527

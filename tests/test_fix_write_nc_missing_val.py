@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import tempfile
-
+import pytest
 import numpy as np
 import xarray as xr
 
@@ -13,9 +13,14 @@ FILE_IN = './tests/data/hallue_multilayer.permh'
 FILE_OUT = './tests/tmp_outputs/test_write_nc_missing_val.nc'
 
 
+# warnings from xarray netCDF4 backend, and numpy/netcdf4 (?)
+# https://github.com/Unidata/netcdf4-python/issues/1354
+# https://github.com/numpy/numpy/issues/11788
+@pytest.mark.filterwarnings("ignore:Setting the shape on a NumPy array")
+@pytest.mark.filterwarnings("ignore:numpy.ndarray size changed, may indicate binary incompatibility.")
 def test_fix_write_nc_missing_val():
     # known bug : cp from src gridmarthe 2024:
-     # FIXME better, prevent bug at write :
+    # bug at write :
     # https://github.com/pydata/xarray/issues/7722
     # https://stackoverflow.com/questions/65019301/variable-has-conflicting-fillvalue-and-missing-value-cannot-encode-data-when
     # del ds[varname.lower()].encoding['missing_value']
