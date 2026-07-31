@@ -237,7 +237,7 @@ CONTAINS
     !
     ! ===================================================================
     SUBROUTINE READ_GRID(XFILE, XTYP_DON, KNBSTEP, KNBTOT, KNU_ZOOMX, PVAR, PDATES, &
-        KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM, iostat)
+        KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM, SHALLOW_ONLY, iostat)
         !
         IMPLICIT NONE
         !
@@ -251,6 +251,8 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
         REAL(KIND=8), DIMENSION(KNBSTEP, KNBTOT), INTENT(OUT) :: PVAR
         CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
+        logical, optional                             :: SHALLOW_ONLY
+        logical :: SHALLOW_ONLY_OPT
         ! memo: max in marthe 3000 colonnes, 3000 lignes, 999 couches, 99 gigognes
         INTEGER  :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, i
         integer  :: N_COUCH_TEMP, NCOUC_MX_TEMP, &
@@ -292,6 +294,12 @@ CONTAINS
         !
         VAR_TO_READ = XTYP_DON
         is_main_grid = .true.
+        !
+        SHALLOW_ONLY_OPT = .false.
+        if (present(SHALLOW_ONLY)) then
+            SHALLOW_ONLY_OPT = SHALLOW_ONLY
+        endif
+        !
         i = 0  ! integer to check if coordinates already read
         ! debug = .FALSE.
         !
@@ -348,6 +356,20 @@ CONTAINS
                     PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
                     PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
                 ENDIF
+
+                if (SHALLOW_ONLY_OPT .and. N_COUCH > 1) then
+                    cycle ! skip deep layers
+                    ! note: SHALLOW only could also use IANALY = 1
+                    ! if N_COUCH > 1, in lecsem_3. But this would
+                    ! break if metadata are not well parsed.
+                endif
+
+                if ((INTOT_TEMP + NTOT -1) > KNBTOT) then
+                    print *, 'FortranError: grid too large for allocated array'
+                    iostat = 2
+                    return
+                endif
+
                 PVAR(ISTEPINC, INTOT_TEMP:INTOT_TEMP + NTOT -1) = FONC(:NTOT)
                 INTOT_TEMP = INTOT_TEMP + NTOT
                 i = i + 1
@@ -410,126 +432,6 @@ CONTAINS
             NLIG_TEMP = NLIG
         endif
     end subroutine fix_metada
-    !
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! =============================================================================!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE READ_GRID_SHALLOW(XFILE, XTYP_DON, KNBSTEP, KN_COUCHMX, KNBTOT, &
-        KNU_ZOOMX, PVAR, PDATES, KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM, &
-        iostat)
-        !
-        IMPLICIT NONE
-        !
-        CHARACTER (LEN=*), INTENT(IN)                 :: XFILE
-        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
-        INTEGER, INTENT(IN)                           :: KNBTOT
-        INTEGER, INTENT(IN)                           :: KNBSTEP
-        INTEGER, INTENT(IN)                           :: KN_COUCHMX
-        INTEGER, INTENT(IN)                           :: KNU_ZOOMX
-        INTEGER, DIMENSION(KNBSTEP), INTENT(OUT)      :: KSTEPS
-        REAL(KIND=4), DIMENSION(KNBSTEP), INTENT(OUT) :: PDATES
-        REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
-        REAL(KIND=8), DIMENSION(KNBSTEP, KNU_ZOOMX + 1, KNBTOT), INTENT(OUT) :: PVAR
-        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
-        !
-        !
-        INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, N_COUCH2
-        INTEGER, DIMENSION(KNU_ZOOMX + 1, 3) :: KDIMEN
-        REAL(KIND=8), DIMENSION(KNBSTEP, KNU_ZOOMX + 1, KN_COUCHMX, KNBTOT) :: ZTEMP
-        ! io check
-        integer, intent(out) :: iostat
-        character(len=132) :: MSG
-        !
-        LIRE_DXDY =  1
-        IANALY    =  0
-        INVERS    =  0
-        IOUCON    = -1
-        LEC       = 10
-        IERLEC    =  0
-        !
-        N_COUCH = 0
-        NU_ZOO  = 0
-        ISTEP   = 0
-        !
-        ZTEMP(:,:,:,:) = 9999.
-        PXCOL(:, :) = 1e+20
-        PYLIG(:, :) = 1e+20
-        PDXLU(:, :) = 1e+20
-        PDYLU(:, :) = 1e+20
-        !
-        ISTEPINC   =  0
-        ISTEP_TEMP = -1
-        INTOT_TEMP =  1
-        !
-        OPEN( &
-            UNIT=LEC, FILE=TRIM(XFILE), &
-            FORM='formatted', ACTION='read', &
-            status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
-        )
-        if (iostat /= 0) then
-            return
-        endif
-        !
-        DO WHILE (IERLEC == 0)
-            NLIG = 999.
-            NKOL = 999.
-            NTOT = NLIG * NKOL
-            NCOUC_MX = 99.
-            NU_ZOOMX = 99.
-
-            CALL LECSEM_3( &
-                X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
-                IOUCON, LEC, IERLEC, NUMERR, NTOT, &
-                IANALY, &
-                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, &
-                NU_ZOO, NU_ZOOMX, &
-                DATE, LIBCHIM, &
-                LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
-            )
-
-            N_COUCH = 0  ! reset to zero for shallow only
-            ! IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
-            IF (IERLEC == 0) THEN
-                N_COUCH = 1  ! add 1 for shallow only break after 1st grid without error
-                KDIMEN(NU_ZOO + 1, 1) = NKOL
-                KDIMEN(NU_ZOO + 1, 2) = NLIG
-                KDIMEN(NU_ZOO + 1, 3) = NCOUC_MX
-                IF (ISTEP /= ISTEP_TEMP) THEN
-                    ISTEPINC = ISTEPINC + 1
-                    ISTEP_TEMP = ISTEP
-                    INTOT_TEMP = 1
-                    KSTEPS(ISTEPINC) = ISTEP
-                    PDATES(ISTEPINC) = real(DATE, 4)
-                ENDIF
-                IF (ISTEPINC == 1 .AND. N_COUCH == 1) THEN
-                    PXCOL(NU_ZOO + 1, :NKOL) = real(XCOL(:NKOL), 4)
-                    PYLIG(NU_ZOO + 1, :NLIG) = real(YLIG(:NLIG), 4)
-                    PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
-                    PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
-                ENDIF
-                ZTEMP(ISTEPINC, NU_ZOO + 1, N_COUCH, :NTOT) = FONC(:NTOT)
-                exit  ! quit while loop after 1st non error
-            ENDIF
-        ENDDO
-        !
-        CLOSE(LEC)
-        !
-        PVAR(:,:,:) = 9999.
-        DO NU_ZOO = 1, NU_ZOOMX + 1
-            NTOT = KDIMEN(NU_ZOO, 1)*KDIMEN(NU_ZOO, 2)
-            DO N_COUCH = 1, KN_COUCHMX
-                WHERE (ZTEMP(:, NU_ZOO, N_COUCH, :NTOT) /= 9999.)
-                    PVAR(:, NU_ZOO, :NTOT) = ZTEMP(:, NU_ZOO, N_COUCH, :NTOT)
-                END WHERE
-                DO N_COUCH2 = N_COUCH, KN_COUCHMX
-                    WHERE (PVAR(:, NU_ZOO, :NTOT) /= 9999.) ZTEMP(:, NU_ZOO, N_COUCH2, :NTOT) = 9999.
-                ENDDO
-            ENDDO
-        ENDDO
-        !
-        WHERE(PVAR(:,:,:) == 9999.) PVAR(:,:,:) = 1e+20
-        !
-    END SUBROUTINE READ_GRID_SHALLOW
     !
     ! ===================================================================
     SUBROUTINE SCAN_TYPEVAR(XFILE, ZTYP_DON, iostat)

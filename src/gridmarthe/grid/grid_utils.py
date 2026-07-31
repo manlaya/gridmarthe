@@ -22,12 +22,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import re
+import re, warnings
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
+
+from ._pkg_utils import deprecated_alias
+from .conventions import VARS_ATTRS
 
 
 def _is_sorted(a, asc=True):
@@ -137,31 +140,54 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     return pd.concat([_steadystep, times], axis=0)
 
 
-def dropna(ds, nanval: Union[list, float], varname: str = None):
-    """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.)
+@deprecated_alias(nanval='nan_value')
+def dropna(ds, nan_value: Optional[Union[list, float]] = None, varname: str = None):
+    """ Drop mask values corrresponding to NaN (marthe convention, eg. code 9999.)
     for 1D (or 2D (time, zone)) array zone must be a coordinate dimension.
 
     Parameters
     ----------
     ds : xarray.Dataset
         dataset of marthe variable(s)
-    nanval : list or float
-        value to consider as NaN
+    nan_value : list or float, optional
+        value to consider as NaN (a.k.a mask value).
     varname : str, optional
         variable name in dataset to treat
 
     Returns
     -------
-    dataset where variable != nanval
+    xarray.Dataset
+        Dataset without the mask values, i.e. where variable != nanval
     """
-    if isinstance(nanval, (float, int, str)):
-        nanval = [nanval]
-    elif isinstance(nanval, tuple):
-        nanval = list(nanval)  # convert to list to be mutated
-    nanval += [1.e+20]
     if varname is None:
         varname = get_default_variable(ds)
-    mask = ds[varname.lower()].where(~ds[varname.lower()].isin(nanval)).dropna(dim='zone') # drop nanval
+    varname = varname.lower()
+
+    if nan_value is None:
+        # if no  user defined nanval, try to get corresponding val in dict
+        # otherwise, fallback to default to 9999.
+        nan_value = VARS_ATTRS.get(varname).get('mart_missing_value')
+        if nan_value is None:
+            warnings.warn(
+                '`drop_nan` set but No NaN value defined for variable {}'
+                '(and no default). Fallback to 9999. If this is not the '
+                'correct value, please provided one using `nan_value`',
+                category=UserWarning,
+                stacklevel=1
+            )
+            nan_value = 9999.  # fallback to default
+    if isinstance(nan_value, (float, int, str)):
+        nan_value = [nan_value]
+    elif isinstance(nan_value, tuple):
+        nan_value = list(nan_value)  # convert to list to be mutated
+
+    # add special mask values
+    nan_value += [1.e+20]
+    if varname in ['permh', 'perm', 'permeab'] and -9999. not in nan_value:
+        nan_value += [-9999.]
+
+    # Set mask value to NaN and drop zone index where mask value is present
+    mask = ds[varname].where(~ds[varname].isin(nan_value)).dropna(dim='zone')
     ds_no_nan = ds.sel(zone=mask['zone'])
     return ds_no_nan
 

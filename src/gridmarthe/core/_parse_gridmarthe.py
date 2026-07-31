@@ -111,6 +111,8 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
     varname : str
         string of variable in xfile to get values.
         Default is None (retrieve first variable found in xfile)
+    shallow_only : bool
+        Option to read only the first layer of the grid file. Default is False.
 
     Returns
     -------
@@ -143,31 +145,44 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
     nu_zoomx = dims.shape[0] - 1  # update nb of nested grids (gig) from dims
     nbtot = np.prod(dims, axis=1).sum()
 
-    if nbtot == 0:
-        if not shallow_only:
-            raise ValueError(f'Varname ({varname}) not found in xfile. No data to parse.')
-        else:
-            dims = _scan_dim_py(xfile)
-            nbtot =  np.prod(dims, axis=1).sum()
-            nbsteps, nu_zoomx = 1, 0
-
-    if dims[0][-1] == 0:
+    if nbtot == 0 or dims[0][-1] == 0:
         raise ValueError(
-            f'Main grid has 0 layer. Please check your file ({xfile})'
-            f' and variable name ({varname}). If missing metadata, '
-            'try to use `cleanmgrid` command line tool to fix it.'
+            f'No data to parse in file {xfile} (the product of dimensions read '
+            f'equals 0). Maybe varname ({varname}) is not found in xfile, or '
+            'the grid file is missing metadata, that were not fixed.'
+            'If missing metadata, try to use `cleanmgrid` command line tool to'
+            'fix it.'
         )
 
     if shallow_only:
-        res = list(modgridmarthe.read_grid_shallow(xfile, varname, nbsteps, dims[0][-1] ,nbtot, nu_zoomx))
-    else:
-        res = list(modgridmarthe.read_grid(xfile, varname, nbsteps, nbtot, nu_zoomx))
+        dims[:, -1] = 1  # force layer to 1 and recompute nbtot
+        nbtot = np.prod(dims, axis=1).sum()
 
+    # Read grid with Fortran shared library
+    res = list(
+        modgridmarthe.read_grid(
+            xfile, varname, nbsteps, nbtot, nu_zoomx, shallow_only
+        )
+    )
     iostat = res.pop(-1)
     _check_fortran_status(iostat, msg=IOFortranError.format(xfile))
 
     res.append(dims)
     return res
+
+
+def _filter_shallow_layer(zvar, dims):
+    ntot  = np.prod(dims, axis=1)
+    nlay1 = np.prod(dims[..., :-1], axis=1)
+    idgrid= np.insert(ntot, 0, 0).cumsum()
+    msk   = np.zeros(ntot.sum(), dtype=bool)
+    for ig in range(dims.shape[0]):
+        istart, iend = idgrid[ig], idgrid[ig] + nlay1[ig]
+        msk[istart:iend] = True
+    # zvar[:, ~msk] = 1e+20  # set default mask value
+    zvar = zvar[:, msk]    # filter array on shallow layer only
+    dims[:, -1] = 1        # force zlay to 1
+    return zvar, dims
 
 
 def _transform_xcoords(zxcol, zylig, zdxlu, nlayer=1, factor=1):

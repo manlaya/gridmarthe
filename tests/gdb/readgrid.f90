@@ -1,6 +1,6 @@
 program test_readgrid
 
-  use MODGRIDMARTHE, only: read_grid, read_grid_shallow, SCAN_DIM
+  use MODGRIDMARTHE, only: read_grid, SCAN_DIM
 
   implicit none
 

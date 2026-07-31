@@ -11,6 +11,7 @@ from ._parse_gridmarthe import (
     _calc_flow_directions,
     _calc_riv_network,
     _get_dims_from_attrs,
+    _filter_shallow_layer,
     scan_var,
     FortranError
 )
