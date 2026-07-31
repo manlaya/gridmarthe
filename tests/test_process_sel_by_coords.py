@@ -8,7 +8,6 @@ import pytest
 import gridmarthe as gm
 
 
-
 @pytest.fixture
 def sample_dataset():
     ds = gm.load_marthe_grid(
@@ -81,11 +80,58 @@ def test_point_selection_nearest(sample_dataset):
     assert np.any(distances <= 500)
 
 
-# def test_point_selection_range_nearest(sample_dataset):
-#     x_range = (605612.5, 606913.5)
-#     y_range = (2543214.9, 2544388.5)
-#     subset = gm.sel_by_coords(sample_dataset, x=x_range, y=y_range, method='nearest', tolerance=500)
-#     assert len(subset.zone) == 9
+def test_range_selection_nearest(sample_dataset):
+    x_range = (605612.5, 606913.5)
+    y_range = (2543214.9, 2544388.5)
+    subset = gm.sel_by_coords(sample_dataset, x=x_range, y=y_range, method='nearest', tolerance=500)
+    assert len(subset.zone) == 9
+
+
+def test_x_range_only_nearest(sample_dataset):
+    x_range = (605612.5, 606913.5)
+    subset = gm.sel_by_coords(sample_dataset, x=x_range, method='nearest', tolerance=500)
+    assert len(subset.zone) > 0
+    x_vals = subset['x'].values
+    assert np.all((x_vals >= x_range[0]) & (x_vals <= x_range[1]))
+
+
+def test_y_range_only_nearest(sample_dataset):
+    y_range = (2543214.9, 2544388.5)
+    subset = gm.sel_by_coords(sample_dataset, y=y_range, method='nearest', tolerance=500)
+    assert len(subset.zone) > 0
+    y_vals = subset['y'].values
+    assert np.all((y_vals >= y_range[0]) & (y_vals <= y_range[1]))
+
+
+def test_x_range_y_scalar_nearest(sample_dataset):
+    x_range = (605000, 607000)
+    y_target = 2543800.0
+    subset = gm.sel_by_coords(sample_dataset, x=x_range, y=y_target, method='nearest', tolerance=500)
+    assert len(subset.zone) > 0
+    x_vals = subset['x'].values
+    y_vals = subset['y'].values
+    assert np.all((x_vals >= x_range[0]) & (x_vals <= x_range[1]))
+    assert np.any(np.isclose(y_vals, y_target, atol=500))
+
+
+def test_x_scalar_y_range_nearest(sample_dataset):
+    x_target = 606000.0
+    y_range = (2543000, 2544000)
+    subset = gm.sel_by_coords(sample_dataset, x=x_target, y=y_range, method='nearest', tolerance=500)
+    assert len(subset.zone) > 0
+    x_vals = subset['x'].values
+    y_vals = subset['y'].values
+    assert np.any(np.isclose(x_vals, x_target, atol=500))
+    y_mid = (y_range[0] + y_range[1]) / 2
+    assert np.all(np.abs(y_vals - y_mid) <= 1500)
+
+
+def test_range_selection_nearest_out_of_tolerance(sample_dataset):
+    """Far-away ranges should return empty when tolerance is tight."""
+    x_range = (1e8, 1.1e8)
+    y_range = (1e8, 1.1e8)
+    subset = gm.sel_by_coords(sample_dataset, x=x_range, y=y_range, method='nearest', tolerance=10)
+    assert len(subset.zone) == 0
 
 
 def test_nearest_x_only_returns_all_y_for_nearest_x(sample_dataset):
@@ -141,4 +187,4 @@ def test_exact_match_close_to_data(sample_dataset_multilayer):
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    pytest.main([__file__, "-v", "--no-cov"])

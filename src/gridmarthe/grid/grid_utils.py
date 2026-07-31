@@ -495,33 +495,88 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
 
         assert x is not None or y is not None, "At least one of x or y must be provided"
 
-        x_only = x is not None and y is None
-        y_only = y is not None and x is None
+        x_vals = ds['x'].values
+        y_vals = ds['y'].values
+        xy_arr = np.column_stack([x_vals, y_vals])
 
-        if x_only or y_only:
-            # Single-axis nearest: return all points sharing the nearest value
-            val = x if x_only else y
-            key = 'x' if x_only else 'y'
+        x_is_range = isinstance(x, (tuple, list))
+        y_is_range = isinstance(y, (tuple, list))
+
+        # 2D corner snapping helper
+        def _snap_box(x_lo, x_hi, y_lo, y_hi):
+            idx1, _ = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
+            idx2, _ = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
+            p1 = xy_arr[idx1]
+            p2 = xy_arr[idx2]
+            d1 = np.sqrt((p1[0] - x_lo)**2 + (p1[1] - y_lo)**2)
+            d2 = np.sqrt((p2[0] - x_hi)**2 + (p2[1] - y_hi)**2)
+            if d1 > tolerance or d2 > tolerance:
+                return None
+            return (min(p1[0], p2[0]), max(p1[0], p2[0]),
+                    min(p1[1], p2[1]), max(p1[1], p2[1]))
+
+        # Helper: 1D nearest value for a scalar or range
+        def _snap_1d(vals, val):
+            if isinstance(val, (tuple, list)):
+                lo, hi = val
+                nlo = _find_nearest(vals, lo)
+                nhi = _find_nearest(vals, hi)
+                if abs(nlo - lo) > tolerance or abs(nhi - hi) > tolerance:
+                    return None
+                return min(nlo, nhi), max(nlo, nhi)
+            nearest = _find_nearest(vals, val)
+            if abs(nearest - val) > tolerance:
+                return None
+            return nearest
+
+        if x is not None and y is not None and not x_is_range and not y_is_range:
+            # Both scalars: single closest point
+            dist_sq = (x_vals - x)**2 + (y_vals - y)**2
+            idx_min = np.argmin(dist_sq)
+            dist_min = np.sqrt(dist_sq[idx_min])
+            if dist_min <= tolerance:
+                new_mask = np.zeros_like(mask)
+                new_mask[idx_min] = True
+                mask &= new_mask
+            else:
+                mask[:] = False
+        elif x is not None and y is not None:
+            # Both axes present, at least one a range: 2D corner snapping
+            x0, x1 = (x[0], x[1]) if x_is_range else (x, x)
+            y0, y1 = (y[0], y[1]) if y_is_range else (y, y)
+            snapped = _snap_box(x0, x1, y0, y1)
+            if snapped is None:
+                mask[:] = False
+            else:
+                sx0, sx1, sy0, sy1 = snapped
+                mask &= (x_vals >= sx0) & (x_vals <= sx1)
+                mask &= (y_vals >= sy0) & (y_vals <= sy1)
+        elif x_is_range:
+            # x range only: 1D snap
+            snapped = _snap_1d(x_vals, x)
+            if snapped is None:
+                mask[:] = False
+            else:
+                lo, hi = snapped
+                mask &= (x_vals >= lo) & (x_vals <= hi)
+        elif y_is_range:
+            # y range only: 1D snap
+            snapped = _snap_1d(y_vals, y)
+            if snapped is None:
+                mask[:] = False
+            else:
+                lo, hi = snapped
+                mask &= (y_vals >= lo) & (y_vals <= hi)
+        else:
+            # Single-axis scalar nearest
+            val = x if x is not None else y
+            key = 'x' if x is not None else 'y'
             vals = ds[key].values
             idx_min = np.argmin(np.abs(vals - val))
             nearest_val = vals[idx_min]
             dist_min = np.abs(nearest_val - val)
             if dist_min <= tolerance:
                 mask &= np.abs(vals - nearest_val) < 1e-10
-            else:
-                mask[:] = False
-        else:
-            # Both axes nearest: return single closest point
-            x_vals = ds['x'].values
-            y_vals = ds['y'].values
-            dist_sq = (x_vals - x)**2 + (y_vals - y)**2
-            idx_min = np.argmin(dist_sq)
-            dist_min = np.sqrt(dist_sq[idx_min])
-
-            if dist_min <= tolerance:
-                new_mask = np.zeros_like(mask)
-                new_mask[idx_min] = True
-                mask &= new_mask
             else:
                 mask[:] = False
     else:
