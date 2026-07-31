@@ -434,7 +434,40 @@ def _get_nearest_xy(ds, x, y):
     return _nearest_xy, nearest
 
 
-def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return_mask=False):
+def _snap_1d(coords, target, tolerance):
+    """ Snap a scalar or (lo, hi) range to the nearest values of `coords`.
+
+    Returns
+    -------
+    (min, max) tuple of snapped values, or None if out of `tolerance`.
+    """
+    lo, hi = (target, target) if not isinstance(target, (tuple, list)) else target
+    nlo = _find_nearest(coords, lo)
+    nhi = _find_nearest(coords, hi)
+    if abs(nlo - lo) > tolerance or abs(nhi - hi) > tolerance:
+        return None
+    return min(nlo, nhi), max(nlo, nhi)
+
+
+def _snap_box(x_lo, x_hi, y_lo, y_hi, xy_arr, tolerance):
+    """ Snap a bounding box to the nearest corners of `xy_arr`.
+
+    Returns
+    -------
+    (xmin, xmax, ymin, ymax), or None if any corner is out of `tolerance`.
+    """
+    idx1, _ = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
+    idx2, _ = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
+    p1, p2 = xy_arr[idx1], xy_arr[idx2]
+    d1 = np.sqrt((p1[0] - x_lo)**2 + (p1[1] - y_lo)**2)
+    d2 = np.sqrt((p2[0] - x_hi)**2 + (p2[1] - y_hi)**2)
+    if d1 > tolerance or d2 > tolerance:
+        return None
+    return (min(p1[0], p2[0]), max(p1[0], p2[0]),
+            min(p1[1], p2[1]), max(p1[1], p2[1]))
+
+
+def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, return_mask=False):
     """ Filter a 1D flattened xarray Dataset by spatial (x, y) and/or z ranges.
 
     When grid are stored as 1D vector for spatial dimension, `xarray.Dataset.sel`
@@ -456,7 +489,7 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
         Requires `tolerance` (max distance).
     tolerance : float, optional
         Max distance when using method='nearest' (in same units as x/y).
-        Default is 1e3 (meters).
+        Default is None. This is **required** when using method='nearest'.
     return_mask : bool, optional
         Option to return mask array
 
@@ -486,9 +519,6 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
     """
     mask = np.ones(len(ds.zone), dtype=bool)
 
-    # Handle X and Y point selection with method='nearest'
-    # if (x is not None and isinstance(x, (int, float))) or (y is not None and isinstance(y, (int, float))):
-
     if method == 'nearest':
         if tolerance is None:
             raise ValueError("tolerance is required when method='nearest'")
@@ -502,83 +532,40 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
         x_is_range = isinstance(x, (tuple, list))
         y_is_range = isinstance(y, (tuple, list))
 
-        # 2D corner snapping helper
-        def _snap_box(x_lo, x_hi, y_lo, y_hi):
-            idx1, _ = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
-            idx2, _ = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
-            p1 = xy_arr[idx1]
-            p2 = xy_arr[idx2]
-            d1 = np.sqrt((p1[0] - x_lo)**2 + (p1[1] - y_lo)**2)
-            d2 = np.sqrt((p2[0] - x_hi)**2 + (p2[1] - y_hi)**2)
-            if d1 > tolerance or d2 > tolerance:
-                return None
-            return (min(p1[0], p2[0]), max(p1[0], p2[0]),
-                    min(p1[1], p2[1]), max(p1[1], p2[1]))
-
-        # Helper: 1D nearest value for a scalar or range
-        def _snap_1d(vals, val):
-            if isinstance(val, (tuple, list)):
-                lo, hi = val
-                nlo = _find_nearest(vals, lo)
-                nhi = _find_nearest(vals, hi)
-                if abs(nlo - lo) > tolerance or abs(nhi - hi) > tolerance:
-                    return None
-                return min(nlo, nhi), max(nlo, nhi)
-            nearest = _find_nearest(vals, val)
-            if abs(nearest - val) > tolerance:
-                return None
-            return nearest
-
-        if x is not None and y is not None and not x_is_range and not y_is_range:
-            # Both scalars: single closest point
-            dist_sq = (x_vals - x)**2 + (y_vals - y)**2
-            idx_min = np.argmin(dist_sq)
-            dist_min = np.sqrt(dist_sq[idx_min])
-            if dist_min <= tolerance:
-                new_mask = np.zeros_like(mask)
-                new_mask[idx_min] = True
-                mask &= new_mask
+        if x is not None and y is not None:
+            if not x_is_range and not y_is_range:
+                # Both scalars: single closest point
+                dist_sq = (x_vals - x)**2 + (y_vals - y)**2
+                idx_min = np.argmin(dist_sq)
+                if np.sqrt(dist_sq[idx_min]) <= tolerance:
+                    mask = np.zeros_like(mask)
+                    mask[idx_min] = True
+                else:
+                    mask[:] = False
             else:
-                mask[:] = False
-        elif x is not None and y is not None:
-            # Both axes present, at least one a range: 2D corner snapping
-            x0, x1 = (x[0], x[1]) if x_is_range else (x, x)
-            y0, y1 = (y[0], y[1]) if y_is_range else (y, y)
-            snapped = _snap_box(x0, x1, y0, y1)
-            if snapped is None:
-                mask[:] = False
-            else:
-                sx0, sx1, sy0, sy1 = snapped
-                mask &= (x_vals >= sx0) & (x_vals <= sx1)
-                mask &= (y_vals >= sy0) & (y_vals <= sy1)
-        elif x_is_range:
-            # x range only: 1D snap
-            snapped = _snap_1d(x_vals, x)
-            if snapped is None:
-                mask[:] = False
-            else:
-                lo, hi = snapped
-                mask &= (x_vals >= lo) & (x_vals <= hi)
-        elif y_is_range:
-            # y range only: 1D snap
-            snapped = _snap_1d(y_vals, y)
-            if snapped is None:
-                mask[:] = False
-            else:
-                lo, hi = snapped
-                mask &= (y_vals >= lo) & (y_vals <= hi)
+                if len(x) == 2 or len(y) == 2:
+                    # Both axes present, at least one a range: 2D corner snapping
+                    x0, x1 = (x[0], x[1]) if x_is_range else (x, x)
+                    y0, y1 = (y[0], y[1]) if y_is_range else (y, y)
+                    snapped = _snap_box(x0, x1, y0, y1, xy_arr, tolerance)
+                    if snapped is None:
+                        mask[:] = False
+                    else:
+                        sx0, sx1, sy0, sy1 = snapped
+                        mask &= (x_vals >= sx0) & (x_vals <= sx1)
+                        mask &= (y_vals >= sy0) & (y_vals <= sy1)
+                # TODO: Add case for a list of coordinates (same length for x and y)
+                # or even for a list of coords with len(x) != len(y) ?
         else:
-            # Single-axis scalar nearest
-            val = x if x is not None else y
+            # Single axis (x or y), scalar or range: 1D snapping
             key = 'x' if x is not None else 'y'
-            vals = ds[key].values
-            idx_min = np.argmin(np.abs(vals - val))
-            nearest_val = vals[idx_min]
-            dist_min = np.abs(nearest_val - val)
-            if dist_min <= tolerance:
-                mask &= np.abs(vals - nearest_val) < 1e-10
-            else:
+            coords = ds[key].values
+            snapped = _snap_1d(coords, x if key == 'x' else y, tolerance)
+            if snapped is None:
                 mask[:] = False
+            else:
+                lo, hi = snapped
+                mask &= (coords >= lo) & (coords <= hi)
     else:
         # Look for exact match
         if isinstance(x, (int, (float, np.floating))):
