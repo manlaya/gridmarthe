@@ -16,6 +16,7 @@ consistent with `time` dimension
 - `subset_by_coords` is deprecated in favor of `sel_by_coords`
 - `gm.plot_nested_grid` calling without `assign_coords` is now allowed
 - `layer` and `time` dimensions can be query in `gm.plot_nested_grid`
+- `dropna()` now detect `varname` and `nan_value`.
 
 
 ### Fixed
@@ -25,6 +26,10 @@ consistent with `time` dimension
 - time dimension in vtk writer
 - search_zone now returns a list of indices if query with xy on multilayer grids
 - `gridmarthe.compute_geometry` on single layer models (no `z` coordinate)
+- reading file with path length > 132 characters now allow (see [#21](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/21))
+- Fortran IO error is now returned to python caller for better exception management
+- reading grid with `shallow_only` is now allowed for nested grids (see [#22](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/22))
+- Various fixes for raster export
 
 
 ## [0.4.0] - 2026-05-27

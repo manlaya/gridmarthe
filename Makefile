@@ -74,7 +74,7 @@ COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90PP) -m coremod $(
 
 # ------------- Rules ------------- #
 
-.PHONY: all doc clean requirements editable meson wheel sdist
+.PHONY: all doc hook clean requirements editable meson wheel sdist
 all: clean editable
 
 # implicit rule for preproc
@@ -86,6 +86,9 @@ lib: lecsem.so
 
 doc:
 	cd docs; $(MAKE) html
+
+hook:
+	cat _check_uncommitted_test_data.sh >> .git/hooks/pre-commit
 
 requirements:
 	$(PIP) install charset_normalizer numpy meson meson-python pytest
