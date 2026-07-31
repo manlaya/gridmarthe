@@ -8,6 +8,7 @@
 
 FC := gfortran
 CC := gcc
+CPP := cpp
 
 ifeq ($(OS), Windows_NT)
     PY := python
@@ -30,18 +31,19 @@ F90SRCDIR := $(MAINDIR)/src/gridmarthe/core
 F90FILES  := $(F90SRCDIR)/lecsem/lecsem.f90 \
 			 $(F90SRCDIR)/lecsem/edsemigl.f90 \
 			 $(F90SRCDIR)/utils/xy_dxdy.f90 \
+			 $(F90SRCDIR)/utils/adsuff.f90 \
+			 $(F90SRCDIR)/utils/colle_segments.f90 \
 			 $(F90SRCDIR)/flowdirect/analy_topo.f90 \
 			 $(F90SRCDIR)/flowdirect/calc_direct_drainage.f90 \
 			 $(F90SRCDIR)/flowdirect/num_8_voisins.f90 \
-			 $(F90SRCDIR)/rivernetwork/Cal_reseau_hydro.f90 \
-			 $(F90SRCDIR)/rivernetwork/Convert_Direct_Drain.f90 \
-			 $(F90SRCDIR)/rivernetwork/Definit_Sous_Bassins.f90 \
-			 $(F90SRCDIR)/rivernetwork/Dir_Drain_LigCol_Ava.f90 \
-			 $(F90SRCDIR)/rivernetwork/Direct_Drain_Mai_Ava.f90 \
-			 $(F90SRCDIR)/rivernetwork/Mai_Ava_Strahl_Surf_Drai.f90 \
-			 $(F90SRCDIR)/rivernetwork/Mai_Exu_Surf_Drai.f90 \
-			 $(F90SRCDIR)/rivernetwork/Verif_Surf_Stat_Hydro.f90 \
-			 $(F90SRCDIR)/dessin/colle_segments.f90 \
+			 $(F90SRCDIR)/rivernetwork/cal_reseau_hydro.f90 \
+			 $(F90SRCDIR)/rivernetwork/convert_direct_drain.f90 \
+			 $(F90SRCDIR)/rivernetwork/definit_sous_bassins.f90 \
+			 $(F90SRCDIR)/rivernetwork/dir_drain_ligcol_ava.f90 \
+			 $(F90SRCDIR)/rivernetwork/direct_drain_mai_ava.f90 \
+			 $(F90SRCDIR)/rivernetwork/mai_ava_strahl_surf_drai.f90 \
+			 $(F90SRCDIR)/rivernetwork/mai_exu_surf_drai.f90 \
+			 $(F90SRCDIR)/rivernetwork/verif_surf_stat_hydro.f90 \
 			 $(F90SRCDIR)/modgridmarthe.f90
 #######################
 
@@ -64,12 +66,20 @@ FFLAGS +=-fallow-argument-mismatch
 # legacy is not really necessary
 # FFLAGS += -std=legacy
 
-COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90FILES) -m coremod $(F2PYOPT)
+F90PP = $(F90FILES:.f90=-cpp.f90)
+
+PPFLAGS=-traditional -Wcomment -DENGLISH
+
+COMPILE = CC=$(CC) FC=$(FC) FFLAGS="$(FFLAGS)" $(F2PY) -c $(F90PP) -m coremod $(F2PYOPT)
 
 # ------------- Rules ------------- #
 
 .PHONY: all doc clean requirements editable meson wheel sdist
 all: clean editable
+
+# implicit rule for preproc
+%-cpp.f90: %.f90
+	$(CPP) -P $(PPFLAGS) $< -o $@
 
 # only compile with f2py for develop purpose
 lib: lecsem.so
@@ -84,11 +94,11 @@ requirements:
 conda-req:
 	mamba install charset-normalizer numpy meson meson-python pytest h5netcdf xarray pandas geopandas
 
-lecsem.pyf:
+lecsem.pyf: $(F90PP)
 	cd $(F90SRCDIR); echo "******** Generating signature ********"; \
-	$(F2PY) $(F90FILES) -m lecsem -h $@ $(F2PYOPT)
+	$(F2PY) $(F90PP) -m lecsem -h $@ $(F2PYOPT)
 
-lecsem.so:
+lecsem.so: $(F90PP)
 	cd $(F90SRCDIR); echo "******** Building F2PY Library ********"; \
 	$(COMPILE)
 
@@ -117,5 +127,5 @@ sdist:
 
 clean:
 	cd $(F90SRCDIR); \
-	rm -f *.so *.o *.mod *.c *pywrappers* *.dll *.pyd ; \
+	rm -f *.so *.o *.mod *.c **/*-cpp.f90 *pywrappers* *.dll *.pyd ; \
 	cd $(MAINDIR)
