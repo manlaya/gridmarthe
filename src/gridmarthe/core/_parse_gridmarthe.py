@@ -307,7 +307,7 @@ def _get_dims_from_attrs(str_dims):
         return None
     else:
         _tmp = str_dims.replace('x,y,z [grids]: ', '').split('; ')
-        return [list(map(int, x.split(' '))) for x in _tmp]
+        return np.array([list(map(int, x.split(' '))) for x in _tmp])
 
 def _get_extend_from_attrs(attr):
     if attr is None:

@@ -83,7 +83,7 @@ def get_dims_from_attrs(ds):
 
     Returns
     -------
-    list:
+    numpy.ndarray:
         A list of dimensions for each grid (main and nested). List will contains
         `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
     """
@@ -569,17 +569,25 @@ def write_marthe_grid(
     title : str, optional
         title written in marthe grid file
 
-    dims : list of array, optional
-        list containing array of dimension for every grid (ie len(dims) > 1 if
-        nested grid):
+    dims : numpy.array or list, optional
+        array containing grid dimensions:
 
-        - format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
-        eg. `[[354,252,2], [182,156,2]]`
+        Shape is `(n_grids, 3)` where `n_grids` is the number of grids
+        (main grid + nested grids).
 
-        - if only main grid : `[[nx,ny,nz]]`
+        >>> # dims = np.array(
+        ... #     [
+        ... #       [nx_main_grid, ny_main_grid, nz_main_grid],
+        ... #       [nx_nested_1, ...],
+        ... #       ...
+        ... #       [nx_nested_n, ...]
+        ... #     ]
+        ... # )
+        >>> dims = np.array([[354,252,2], [182,156,2]]) # main grid + 1 nested grid
+        >>> dims = np.array([[nx, ny, nz]]) # only main grid
 
-        - if None (default, dims will be parsed from `ds.attrs['original_dimensions']`
-        which is added when read with :py:func:`gridmarthe.load_marthe_grid`.
+        If None (default, dims will be parsed from `ds.attrs['original_dimensions']`
+        which is added when grid is read with :py:func:`gridmarthe.load_marthe_grid`.
         If not present (lost in some computation for example), please use
         py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
 
@@ -644,7 +652,7 @@ def write_marthe_grid(
 
     # --- Check if expected dimensions match variable dimensions
     # if not, recreate full grid with domain grid (permh file)
-    _test_shape = np.prod(np.array(dims), axis=1).sum() != np.size(ds2[varname].data)
+    _test_shape = np.prod(dims, axis=1).sum() != np.size(ds2[varname].data)
     if _test_shape:
         # if dimension differs, file_permh is required
         error = "Expected size and actual size (from variable array) differs. "

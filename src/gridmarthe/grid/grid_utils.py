@@ -427,11 +427,9 @@ def _get_nearest_xy(ds, x, y):
     nearest_idx: int
         Index of the nearest point in the dataset
     """
-    nearest, dist = _nearest_node(
-        np.array([(x, y)]),
-        np.array(list(zip(ds['x'].data, ds['y'].data)))
-    )
+    # xy_arr = np.array(list(zip(ds['x'].data, ds['y'].data)))
     xy_arr = np.array([ds['x'].data, ds['y'].data]).T
+    nearest, dist = _nearest_node(np.array([(x, y)]), xy_arr)
     _nearest_xy = xy_arr[nearest]
     return _nearest_xy, nearest
 
