@@ -1,5 +1,6 @@
 from ._parse_gridmarthe import (
     modgridmarthe,
+    _check_fortran_status,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,

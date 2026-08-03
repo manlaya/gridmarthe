@@ -3,7 +3,7 @@
 
 import numpy as np
 import gridmarthe as gm
-from gridmarthe.core import scan_var
+from gridmarthe.core import scan_var, modgridmarthe
 import pytest
 
 DATA_PATH = './tests/data'
@@ -62,6 +62,19 @@ def test_fortran_io_error():
     # in load_marthe_grid ; wrongly interpreted as a missing variable.
     with pytest.raises(gm.FortranError):
         scan_var('non_existent_file')
+
+
+def test_fortran_io_stat():
+    var, iostat = modgridmarthe.scan_typevar(f'{DATA_PATH}/hallue.permh')
+    assert iostat == 0
+
+    # not a file
+    var, iostat = modgridmarthe.scan_typevar('non_existent_file')
+    assert iostat == -2
+
+    # a file but not a grid - should not cause a stop
+    var, iostat = modgridmarthe.scan_typevar('tests/data/albien.pastp')
+    assert iostat != 0
 
 
 if __name__ == '__main__':

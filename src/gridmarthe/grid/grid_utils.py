@@ -164,18 +164,7 @@ def dropna(ds, nan_value: Optional[Union[list, float]] = None, varname: str = No
     varname = varname.lower()
 
     if nan_value is None:
-        # if no  user defined nanval, try to get corresponding val in dict
-        # otherwise, fallback to default to 9999.
-        nan_value = VARS_ATTRS.get(varname).get('mart_missing_value')
-        if nan_value is None:
-            warnings.warn(
-                '`drop_nan` set but No NaN value defined for variable {}'
-                '(and no default). Fallback to 9999. If this is not the '
-                'correct value, please provided one using `nan_value`',
-                category=UserWarning,
-                stacklevel=1
-            )
-            nan_value = 9999.  # fallback to default
+        nan_value = get_default_nan_value(varname)
     if isinstance(nan_value, (float, int, str)):
         nan_value = [nan_value]
     elif isinstance(nan_value, tuple):
@@ -391,6 +380,40 @@ def get_default_variable(ds):
     """
     _vars = [x for x in ds if x not in ['z', 'y', 'x', 'dx', 'dy', 'zone', 'time']]
     return _vars[0]
+
+
+def get_default_nan_value(varname):
+    """ Get the default NaN/Masked value for a Marthe variable
+
+    Parameters
+    ----------
+    varname : str
+        Name of the variable.
+
+    Returns
+    -------
+    float
+        default mask value
+
+    Warns
+    -----
+    UserWarning
+       If no default value is defined for the variable in `VARS_ATTRS`
+       a warning is raised and the default value 9999. is returned.
+    """
+    # if no  user defined nanval, try to get corresponding val in dict
+    # otherwise, fallback to default to 9999.
+    nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value')
+    if nan_value is None:
+        warnings.warn(
+            f'No NaN/mask value defined for variable {varname}'
+            '(and no default). Fallback to 9999. If this is not the '
+            'correct value, please provided one using `nan_value`',
+            category=UserWarning,
+            stacklevel=1
+        )
+        nan_value = 9999.  # fallback to default
+    return nan_value
 
 
 def _get_nearest_xy(ds, x, y):

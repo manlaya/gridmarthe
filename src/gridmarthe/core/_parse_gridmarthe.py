@@ -28,10 +28,26 @@ import numpy as np
 from .coremod import modgridmarthe         # compiled fortran module
 
 
-IOFortranError = (
-    "IOFortranError: error with file {}."
-    "Possible cause: file not found or not readable, unbounded array/allocation."
+IO_FORTRAN_ERROR_MSG = (
+    "IOFortranError: error with file {}. Possible cause: {}"
 )
+
+IO_READ_FORTRAN_STATUS = {
+    0 : 'ok',
+   -2 : "File not found or not readable.",
+   -1 : "End of file.",
+    1 : "Read error",
+    2 : "Inconsistent dimensions (nrows and/or ncols <= 0).",
+    3 : "Inconsistent dimensions between coordinates and values.",
+    4 : "Array is not allocatable or unbound error (values >= allocated_dims)."
+}
+
+IO_WRITE_FORTRAN_STATUS = {
+    0 : 'ok',
+   -2 : "File not found or not readable.",
+    1 : 'Incorrect coordinates (xc == x_origin and/or yc == y_origin).',
+    2 : 'Incorrect dimensions (nrows <= 0; ncols <= 0; unsorted coordinates, etc.).'
+}
 
 
 class FortranError(Exception):
@@ -44,8 +60,14 @@ class FortranError(Exception):
         return f"Error Code: {self.iostat}: {self.message}"
 
 
-def _check_fortran_status(status, msg):
+def _check_fortran_status(status, file=None, mode='r', suffix=None):
+    _status_msg = IO_READ_FORTRAN_STATUS if mode == 'r' else IO_WRITE_FORTRAN_STATUS
     if status != 0:
+        msg = IO_FORTRAN_ERROR_MSG.format(
+            file, _status_msg.get(status, 'Unknown')
+        )
+        if suffix is not None:
+            msg += ' ' + suffix
         raise FortranError(msg, status)
     return None
 
@@ -94,7 +116,7 @@ def _scan_dim_py(xfile):
 def scan_var(xfile):
     """ List all variables stored in a Marthe grid file """
     var, iostat = modgridmarthe.scan_typevar(xfile)  # get a list of unique type_var that are in xfile
-    _check_fortran_status(iostat, msg=IOFortranError.format(xfile))
+    _check_fortran_status(iostat, xfile)
     var = np.char.strip(np.char.decode(var, 'ISO-8859-1'))  # decode byte array provided by f2py
     var = var[var != '']  # get rid of empty element provided by fortran code
     return var
@@ -139,7 +161,7 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
     dims, nbsteps, status = modgridmarthe.scan_dim(
         xfile, varname if varname is not None else ''
     )
-    _check_fortran_status(status, msg=IOFortranError.format(xfile))
+    _check_fortran_status(status, xfile)
 
     dims = dims[~np.all(dims == 0, axis=1), :]  # filter out dims, as fortran initiate large array with 0
     nu_zoomx = dims.shape[0] - 1  # update nb of nested grids (gig) from dims
@@ -165,7 +187,7 @@ def _read_marthe_grid(xfile, varname=None, shallow_only=False):
         )
     )
     iostat = res.pop(-1)
-    _check_fortran_status(iostat, msg=IOFortranError.format(xfile))
+    _check_fortran_status(iostat, xfile)
 
     res.append(dims)
     return res
@@ -333,7 +355,7 @@ def _calc_flow_directions(
     # nu_zoomx = modgridmarthe.scan_nu_zoomx(file_out_direct)  # scan nb of nested grids (gig)
     varname = ''
     dims, nbsteps, iostat = modgridmarthe.scan_dim(file_out_direct, varname) # nu_zoomx
-    _check_fortran_status(iostat, IOFortranError.format(file_out_direct))
+    _check_fortran_status(iostat, file_out_direct)
 
     nu_zoomx = dims.shape[0] - 1  # update nb of nested grids (gig) from dims
     dims = dims[~np.all(dims == 0, axis=1), :]  # filter out dims, as fortran initiate large array with 0
@@ -342,6 +364,7 @@ def _calc_flow_directions(
 
     res = list(modgridmarthe.read_grid(file_out_direct, varname, nbsteps, nbtot, nu_zoomx))
     iostat = res.pop(-1)
+    _check_fortran_status(iostat, file_out_direct)
     # print(res)
     # dims[0][-1] = 0
     res.append(dims)

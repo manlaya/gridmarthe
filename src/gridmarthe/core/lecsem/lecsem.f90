@@ -1,17 +1,17 @@
 ! SPDX-License-Identifier: GPL-3.0-or-later
 ! Copyright 2024, BRGM
-! 
+!
 ! This file is part of gridmarthe.
-! 
+!
 ! Gridmarthe is free software: you can redistribute it and/or modify it under the
 ! terms of the GNU General Public License as published by the Free Software
 ! Foundation, either version 3 of the License, or (at your option) any later
 ! version.
-! 
+!
 ! Gridmarthe is distributed in the hope that it will be useful, but WITHOUT ANY
 ! WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 ! PARTICULAR PURPOSE. See the GNU General Public License for more details.
-! 
+!
 ! You should have received a copy of the GNU General Public License along with
 ! Gridmarthe. If not, see <https://www.gnu.org/licenses/>.
 !
@@ -63,10 +63,10 @@
 !     Y0    = Ordonnée du    bas     de la ligne   n°NLIG (si LU_XY > 0)
 !     NTOT  = Nombre de points = NKOL * NLIG
 !     FONC  = Tableau des valeurs lues
+!     IERLEC = -1 Si fin de fichier rencontrée
 !     IERLEC =  0 Si normal
-!     IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!     IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!     IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !================================================================================
       IMPLICIT NONE
@@ -160,10 +160,10 @@
 !     NU_ZOOMX = Nombre maxi de Gigognes
 !     DATE     = Date associée à la Grille
 !     LIBCHIM  = Libellé complémentaire (nom de l'Élément Chimique) (len=80)
+!     IERLEC = -1 Si fin de fichier rencontrée
 !     IERLEC =  0 Si normal
-!     IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!     IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!     IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !================================================================================
       IMPLICIT NONE
@@ -367,7 +367,7 @@
       IERLEC = 1
       GO TO 999
   500 NUMERR = I
-      IERLEC = 2
+      IERLEC = -1
       GO TO 999
   999 CONTINUE
         CONTAINS
@@ -426,10 +426,10 @@
 !         NU_ZOOMX = Nombre maxi de Gigognes
 !         DATE     = Date associée à la Grille
 !         LIBCHIM  = Libellé complémentaire (nom de l'Élément Chimique) (len=80)
+!         IERLEC = -1 Si fin de fichier rencontrée
 !         IERLEC =  0 Si normal
-!         IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !         IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!         IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!         IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !         IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !       ================================================================================
         IMPLICIT NONE
@@ -565,7 +565,7 @@
            IF (IERRAUX /= 0) GO TO 450
         ENDDO
         IF ((NLIG <= 0).OR.(NKOL <= 0)) THEN
-           IERLEC = -1
+           IERLEC = 2
            GO TO 999
         ENDIF
         NEED = NLIG * NKOL
@@ -764,7 +764,7 @@
         IERLEC = 1
         GO TO 999
     500 NUMERR = I
-        IERLEC = 2
+        IERLEC = -1
         GO TO 999
     999 CONTINUE
    9006 FORMAT (" ***********************************************************" &
@@ -848,7 +848,7 @@
            NTOT = NLIG * NKOL
         CASE (0)
            IF ((NLIG <= 0).OR.(NKOL <= 0)) THEN
-              IERLEC = -1
+              IERLEC = 2
               GO TO 999
            ENDIF
            NEED = NLIG * NKOL
@@ -996,7 +996,7 @@
         IERLEC = 1
         GO TO 999
     500 NUMERR = I
-        IERLEC = 2
+        IERLEC = -1
         GO TO 999
     999 CONTINUE
    9006 FORMAT (" ***********************************************************" &
@@ -1515,9 +1515,9 @@
         IERLEC = 1
         GO TO 999
   500   NUMERR = I
-        IERLEC = 2
+        IERLEC = -1
         GO TO 999
-  520   IERLEC = -1
+  520   IERLEC = 2
     999 CONTINUE
    9004 FORMAT (18X,A15)
    9005 FORMAT (T9,A1,T17,I3,T27,A3,T31,A,T35,I4,T50,I4,T63,F7.0,T74,F7.0)
@@ -1742,10 +1742,10 @@
 !                    les coordonnées [il n'y a rien dans FONC()]
 !        NKOL      = Nombre maxi de places dans les tableaux XCOL(), DXLU()
 !        NLIG      = Nombre maxi de places dans les tableaux YLIG(), DYLU()
+!        IERLEC = -1 Si fin de fichier rencontrée
 !        IERLEC =  0 Si normal
-!        IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !        IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!        IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!        IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !        IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !       ========================================================================
         IMPLICIT NONE
@@ -1779,11 +1779,11 @@
         READ (LEC, *, IOSTAT=IERRAUX) NKOL, NLIG, XMIN, XMAX, YMIN, YMAX &
                                     , CMIN_FICTIF, CMAX_FICTIF
         IF (IERRAUX /= 0) THEN
-           IERLEC = -1
+           IERLEC = 1
            GO TO 999
         ENDIF
         IF ((NLIG <= 0).OR.(NKOL <= 0)) THEN
-           IERLEC = -1
+           IERLEC = 2
            GO TO 999
         ENDIF
         NEED = NLIG * NKOL
@@ -1813,7 +1813,7 @@
               READ (LEC, *, IOSTAT=IERRAUX) FONC(INDLIG+1:INDLIG+NKOL)
               SELECT CASE (IERRAUX)
               CASE (:-1)
-                 IERLEC = 2
+                 IERLEC = -1
                  NUMERR = INDLIG + 1
               CASE (1:)
                  IERLEC = 1
@@ -1861,10 +1861,10 @@
 !                    les coordonnées [Il n'y a rien dans FONC()]
 !        NKOL      = Nombre maxi de places dans le tableau XCOL(), DXLU()
 !        NLIG      = Nombre maxi de places dans le tableau YLIG(), DYLU()
+!        IERLEC = -1 Si fin de fichier rencontrée
 !        IERLEC =  0 Si normal
-!        IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !        IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!        IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!        IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !        IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !       ========================================================================
         IMPLICIT NONE
@@ -1972,7 +1972,7 @@
            END SELECT
            READ (LEC, "(A)", IOSTAT=IERRAUX) TITAUX
            IF (IERRAUX /= 0) THEN
-              IERLEC = -1
+              IERLEC = 1
               GO TO 999
            ENDIF
            LENGTH = LEN_TRIM(LAB15)
@@ -1989,13 +1989,13 @@
               END SELECT
            ENDIF
            IF (IDEB <= 0) THEN
-              IERLEC = -1
+              IERLEC = 2
               GO TO 999
            ELSE
               READ (TITAUX(IDEB+LENGTH+1:), *, IOSTAT=IERRAUX) VALEUR
            ENDIF
            IF (IERRAUX /= 0) THEN
-              IERLEC = -1
+              IERLEC = 1
               GO TO 999
            ENDIF
            SELECT CASE (K)
@@ -2046,7 +2046,7 @@
               READ (LEC, *, IOSTAT=IERRAUX) FONC(INDLIG+1:INDLIG+NKOL)
               SELECT CASE (IERRAUX)
               CASE (:-1)
-                 IERLEC = 2
+                 IERLEC = -1
                  NUMERR = INDLIG + 1
               CASE (1:)
                  IERLEC = 1
@@ -2086,9 +2086,9 @@
 !                    les coordonnées [il n'y a rien dans FONC()]
 !        INVERS : 0 = La première ligne lue est rangée en premier (Modèles)
 !               : 1 = Inversion la première ligne lue est rangée en dernier
+!        IERLEC = -1 Si fin de fichier rencontrée
 !        IERLEC =  0 Si normal
 !        IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!        IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
 !       ========================================================================
         IMPLICIT NONE
         INTEGER, INTENT(IN) :: INVERS, LEC, IANALY
@@ -2116,7 +2116,7 @@
            READ (LEC, *, IOSTAT=IERRAUX) (FONC(I), I=1,NTOT)
            SELECT CASE (IERRAUX)
            CASE (:-1)
-              IERLEC = 2
+              IERLEC = -1  ! end of file standard fortran code
               NUMERR = 1
            CASE (1:)
               IERLEC = 1
@@ -2196,10 +2196,10 @@
 !     TITSEM = Dernier titre lu pour la Grille (len=132)
 !     NLIG   = Nombre de Lignes
 !     NKOL   = Nombre de Colonnes
+!     IERLEC = -1 Si fin de fichier rencontrée
 !     IERLEC =  0 Si normal
-!     IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!     IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!     IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !============================================================================
       IMPLICIT NONE
@@ -2258,10 +2258,10 @@
 !     TITSEM = Dernier titre lu pour la Grille (len=132)
 !     NLIG   = Nombre de Lignes
 !     NKOL   = Nombre de Colonnes
+!     IERLEC = -1 Si fin de fichier rencontrée
 !     IERLEC =  0 Si normal
-!     IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!     IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!     IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !======================================================================================
       IMPLICIT NONE
@@ -2525,10 +2525,10 @@
 !     Y0    = Ordonnée du    bas     de la ligne   n°NLIG (si LU_XY > 0)
 !     NTOT  = Nombre de points = NKOL * NLIG
 !     FONC  = Tableau des valeurs lues
+!     IERLEC = -1 Si fin de fichier rencontrée
 !     IERLEC =  0 Si normal
-!     IERLEC = -1 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  1 Si erreur de lecture         (Maille NUMERR)
-!     IERLEC =  2 Si fin de fichier rencontrée (Maille NUMERR)
+!     IERLEC =  2 Si erreur dans les nombres de Ligne, Colonne ou Panneau
 !     IERLEC =  3 Si absolument incorrect/dimensions permises ou précédentes
 !=================================================================================
       IMPLICIT NONE

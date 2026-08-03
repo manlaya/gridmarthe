@@ -119,7 +119,8 @@ CONTAINS
         )
         ! call check_io(xfile, iostat, iomsg)  ! edit, manage error in python
         if (iostat /= 0) then
-            return  ! end here, propagate to the caller --> raise an exception in python
+            iostat = -2  ! force value for py caller
+            return       ! end here, propagate to the caller --> raise an exception in python
         endif
         !
         CALL LECSEM_3( &
@@ -134,6 +135,8 @@ CONTAINS
         KNU_ZOOMX = NU_ZOOMX
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE SCAN_NU_ZOOMX
     !
@@ -188,6 +191,7 @@ CONTAINS
             status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
         )
         if (iostat /= 0) then
+            iostat = -2  ! force value for py caller
             return
         endif
         !
@@ -233,6 +237,8 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
     END SUBROUTINE SCAN_DIM
     !
     ! ===================================================================
@@ -309,6 +315,7 @@ CONTAINS
             status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
         )
         if (iostat /= 0) then
+            iostat = -2  ! force value for py caller
             return
         endif
         !
@@ -366,7 +373,7 @@ CONTAINS
 
                 if ((INTOT_TEMP + NTOT -1) > KNBTOT) then
                     print *, 'FortranError: grid too large for allocated array'
-                    iostat = 2
+                    iostat = 4
                     return
                 endif
 
@@ -378,6 +385,8 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE READ_GRID
     !
@@ -466,6 +475,7 @@ CONTAINS
             status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
         )
         if (iostat /= 0) then
+            iostat = -2
             return
         endif
         !
@@ -489,6 +499,8 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE SCAN_TYPEVAR
     !
@@ -519,6 +531,7 @@ CONTAINS
         ! BUT, ZVAR should contain all possible value (9999. if nan but do NOT drop nan before)
         ! ZVAR shoult be sorted according to sorted indexes (in this order) :
         !       Time(asc), GRID(main/gig, asc) LAYER(asc), YCOL (dsc), XCOL (asc)
+        ! IEREDI: -1 (IO error), 0 (OK), 1,2 (Write error)
         IMPLICIT NONE
         !
         !inputs
@@ -563,7 +576,7 @@ CONTAINS
             status='REPLACE', IOSTAT=IOSTAT, IOMSG=MSG &
         )
         if (iostat /= 0) then
-            ieredi = iostat
+            ieredi = -2
             return
         endif
 

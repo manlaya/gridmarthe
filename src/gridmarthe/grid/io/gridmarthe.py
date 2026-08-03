@@ -22,6 +22,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+from pathlib import Path
 import os, warnings
 
 from typing import Union
@@ -32,6 +33,7 @@ import xarray as xr
 
 from gridmarthe.core import (
     modgridmarthe,
+    _check_fortran_status,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,
@@ -53,7 +55,8 @@ from ..grid_utils import (
     dropna,
     fillna,
     replace,
-    get_default_variable
+    get_default_variable,
+    get_default_nan_value
 )
 
 from ..conventions import (
@@ -591,7 +594,19 @@ def write_marthe_grid(
     -------
     status: int.
         0 if everything's ok. 1 otherwise.
+
+    Raises
+    ------
+    FortranError:
+        if error occurs in Fortran subroutine to write Marthe grid.
+
+    ValueError:
+        if no dimensions can be parsed from `ds.attrs['original_dimensions']`
+        or if `dims` is not None and does not match dataset dimensions.
     """
+
+    _ = Path(fileout).parent.mkdir(parents=True, exist_ok=True)  # ensure dst dir exists
+
     # TODO: infer nx, ny, nz, ngrid from ds ? --> allow to create a custom grid
     ds2 = ds.copy()
     # if isinstance(ds, xr.DataArray): # en fait, il faut x,y,dx,dy
@@ -600,10 +615,8 @@ def write_marthe_grid(
     if 'time' not in ds2.dims:
         ds2 = ds2.expand_dims('time')
 
-    nan_value = (
-        VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.)
-        if nan_value is None else nan_value
-    )
+    if nan_value is None:
+        nan_value = get_default_nan_value(varname)
 
     if file_permh is not None:
         # if permeab, fill_na with permh file (because either 0 or -9999.)
@@ -614,11 +627,9 @@ def write_marthe_grid(
         )
         if not _fill_na:
             # if not permh variable, fill nan with constant values, based on variable
-            if nan_value is None:
-                nan_value = (
-                    VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.)
-                )
             ds2  = fillna(ds2, nan_value, varname)
+    elif np.any(np.isnan(ds2[varname].data)):
+        ds2 = fillna(ds2, nan_value, varname)
 
     if dims is None:
         dims = _get_dims_from_attrs(ds2.attrs.get('original_dimensions'))
@@ -677,12 +688,13 @@ def write_marthe_grid(
         xfile=fileout
     )
 
-    if status != 0:
-        raise FortranError(
-            f'Fortran subroutine EDISEM failed with status {status}\n'
-            'Please check array consistency : 9999. or 0. for nan values (no np.nan),'
-            'do not drop nan val before write or provide a `file_permh`.',
-            status
+    # check status and raise a FortranError if status != 0
+    _check_fortran_status(
+        status, fileout, mode='w',
+        suffix=(
+            "Please check array consistency, coordinates order and/or do not"
+            " drop nan val before write or provide a `file_permh`."
         )
+    )
 
     return status
