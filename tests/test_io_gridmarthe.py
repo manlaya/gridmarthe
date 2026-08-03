@@ -54,24 +54,28 @@ def test_load_with_drop_nan_removes_nan():
     arr = ds['permeab'].values
     assert not np.any(np.isnan(arr))
     assert not np.any(arr == 0.)  # here 9999. is the default nanval
+    assert len(ds.zone.data) == 927
 
     # same but nested
     ds = gm.load_marthe_grid('tests/data/Somme_V3_Surfex.permh', drop_nan=True, xyfactor=1e3)
     arr = ds['permeab'].values
     assert not np.any(np.isnan(arr))
     assert not np.any(arr == 0.)  # here 9999. is the default nanval
+    assert len(ds.zone.data) == 66924
 
     # same but multilayer
     ds = gm.load_marthe_grid('tests/data/craie_npc_nogig.permh', drop_nan=True)
     arr = ds['permeab'].values
     assert not np.any(np.isnan(arr))
     assert not np.any(arr == 0.)
+    assert len(ds.zone.data) == 216742
 
     # same but multilayer AND nested grid
     ds = gm.load_marthe_grid('tests/data/craie_npc_gig.permh', drop_nan=True)
     arr = ds['permeab'].values
     assert not np.any(np.isnan(arr))
     assert not np.any(arr == 0.)
+    assert len(ds.zone.data) == 101209
 
 
 def test_load_with_custom_nanval():
@@ -133,6 +137,32 @@ def test_load_grid_wrong_metadata():
     assert np.max(ds['z'].values) == 10
 
 
+def test_shallow_only():
+    ds = gm.load_marthe_grid(DATA_PATH) # single layer
+    ds_shallow = gm.load_marthe_grid(DATA_PATH, shallow_only=True) # single layer
+    assert np.size(ds_shallow.zone) == 2862
+    assert np.all(ds.zone == ds_shallow.zone)
+
+    ds_shallow = gm.load_marthe_grid('./tests/data/hallue_multilayer.permh', shallow_only=True)  # 3lay
+    assert np.size(ds_shallow.zone) == 2862
+    assert np.all(ds.zone == ds_shallow.zone)
+
+    ds = gm.load_marthe_grid('./tests/data/Somme_V3_Surfex.permh')  # nest
+    ds_shallow = gm.load_marthe_grid('./tests/data/Somme_V3_Surfex.permh', shallow_only=True)  # nest
+    assert np.size(ds_shallow.zone) == 250537  # all 3 nested and masked val should be there
+    assert np.all(ds.x == ds_shallow.x)
+    assert np.all(ds.y == ds_shallow.y)
+    assert np.all(ds.dx == ds_shallow.dx)
+    assert np.all(ds.dy == ds_shallow.dy)
+    # gm.dropna(ds)
+    # gm.dropna(ds_shallow)
+
+    ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh')  # nets+nlay
+    ds1 = ds.where(ds['z'] ==1, drop=True)
+    ds_shallow = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', shallow_only=True)  # nets+nlay
+    assert np.size(ds_shallow.zone) == np.size(ds1.zone)
+
+
 def test_load_gm_with_path_object():
     from pathlib import Path
     ds = gm.load_marthe_grid(Path(DATA_PATH), drop_nan=True)
@@ -141,6 +171,9 @@ def test_load_gm_with_path_object():
 
 
 def test_read_grid_times_int_fmt():
+    # test reading times with integer format in pastp file
+    # complementary to test_io_read_time.test_read_times_int_fmt()
+    # unit test vs integration test
     head = gm.load_marthe_grid(
         './tests/data/chasim_albien.out',
         fpastp='./tests/data/albien.pastp',
@@ -153,6 +186,21 @@ def test_read_grid_times_int_fmt():
 @pytest.mark.benchmark
 def test_perf_read_grid(benchmark):
     benchmark(gm.load_marthe_grid, DATA_WITH_TIME, drop_nan=True)
+
+
+def test_path_134():
+    # up to version 0.4.0, max paths lenght in Fortran was 132
+    # this test checks that for version > 0.4.0, the file is read even with
+    # a path length of more than 132
+    import shutil
+    from pathlib import Path
+    d = Path('./tests/tmp_outputs', 'y' * 140)
+    d.mkdir(exist_ok=True)
+    f = Path(d, 'g.out')                     # len(p) == 153
+    shutil.copy('./tests/data/chasim_hallue_2var.out', f)
+    ds = gm.load_marthe_grid(f, 'CHARGE')
+    f.unlink()
+    d.rmdir()
 
 
 def run_all():
@@ -168,6 +216,8 @@ def run_all():
     test_load_invalid_varname_raises()
     test_load_grid_with_time_dimension()
     test_read_grid_times_int_fmt()
+    test_path_134()
+    test_shallow_only()
     print("=============================")
     print("gridmarthe reader test passed")
     return

@@ -1,5 +1,6 @@
 from ._parse_gridmarthe import (
     modgridmarthe,
+    _check_fortran_status,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,
@@ -11,6 +12,7 @@ from ._parse_gridmarthe import (
     _calc_flow_directions,
     _calc_riv_network,
     _get_dims_from_attrs,
+    _filter_shallow_layer,
     scan_var,
     FortranError
 )

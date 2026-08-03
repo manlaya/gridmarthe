@@ -146,8 +146,10 @@ cython_debug/
 
 *.bak
 dev/
-test-read
 Cal_river_network.listing
 
 .benchmarks/
 
+# gdb manual debug for core module
+greader
+*-cpp.f90
