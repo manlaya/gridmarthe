@@ -409,7 +409,7 @@ def load_marthe_grid(
     )
 
     if drop_time and ds.sizes['time'] == 1:
-        ds = ds.drop_dims('time')
+        ds = ds.squeeze('time').drop_vars('time')
 
     # add non-dimensionnal coordinates
     # ds = ds.assign_coords(  # future

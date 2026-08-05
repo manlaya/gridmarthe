@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
 import numpy as np
 import xarray as xr
 
@@ -116,6 +117,7 @@ def test_load_grid_attrs_present():
 def test_drop_time_dimension_for_parameter_grid():
     ds = gm.load_marthe_grid(DATA_PATH, VAR, drop_time=True)
     assert 'time' not in ds.dims
+    assert VAR.lower() in ds.data_vars
 
 
 def test_load_grid_with_time_dimension():
@@ -203,25 +205,5 @@ def test_path_134():
     d.rmdir()
 
 
-def run_all():
-    test_load_valid_grid_returns_xarray()
-    test_load_grid_attrs_present()
-    test_load_with_add_id_grid_adds_id_grid()
-    test_load_with_adds_col_row()
-    test_load_with_custom_nanval()
-    test_load_with_drop_nan_removes_nan()
-    test_load_with_varname_none_picks_first()
-    test_load_with_varname_all_returns_multiple()
-    test_load_nonexistent_file_raises()
-    test_load_invalid_varname_raises()
-    test_load_grid_with_time_dimension()
-    test_read_grid_times_int_fmt()
-    test_path_134()
-    test_shallow_only()
-    print("=============================")
-    print("gridmarthe reader test passed")
-    return
-
-
 if __name__ == "__main__":
-    run_all()
+    pytest.main([__file__, '-v', '--no-cov'])
