@@ -478,10 +478,12 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
     ----------
     ds : xarray.Dataset
         The input dataset with 1D 'zone' dimension and variables 'x', 'y', 'z'.
-    x : float or tuple, optional
-        x-coordinate: float for point selection, (xmin, xmax) for range.
-    y : float or tuple, optional
-        y-coordinate: float for point selection, (ymin, ymax) for range.
+    x : float or tuple or list, optional
+        x-coordinate: float for point selection, (xmin, xmax) for range,
+        or a list of x values for multiple point selection (with method='nearest').
+    y : float or tuple or list, optional
+        y-coordinate: float for point selection, (ymin, ymax) for range,
+        or a list of y values for multiple point selection (with method='nearest').
     z : int or tuple, optional
         z-level: int for exact, (zmin, zmax) for range.
     method : str, optional
@@ -543,7 +545,10 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
                 else:
                     mask[:] = False
             else:
-                if len(x) == 2 or len(y) == 2:
+                x_len = len(x) if x_is_range else None
+                y_len = len(y) if y_is_range else None
+
+                if x_len == 2 or y_len == 2:
                     # Both axes present, at least one a range: 2D corner snapping
                     x0, x1 = (x[0], x[1]) if x_is_range else (x, x)
                     y0, y1 = (y[0], y[1]) if y_is_range else (y, y)
@@ -554,8 +559,21 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
                         sx0, sx1, sy0, sy1 = snapped
                         mask &= (x_vals >= sx0) & (x_vals <= sx1)
                         mask &= (y_vals >= sy0) & (y_vals <= sy1)
-                # TODO: Add case for a list of coordinates (same length for x and y)
-                # or even for a list of coords with len(x) != len(y) ?
+                elif x_len is not None and y_len is not None and x_len == y_len:
+                    # Lists of coordinates (same length): keep the nearest
+                    # grid point for each (x, y) pair
+                    selected = np.zeros_like(mask)
+                    for px, py in zip(x, y, strict=True):
+                        dist_sq = (x_vals - px)**2 + (y_vals - py)**2
+                        idx_min = np.argmin(dist_sq)
+                        if np.sqrt(dist_sq[idx_min]) <= tolerance:
+                            selected[idx_min] = True
+                    mask = selected
+                else:
+                    raise ValueError(
+                        "x and y must be scalars, (min, max) ranges, or lists "
+                        "of coordinates of the same length."
+                    )
         else:
             # Single axis (x or y), scalar or range: 1D snapping
             key = 'x' if x is not None else 'y'

@@ -167,6 +167,45 @@ def test_empty_selection_returns_empty(sample_dataset):
     assert len(subset.zone) == 0
 
 
+def test_multiple_point_selection_nearest(sample_dataset):
+    """A list of (x, y) points selects the nearest grid point for each pair."""
+    idxs = [0, 100, 500]
+    xs = sample_dataset['x'].values[idxs].tolist()
+    ys = sample_dataset['y'].values[idxs].tolist()
+    subset = gm.sel_by_coords(sample_dataset, x=xs, y=ys, method='nearest', tolerance=1e3)
+    for x0, y0 in zip(xs, ys):
+        dist_sq = (sample_dataset['x'].values - x0)**2 + (sample_dataset['y'].values - y0)**2
+        idx_min = np.argmin(dist_sq)
+        assert sample_dataset.zone.values[idx_min] in subset.zone.values
+    assert len(subset.zone) <= len(xs)
+
+
+def test_multiple_point_selection_nearest_out_of_tolerance(sample_dataset):
+    """Points far from the grid are dropped, keeping only the close ones."""
+    xs = [sample_dataset['x'].values[0], 1e8, sample_dataset['x'].values[2]]
+    ys = [sample_dataset['y'].values[0], 1e8, sample_dataset['y'].values[2]]
+    subset = gm.sel_by_coords(sample_dataset, x=xs, y=ys, method='nearest', tolerance=10)
+    assert len(subset.zone) == 2
+
+
+def test_multiple_point_selection_nearest_duplicates_collapse(sample_dataset):
+    """Duplicate targets should not duplicate selected zones."""
+    x0 = sample_dataset['x'].values[0]
+    y0 = sample_dataset['y'].values[0]
+    xs = [x0, x0, sample_dataset['x'].values[3]]
+    ys = [y0, y0, sample_dataset['y'].values[3]]
+    subset = gm.sel_by_coords(sample_dataset, x=xs, y=ys, method='nearest', tolerance=1e3)
+    assert len(subset.zone) <= len(xs)
+
+
+def test_mismatched_list_lengths_raise(sample_dataset):
+    """Lists of coordinates of different lengths (len != 2) should raise."""
+    xs = sample_dataset['x'].values[[0, 100, 200]].tolist()
+    ys = sample_dataset['y'].values[[0, 100, 200, 300]].tolist()
+    with pytest.raises(ValueError):
+        gm.sel_by_coords(sample_dataset, x=xs, y=ys, method='nearest', tolerance=1e3)
+
+
 def test_exact_match_close_to_data(sample_dataset_multilayer):
     # Pick an actual x,y from the dataset
     idx = 100
