@@ -9,6 +9,9 @@ __pycache__/
 *.mod
 *.pyd
 *.dll
+*.dll.a
+*.lib
+*.obj
 
 # Distribution / packaging
 .Python

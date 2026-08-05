@@ -16,7 +16,8 @@ project('gridmarthe', ['fortran', 'c'],
 )
 
 # add_languages('fortran')
-subdir('src/gridmarthe/core')
+src_core = 'src/gridmarthe/core'
+subdir(src_core)
 core_sources = all_functions_sources
 core_install_dir = 'gridmarthe/core/'  # in python_install_dir
 
@@ -32,24 +33,24 @@ fargs = []  # compile args
 largs = []  # link args
 
 if fc.get_id() == 'gcc'
-  
+
   fargs += ['-cpp', '-fdefault-real-8']
   # fargs += ['-O2']  # fix warning 'use builtin O3, deactivate this line"
   fargs += ['-ffree-line-length-none']
-  
+
   if cc.version().version_compare('>=13.0')
     fargs += ['-fallow-argument-mismatch', '-std=legacy']
   endif
-  
+
   if host_machine.system() == 'windows'
     fargs += ['-Wno-error']
-    
+
     if not get_option('condabuild')
         largs += ['-static', '-static-libgfortran', '-static-libgcc', '-static-libquadmath']
     else
         fargs += ['-fPIC']
     endif
-    
+
     quadmath_dep = fc.find_library('quadmath', required: false) # from `f2py --build-dir` meson.build generation
     quadmath = declare_dependency(link_args : ['-lquadmath'])
     deps += [quadmath_dep,quadmath]
@@ -60,7 +61,7 @@ if fc.get_id() == 'gcc'
 elif fc.get_id() in ['llvm-flang', 'flang', 'flang-new']
   # TODO add options for llvm-flang for conda-forge
   fargs += ['-fdefault-real-8', '-ffree-form']
-  
+
 elif cc.get_id() in ['intel-llvm', 'intel', 'intel-llvm-cl', 'intel-cl']
   fargs += ['-real-size 64', '-stand f95']
 
@@ -95,7 +96,7 @@ if get_option('pip_edit_mode')
 else
   # classical, not functionnal in editable mode...
   incdir_numpy = run_command(py,
-    ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'], 
+    ['-c', 'import os; os.chdir(".."); import numpy; print(numpy.get_include())'],
     check : true
   ).stdout().strip()
 endif
@@ -117,6 +118,15 @@ core_interface = custom_target('coremodmodule.c',
   command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'coremod', '--lower']
 )
 
+_only_lib = get_option('build_only_lib')
+if _only_lib
+  lib_install_dir = src_core
+else
+  lib_install_dir = python_install_dir / core_install_dir
+endif
+message('Installing library in ', lib_install_dir)
+
+# ------ Build coremod extension ----- #
 py.extension_module('coremod',
   [
     core_sources,
@@ -126,8 +136,10 @@ py.extension_module('coremod',
   include_directories: inc_dir,
   dependencies: deps,
   install: true,
-  install_dir: python_install_dir / core_install_dir,
+  install_dir: lib_install_dir,
 )
 
 # --------- Install pypackage ----------- #
+if not _only_lib
 install_subdir('src/gridmarthe', install_dir : python_install_dir)
+endif

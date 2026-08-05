@@ -1,18 +1,22 @@
-# mamba env create -n gm -f environment.yml
+# usage: mamba env create -n gm -f environment.yml
+# on Windows. This needs an installation of Visual Sutdio
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  - python=3.14
   # build deps
   - pip
   - uutils-coreutils  # rust cross-platform version of gnu coreutils
-  - conda-build
   - make
-  - gfortran
-  - gcc
-  - ninja
+  - conda-build
+  - clang=21
+  - flang=21
+  - flang-rt_win-64=21
+  - lld=21
+  - clang-tools
   - meson
   - meson-python
+  - ninja
   - charset-normalizer
   - numpy
   # gridmarthe deps

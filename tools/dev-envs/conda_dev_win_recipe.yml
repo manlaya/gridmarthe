@@ -1,0 +1,24 @@
+# this env is only to test the build of the gridmarthe-feedstock recipe
+# on Windows. This needs an installation of Visual Sutdio
+# and the conda-forge ci-support package.
+# Usage:
+#   conda env create -f environment.yml
+#   conda activate cf-build
+#   cd PATH/TO/GRIDMARTHER-FEEDSTOCK
+#   conda smithy rerender -c auto
+#   conda conda build recipe -m .ci_support/<config>.yaml
+name: cf-build
+dependencies:
+  - python=3.12
+  # build deps
+  - conda-build
+  - conda-smithy
+  - flang=21
+  - flang-rt_win-64=21
+  - lld=21
+  - clang-tools
+  - meson
+  - meson-python
+  - ninja
+  - charset-normalizer
+  - numpy
