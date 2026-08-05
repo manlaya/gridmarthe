@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------- #
 
 project('gridmarthe', ['fortran', 'c'],
-  version : run_command('meson_get_version.py').stdout().strip(),
+  version : run_command('meson_get_version.py', check: true).stdout().strip(),
   license: 'GNU/GPL-V3',
   meson_version: '>=1.1.0',
   default_options : [
