@@ -86,6 +86,42 @@ def get_dims_from_attrs(ds):
     return _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
 
 
+def _mask_nest_bound(dims, zone, id_grid):
+    """Get mask array of the nested grid bound
+    
+    Parameters
+    ----------
+    dims : list
+        list of grid [maingrid[x, y, z], gig1[x, y, z], ...]
+    zone : array
+        zone's values
+    id_grid : array
+        id_grid's values
+    
+    Returns
+    -------
+    array:
+        array of zone
+    """
+    mask = []
+    for i, igig in enumerate(dims):
+        if i == 0:
+            continue
+        index = np.argwhere(id_grid == i).flatten()
+        zones = zone[index].reshape(igig[::-1])
+
+        n = zones[..., 0, :]
+        s = zones[..., -1, :]
+        w  = zones[..., :, 0]
+        e  = zones[..., :, -1]
+
+        border = np.concatenate([n.ravel(), s.ravel(),
+                                  w.ravel(), e.ravel()])
+        mask = np.concatenate([mask, border])
+        
+    return mask
+
+
 @deprecated_alias(nanval='nan_value')
 @deprecated_alias(keepligcol='add_col_row')
 @deprecated_alias(dates='times')
@@ -317,6 +353,7 @@ def load_marthe_grid(
     xcols, dxlus = _transform_xcoords(zxcol, zylig, zdxlu, nlayer=dims[0][-1], factor=xyfactor)
     yligs, dylus = _transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
 
+
     if varname == '':
         varname = ext.replace('.', '').upper()
         warnings.warn(
@@ -428,6 +465,11 @@ def load_marthe_grid(
         ds = dropna(ds, nan_value, varname)
         # add range zone of active cells. memo: remove tuple to set as dimension
         ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))
+
+    if add_id_grid and drop_nan: # TODO : add a parameter ?
+        mask = _mask_nest_bound(dims, ds['zone'].values, ds['id_grid'].values)
+        safe_zone = ~ds["zone"].isin(mask)
+        ds = ds.sel(zone=safe_zone)
 
     return ds
 
