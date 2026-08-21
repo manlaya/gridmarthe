@@ -85,24 +85,55 @@ def get_dims_from_attrs(ds):
     """
     return _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
 
+def get_dims_from_ds(ds):
+    """ Get Marthe grid dimensions from dataset structure
 
-def _mask_nest_bound(dims, zone, id_grid):
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Input dataset, read by :py:func:`load_marthe_grid`
+
+    Returns
+    -------
+    list:
+        A list of dimensions for each grid (main and nested). List will contains
+        `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
+    """
+    if 'x' not in ds.data_vars or 'y' not in ds.data_vars:
+        raise KeyError("Variable 'x' and/or 'y' not found in grid")
+
+    dims = []
+    ids = np.unique(ds['id_grid'].values)
+
+    for id in ids:
+        x = len(np.unique(ds.where(ds['id_grid']==id, drop=True)['x'].values))
+        y = len(np.unique(ds.where(ds['id_grid']==id, drop=True)['y'].values))
+        z = 1 if 'z' not in ds.data_vars else len(np.unique(ds['z'].values))
+        dims.append([x,y,z])
+
+    return dims
+
+
+def mask_nest_bound(ds):
     """Get mask array of the nested grid bound
     
     Parameters
     ----------
-    dims : list
-        list of grid [maingrid[x, y, z], gig1[x, y, z], ...]
-    zone : array
-        zone's values
-    id_grid : array
-        id_grid's values
+    ds : xr.Dataset
+        dataset containing data, coordinates (x,y[,z]), dx,dy and dimensions (in attrs).
     
     Returns
     -------
     array:
         array of zone
     """
+    if 'zone' not in ds.coords or 'id_grid' not in ds.data_vars:
+        raise KeyError("Variables 'zone' and/or 'id_grid' not found in grid")
+
+    zone = ds['zone'].values
+    id_grid = ds['id_grid'].values
+    dims = get_dims_from_ds(ds)
+
     mask = []
     for i, igig in enumerate(dims):
         if i == 0:
@@ -465,11 +496,6 @@ def load_marthe_grid(
         ds = dropna(ds, nan_value, varname)
         # add range zone of active cells. memo: remove tuple to set as dimension
         ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))
-
-    if add_id_grid and drop_nan: # TODO : add a parameter ?
-        mask = _mask_nest_bound(dims, ds['zone'].values, ds['id_grid'].values)
-        safe_zone = ~ds["zone"].isin(mask)
-        ds = ds.sel(zone=safe_zone)
 
     return ds
 

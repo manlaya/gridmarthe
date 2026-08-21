@@ -66,6 +66,19 @@ def test_load_with_add_id_grid_adds_id_grid():
     assert 'id_grid' in ds.data_vars
 
 
+def test_load_with_add_id_grid_drop_nest_bound():
+    ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True)
+    assert 'id_grid' in ds.data_vars
+
+    zones = ds.where(ds['id_grid']==1)['zone'].values
+
+    mask = gm.mask_nest_bound(ds)
+    safe_zone = ~ds["zone"].isin(mask)
+    ds = ds.sel(zone=safe_zone)
+    
+    assert len(zones) != len(ds['zone'].values)
+
+
 def test_load_nonexistent_file_raises():
     with pytest.raises(FileNotFoundError):
         gm.load_marthe_grid('not_a_file.permh', VAR)
@@ -123,6 +136,32 @@ def test_read_grid_times_int_fmt():
     assert np.allclose(head.time.data, np.array([1840, 1935, 1970, 1995, 2005, 2012]))
 
 
+def test_get_dims_from_ds_with_nan():
+    ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True)
+    dims = gm.get_dims_from_attrs(ds)
+
+    assert gm.get_dims_from_ds(ds) == dims
+
+
+def test_get_dims_from_ds_with_non_nested_grid():
+    ds = gm.load_marthe_grid(DATA_PATH, VAR, add_id_grid=True)
+    dims = gm.get_dims_from_attrs(ds)
+
+    assert gm.get_dims_from_ds(ds) == dims
+
+
+def test_get_dims_from_ds_without_nan():
+    ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True, drop_nan=True)
+    dims = gm.get_dims_from_attrs(ds)
+
+    assert gm.get_dims_from_ds(ds) != dims
+
+    ds2 = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True)
+    ds2 = ds2.where(ds['permeab'] != 0, drop=True)
+
+    assert gm.get_dims_from_ds(ds) == gm.get_dims_from_ds(ds2)
+
+
 @pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark not found")
 @pytest.mark.benchmark
 def test_perf_read_grid(benchmark):
@@ -133,6 +172,7 @@ def run_all():
     test_load_valid_grid_returns_xarray()
     test_load_grid_attrs_present()
     test_load_with_add_id_grid_adds_id_grid()
+    test_load_with_add_id_grid_drop_nest_bound()
     test_load_with_adds_col_row()
     test_load_with_custom_nanval()
     test_load_with_drop_nan_removes_nan()
