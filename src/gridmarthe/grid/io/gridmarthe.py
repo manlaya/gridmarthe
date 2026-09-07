@@ -517,7 +517,7 @@ def write_marthe_grid(
     fileout='grid.out',
     varname=None,
     file_permh: str|None = None,
-    nan_value=9999.,
+    nan_value=None,
     title=None,
     dims=None,
     force_full_grid=False,
@@ -564,7 +564,7 @@ def write_marthe_grid(
         Needed to recreate full dimension if NaN dropped before.
 
     nan_value : float, optional
-        custom value to fillna, when using a `permh` field to reset geometry
+        custom value to fillna. By default, inferred from variable defaults.
 
     title : str, optional
         title written in marthe grid file

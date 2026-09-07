@@ -33,13 +33,17 @@ def test_assign_coords_with_z_nested():
 
 
 def test_assign_coords_no_z():
-    ds = gm.load_marthe_grid(DATA_NO_Z, VAR)
+    ds = gm.load_marthe_grid(DATA_NO_Z, VAR, xyfactor=1e3)
     ds2 = gm.assign_coords(ds)
     assert 'x' in ds2.coords
     assert 'y' in ds2.coords
     assert 'z' not in ds2.coords
     assert VAR.lower() in ds.data_vars
     assert len(np.shape(ds2[VAR.lower()].data)) == 3
+
+    # check that slicing is ok (see #24)
+    sta = ds2.sel(x=slice(605250, 608250), y=slice(2554250, 2557250))
+    assert len(sta.x) == len(sta.y) == 7
 
 
 def test_assign_coords_force_no_z():

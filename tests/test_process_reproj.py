@@ -15,7 +15,8 @@ def _check_reproj(ds_reproj, n=2862, dx=500., dy=500.):
     # check that dx, dy are ketp with new coords
     ds_check = gm.assign_coords(ds_reproj)
     assert np.allclose(np.diff(ds_check.x), dx)
-    assert np.allclose(np.diff(ds_check.y[::-1]), dy)
+    # assert np.allclose(np.diff(ds_check.y[::-1]), dy) # not more y descending sort in assign_coords
+    assert np.allclose(np.diff(ds_check.y), dy)
     assert 'RGF93' in ds_reproj.attrs['crs'].get('geographic_crs_name')
 
 

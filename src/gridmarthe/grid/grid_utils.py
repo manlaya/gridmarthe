@@ -276,17 +276,15 @@ def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zon
     keep_zone : bool, optional
         keep zone as dimension (will make multiindex). Default is False.
     zone_label : str, optional
-        label of current index. Default is `zone` as read by :py:func:`gridmarthe.load_marthe_grid`
+        label of current index. Default is `zone` as read by
+        :py:func:`gridmarthe.load_marthe_grid`
 
     Returns
     -------
     xr.Dataset
         Dataset with coordinates as dimension.
     """
-    if len(coords) == 3:
-        z_coords = ds.get(coords[2], None) # assert z is here, or bypass
-    else:
-        z_coords = None
+    z_coords = ds.get(coords[2], None) if len(coords) == 3 else None
 
     if add_lay is False:
         # in some case, even if z is included it should not be treated as coord (ex. plot outcrop)
@@ -316,7 +314,10 @@ def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zon
     if z_coords is not None:
         da.z.attrs = coords_attrs[2]
 
-    return da.sortby(dims).sortby('y', ascending=False)
+    # Memo: Do not `.sortby('y', ascending=False)` after sortby(dims)
+    # This would results in a slicing error
+    # See (https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/work_items/24)
+    return da.sortby(dims)
 
 
 def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
@@ -340,12 +341,12 @@ def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
 
     Notes
     -----
-    For nested grids, the total number of zones cannot be checked
-    when flattening back to 1D from cartesian coords/arrays. It will
-    lead to incorrect total number of zones as different cell sizes exist
-    in the 3D grid. For such cases, it is advised to use dropna=True to remove
-    empty zones. Then write back to marthe grid with :py:func:`gridmarthe.write_marthe_grid`
-    using a permh file as template.
+    For nested grids, the total number of zones cannot be checked when
+    flattening back to 1D from cartesian coords/arrays. It will lead to
+    incorrect total number of zones as different cell sizes exist in the 3D
+    grid. For such cases, it is advised to use dropna=True to remove empty
+    zones. Then write back to marthe grid with
+    :py:func:`gridmarthe.write_marthe_grid` using a permh file as template.
 
     TODO: add a sort option to ensure sorted coords in output
     based on z,y,x order AND dx, dy scale (larger scale first, then smaller)
