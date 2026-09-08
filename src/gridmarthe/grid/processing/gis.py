@@ -34,18 +34,7 @@ import geopandas as gpd
 import xarray as xr
 
 from ..grid_utils import assign_coords, stack_coords
-from .gutils import _polygonize
-
-
-def _build_polyg(ds):
-    """ build a (rectangular) polygon shape from marthegrid dataset """
-
-    x0 = ds.x.values - (ds.dx.values / 2.)
-    y0 = ds.y.values - (ds.dy.values / 2.)
-    x1 = ds.x.values + (ds.dx.values / 2.)
-    y1 = ds.y.values + (ds.dy.values / 2.)
-
-    return _polygonize(x0, y0, x1, y1)
+from .gutils import _build_polyg
 
 
 def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):

@@ -10,7 +10,7 @@ import shapely
 from gridmarthe.core import _get_dims_from_attrs, _get_extend_from_attrs
 from ..conventions import _parse_global_attrs, _assign_xy_attrs, _assign_z_attrs
 from ..grid_utils import _nearest_node
-
+from ..processing.gis import to_geodataframe
 
 def create_grid_domain(
     x0,
@@ -272,7 +272,8 @@ def add_zoom(
         The grid with the zoom grid added.
     """
     # FIXME how to assert epsg ?
-    inactive_code = 0 # for permeability
+    inactive_code = 0  # for permeability in main grid
+    inactive_subgrid = -9999.  # inactive subgrid (but active main grid)
 
     dims = _get_dims_from_attrs(grid.attrs.get('original_dimensions'))
     nlayer = dims[0][-1]
@@ -322,8 +323,14 @@ def add_zoom(
     y_coords = y0_zoom + dy/2 + np.arange(ny) * dy
 
     # add halo cell centers
-    x_coords = np.concatenate([[x_coords[0] - dx*(xfactor+1)/2], x_coords, [x_coords[-1] + dx*(xfactor+1)/2]])
-    y_coords = np.concatenate([[y_coords[0] - dy*(xfactor+1)/2], y_coords, [y_coords[-1] + dy*(xfactor+1)/2]])
+    x_coords = np.concatenate([
+            [x_coords[0] - dx * (xfactor+1) / 2], x_coords,
+            [x_coords[-1] + dx * (xfactor+1) / 2]
+    ])
+    y_coords = np.concatenate([
+            [y_coords[0] - dy * (xfactor+1) / 2], y_coords,
+            [y_coords[-1] + dy * (xfactor+1) / 2]
+    ])
     layer_coords = np.arange(1, nlayer + 1)
 
     # map coords to match zone dimensions
@@ -367,6 +374,7 @@ def add_zoom(
 
     zoom_points_with_halo = shapely.points(zoom_grid["x"].values,
                                            zoom_grid["y"].values)
+
     if mask_polygon is None:
         # all cells in zoom grid are active, set main grid cells to inactive if
         # their centers are inside the zoom domain
@@ -382,10 +390,12 @@ def add_zoom(
         zoom_polygon = mask_polygon
 
     # set main grid cells to inactive if their centers are inside the mask_polygon
+    # and if nested is active
     inside = shapely.covers(zoom_polygon, main_points)
     grid['permeab'][0, :nvals] = np.where(inside, inactive_code, grid['permeab'][0, :nvals])
 
     # mask_polygon is provided, use it to set active/inactive cells in zoom grid
+    # FIXME: get 0 from main grid inactive cells, and halo cells, otherwise set -9999.
     inside = shapely.covers(zoom_polygon, zoom_points_with_halo)
     zoom_grid['permeab'] = zoom_grid['permeab'].where(inside, inactive_code)
 
@@ -397,8 +407,8 @@ def add_zoom(
     dims.extend(zoom_dims)
     nested_grid.attrs['original_dimensions'] = (
         'x,y,z [grids]: ' + '; '.join(
-            [ ' '.join(map(str, x)) for x in dims]
-            )
+            [' '.join(map(str, x)) for x in dims]
+        )
     )
     nested_grid.attrs['nested_grid'] = True
 
@@ -427,9 +437,13 @@ def add_zoom_from_shape(grid, zooms, epsg=None):
     """
     # FIXME assert non-intersection between zoom domains if multiple
     epsg = epsg if epsg is not None else grid.attrs.get('epsg')
+    gdf_grid = to_geodataframe(grid)
     for zoom in zooms:
         gdf_zoom = gpd.read_file(zoom['shape'])
-        domain_geom_zoom = gdf_zoom.union_all()
+        # get cells intersecting zoom domain to ensure coherent snapping
+        # after mask_polygon filter
+        grid_geom_zoom = gdf_grid.geometry.intersects(gdf_zoom.unary_union)
+        domain_geom_zoom = gdf_grid.iloc[grid_geom_zoom.values].union_all()
         x0_zoom, y0_zoom, x1_zoom, y1_zoom = domain_geom_zoom.bounds
 
         grid = add_zoom(
