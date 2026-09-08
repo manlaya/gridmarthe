@@ -12,7 +12,9 @@ def _check_times(times, is_time=True):
     assert 'time' in times.columns
     assert times['step'].dtype == 'int64'
     if is_time:
-        assert times['time'].dtype == 'datetime64[ns]'
+        # pandas 3.0 : datetime64[ns] -> <M8[ns]
+        # assert times['time'].dtype in ['datetime64[ns]', '<M8[us]']
+        assert np.issubdtype(times['time'].dtype, np.datetime64)
 
 
 def test_read_times():
