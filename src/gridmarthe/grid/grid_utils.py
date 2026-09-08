@@ -480,10 +480,10 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
         The input dataset with 1D 'zone' dimension and variables 'x', 'y', 'z'.
     x : float or tuple or list, optional
         x-coordinate: float for point selection, (xmin, xmax) for range,
-        or a list of x values for multiple point selection (with method='nearest').
+        or a list of x values for multiple point selection (paired with `y`).
     y : float or tuple or list, optional
         y-coordinate: float for point selection, (ymin, ymax) for range,
-        or a list of y values for multiple point selection (with method='nearest').
+        or a list of y values for multiple point selection (paired with `x`).
     z : int or tuple, optional
         z-level: int for exact, (zmin, zmax) for range.
     method : str, optional
@@ -585,19 +585,41 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
                 lo, hi = snapped
                 mask &= (coords >= lo) & (coords <= hi)
     else:
-        # Look for exact match
-        if isinstance(x, (int, (float, np.floating))):
-            mask &= np.isclose(ds['x'].values, x)
-        if isinstance(y, (int, (float, np.floating))):
-            mask &= np.isclose(ds['y'].values, y)
+        x_vals = ds['x'].values
+        y_vals = ds['y'].values
 
-        # Range or no selection
-        if isinstance(x, (tuple, list)) and len(x) == 2:
-            xmin, xmax = x
-            mask &= (ds['x'].values >= xmin) & (ds['x'].values <= xmax)
-        if isinstance(y, (tuple, list)) and len(y) == 2:
-            ymin, ymax = y
-            mask &= (ds['y'].values >= ymin) & (ds['y'].values <= ymax)
+        x_len = len(x) if isinstance(x, (tuple, list)) else None
+        y_len = len(y) if isinstance(y, (tuple, list)) else None
+
+        if x_len == 2 or y_len == 2:
+            # Exact match on scalars, (min, max) range on 2-length lists
+            if isinstance(x, (int, (float, np.floating))):
+                mask &= np.isclose(x_vals, x)
+            if isinstance(y, (int, (float, np.floating))):
+                mask &= np.isclose(y_vals, y)
+            if isinstance(x, (tuple, list)) and len(x) == 2:
+                xmin, xmax = x
+                mask &= (x_vals >= xmin) & (x_vals <= xmax)
+            if isinstance(y, (tuple, list)) and len(y) == 2:
+                ymin, ymax = y
+                mask &= (y_vals >= ymin) & (y_vals <= ymax)
+        elif x_len is not None and y_len is not None and x_len == y_len:
+            # Lists of coordinates (same length): exact match for each (x, y) pair
+            selected = np.zeros_like(mask)
+            for px, py in zip(x, y, strict=True):
+                selected |= np.isclose(x_vals, px) & np.isclose(y_vals, py)
+            mask &= selected
+        else:
+            # Single axis or scalar: exact match
+            if (x_len is not None and x_len != 2) or (y_len is not None and y_len != 2):
+                raise ValueError(
+                    "x and y must be scalars, (min, max) ranges, or lists "
+                    "of coordinates of the same length."
+                )
+            if isinstance(x, (int, (float, np.floating))):
+                mask &= np.isclose(x_vals, x)
+            if isinstance(y, (int, (float, np.floating))):
+                mask &= np.isclose(y_vals, y)
 
     # Handle Z selection
     if z is not None:

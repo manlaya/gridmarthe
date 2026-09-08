@@ -206,6 +206,45 @@ def test_mismatched_list_lengths_raise(sample_dataset):
         gm.sel_by_coords(sample_dataset, x=xs, y=ys, method='nearest', tolerance=1e3)
 
 
+def test_multiple_point_selection_exact(sample_dataset):
+    """A list of (x, y) points selects each pair by exact match (no method)."""
+    idxs = [0, 100, 500]
+    xs = sample_dataset['x'].values[idxs].tolist()
+    ys = sample_dataset['y'].values[idxs].tolist()
+    subset = gm.sel_by_coords(sample_dataset, x=xs, y=ys)
+    for x0, y0 in zip(xs, ys):
+        x_vals = subset['x'].values
+        y_vals = subset['y'].values
+        assert np.any(np.isclose(x_vals, x0) & np.isclose(y_vals, y0))
+    assert len(subset.zone) <= len(xs)
+
+
+def test_multiple_point_selection_exact_missing_points(sample_dataset):
+    """Points not present in the grid are simply not selected."""
+    x0, y0 = sample_dataset['x'].values[0], sample_dataset['y'].values[0]
+    xs = [1e8, x0, 2e8]
+    ys = [1e8, y0, 2e8]
+    subset = gm.sel_by_coords(sample_dataset, x=xs, y=ys)
+    x_vals = subset['x'].values
+    y_vals = subset['y'].values
+    assert np.all(np.isclose(x_vals, x0) & np.isclose(y_vals, y0))
+
+
+def test_mismatched_list_lengths_raise_exact(sample_dataset):
+    """Lists of coordinates of different lengths should raise without method."""
+    xs = sample_dataset['x'].values[[0, 100, 200]].tolist()
+    ys = sample_dataset['y'].values[[0, 100, 200, 300]].tolist()
+    with pytest.raises(ValueError):
+        gm.sel_by_coords(sample_dataset, x=xs, y=ys)
+
+
+def test_single_axis_list_raise_exact(sample_dataset):
+    """A list of coordinates on one axis only should raise (ambiguous)."""
+    xs = sample_dataset['x'].values[[0, 100, 200]].tolist()
+    with pytest.raises(ValueError):
+        gm.sel_by_coords(sample_dataset, x=xs)
+
+
 def test_exact_match_close_to_data(sample_dataset_multilayer):
     # Pick an actual x,y from the dataset
     idx = 100
