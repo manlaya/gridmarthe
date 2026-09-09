@@ -19,4 +19,4 @@ build:
       - python3 -c "import gridmarthe"
 
 sphinx:
-  configuration: docs/source/conf.py
+  configuration: doc/source/conf.py
