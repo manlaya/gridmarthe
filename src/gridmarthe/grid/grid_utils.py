@@ -64,7 +64,7 @@ def _nearest_node(node, nodes):
     nodes = np.asarray(nodes)
     dist_2 = np.sum((nodes - node)**2, axis=1)
     idx_nearest = np.argmin(dist_2)
-    return idx_nearest, np.sqrt(idx_nearest)
+    return idx_nearest, np.sqrt(dist_2[idx_nearest])
 
 
 def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
