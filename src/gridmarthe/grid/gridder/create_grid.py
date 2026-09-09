@@ -12,6 +12,7 @@ from ..conventions import _parse_global_attrs, _assign_xy_attrs, _assign_z_attrs
 from ..grid_utils import _nearest_node
 from ..processing.gis import to_geodataframe
 
+
 def create_grid_domain(
     x0,
     y0,
@@ -207,17 +208,13 @@ def create_grid_from_shape(
         nlayer=nlayer,
         default_value=default_value,
         epsg=epsg
-
     )
 
     # Optionally set active domain inside polygon
     if active_only:
         inactive_code = 0 # for permeability
-        points = shapely.points(grid["x"].values,
-                                grid["y"].values)
-
+        points = shapely.points(grid["x"].values, grid["y"].values)
         inside = shapely.covers(domain_geom, points)
-
         grid['permeab'] = grid['permeab'].where(inside, inactive_code)
 
     return grid
@@ -284,14 +281,23 @@ def add_zoom(
     xy_arr = np.array([grid['x'][:nvals].values, grid['y'][:nvals].values]).T
     main_points = shapely.points(xy_arr[:,0], xy_arr[:,1])
 
+    if len(dims) > 1:
+        # TODO: test that zoom does not overlap any previous zoom
+        _has_existing_zoom = True
+        nzoom = len(dims) - 1
+        idx_zoom = np.prod(dims, axis=1)
+        # check _filter_shallow_only: that was a similar pb
+    else:
+        _has_existing_zoom = False
+
     # regular main grid dx and dy
     dx = grid['dx'][:nvals].values[0]
     dy = grid['dy'][:nvals].values[0]
 
     # -- snap to main grid cells edges
     # get nearest main center cell
-    idx_0 = _nearest_node((x0_zoom, y0_zoom), xy_arr)
-    idx_1 = _nearest_node((x1_zoom, y1_zoom), xy_arr)
+    idx_0, _ = _nearest_node((x0_zoom, y0_zoom), xy_arr)
+    idx_1, _ = _nearest_node((x1_zoom, y1_zoom), xy_arr)
 
     (x0_zoom, y0_zoom), (x1_zoom, y1_zoom) = xy_arr[idx_0,:], xy_arr[idx_1, :]
 
