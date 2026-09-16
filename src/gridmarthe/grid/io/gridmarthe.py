@@ -84,7 +84,7 @@ def get_dims_from_attrs(ds):
     Returns
     -------
     numpy.ndarray:
-        A list of dimensions for each grid (main and nested). List will contains
+        An array of dimensions for each grid (main and nested). List will contains
         `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
     """
     return _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
@@ -99,8 +99,8 @@ def get_dims_from_ds(ds):
 
     Returns
     -------
-    list:
-        A list of dimensions for each grid (main and nested). List will contains
+    numpy.ndarray:
+        An array of dimensions for each grid (main and nested). List will contains
         `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
     """
     if 'x' not in ds.data_vars or 'y' not in ds.data_vars:
@@ -115,17 +115,17 @@ def get_dims_from_ds(ds):
         z = 1 if 'z' not in ds.data_vars else len(np.unique(ds['z'].values))
         dims.append([x,y,z])
 
-    return dims
+    return np.array(dims)
 
 
 def mask_nest_bound(ds):
     """Get mask array of the nested grid bound
-    
+
     Parameters
     ----------
     ds : xr.Dataset
         dataset containing data, coordinates (x,y[,z]), dx,dy and dimensions (in attrs).
-    
+
     Returns
     -------
     array:
@@ -153,7 +153,7 @@ def mask_nest_bound(ds):
         border = np.concatenate([n.ravel(), s.ravel(),
                                   w.ravel(), e.ravel()])
         mask = np.concatenate([mask, border])
-        
+
     return mask
 
 

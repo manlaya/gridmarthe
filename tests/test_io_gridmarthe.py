@@ -106,7 +106,7 @@ def test_load_with_add_id_grid_drop_nest_bound():
     mask = gm.mask_nest_bound(ds)
     safe_zone = ~ds["zone"].isin(mask)
     ds = ds.sel(zone=safe_zone)
-    
+
     assert len(zones) != len(ds['zone'].values)
 
 
@@ -201,26 +201,26 @@ def test_get_dims_from_ds_with_nan():
     ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True)
     dims = gm.get_dims_from_attrs(ds)
 
-    assert gm.get_dims_from_ds(ds) == dims
+    assert np.allclose(gm.get_dims_from_ds(ds), dims)
 
 
 def test_get_dims_from_ds_with_non_nested_grid():
     ds = gm.load_marthe_grid(DATA_PATH, VAR, add_id_grid=True)
     dims = gm.get_dims_from_attrs(ds)
 
-    assert gm.get_dims_from_ds(ds) == dims
+    assert np.allclose(gm.get_dims_from_ds(ds), dims)
 
 
 def test_get_dims_from_ds_without_nan():
     ds = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True, drop_nan=True)
     dims = gm.get_dims_from_attrs(ds)
 
-    assert gm.get_dims_from_ds(ds) != dims
+    assert np.all(gm.get_dims_from_ds(ds) != dims)
 
     ds2 = gm.load_marthe_grid('./tests/data/craie_npc_gig.permh', 'PERMEAB', add_id_grid=True)
     ds2 = ds2.where(ds['permeab'] != 0, drop=True)
 
-    assert gm.get_dims_from_ds(ds) == gm.get_dims_from_ds(ds2)
+    assert np.all(gm.get_dims_from_ds(ds) == gm.get_dims_from_ds(ds2))
 
 
 @pytest.mark.skipif(not BENCHMARK_AVAILABLE, reason="pytest-benchmark not found")
