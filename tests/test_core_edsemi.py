@@ -2,6 +2,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import pytest
 import numpy as np
 
 import gridmarthe as gm
@@ -108,7 +109,15 @@ def test_force_full_grid():
     assert len(lines) >= 50
 
 
+def test_write_after_stack():
+    martfile = './tests/data/hallue_multilayer.permh'
+    fout = './tests/tmp_outputs/grid.out'
+    ds_in = gm.load_marthe_grid(martfile)
+    ds_in = gm.stack_coords(gm.assign_coords(ds_in))
+    status = gm.write_marthe_grid(ds_in, fout)
+    assert status == 0, "write_marthe_grid test, with permh file and dropna, failed"
+
 
 if __name__ == "__main__":
 
-    test_write_marthe_grid()
+    pytest.main([__file__, '-v', '--no-cov'])

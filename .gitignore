@@ -9,6 +9,9 @@ __pycache__/
 *.mod
 *.pyd
 *.dll
+*.dll.a
+*.lib
+*.obj
 
 # Distribution / packaging
 .Python
@@ -145,10 +148,11 @@ cython_debug/
 .vscode
 
 *.bak
-*.out
 dev/
-test-read
 Cal_river_network.listing
 
 .benchmarks/
 
+# gdb manual debug for core module
+greader
+*-cpp.f90

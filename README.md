@@ -120,16 +120,26 @@ make
 This will install the library using pip editable mode, but with dependencies
 installed from conda-forge.
 
-Alternatively, you can use `conda-build`:
+Alternatively, you can use `conda-build` and the `conda develop` command to
+install the library in development mode.
 
 ```bash
 mamba env create -n gm -f environment.yml
 mamba activate gm
-mamba install conda-build
-make lib  # only compile shared library for python bindings
-conda develop src/
+make conda-dev
 ```
 
+On Windows, it is also possible to use a different compiler, for compatibility
+issues with other libraries. For example, use `llvm` compilers (`flang` and
+`clang`) instead of `gfortran` and `gcc`. To do so, use the following command:
+
+```bash
+mamba env create -n gm -f tools/env/conda_dev_llvm.yml
+mamba activate gm
+make conda-dev FC=flang CC=clang LD=lld
+```
+
+Warning: this approach requires an installation of VStudio.
 
 ## Usage
 

@@ -26,6 +26,7 @@
 
 
 from typing_extensions import deprecated
+import re
 import numpy as np
 
 from pyproj import Transformer, CRS
@@ -33,18 +34,7 @@ import geopandas as gpd
 import xarray as xr
 
 from ..grid_utils import assign_coords, stack_coords
-from .gutils import _polygonize
-
-
-def _build_polyg(ds):
-    """ build a (rectangular) polygon shape from marthegrid dataset """
-
-    x0 = ds.x.values - (ds.dx.values / 2.)
-    y0 = ds.y.values - (ds.dy.values / 2.)
-    x1 = ds.x.values + (ds.dx.values / 2.)
-    y1 = ds.y.values + (ds.dy.values / 2.)
-
-    return _polygonize(x0, y0, x1, y1)
+from .gutils import _build_polyg
 
 
 def to_geodataframe(ds, epsg='EPSG:27572', fmt='long'):
@@ -300,7 +290,7 @@ def to_raster(
         The name of the x dimension, by default 'x'.
     y_dim : str, optional
         The name of the y dimension, by default 'y'.
-    time : str, list
+    time : str, list, optional
         time or list of time from `da.time`
     epsg : int, optional
         The EPSG code for the coordinate reference system, by default 27572.
@@ -326,17 +316,29 @@ def to_raster(
         raise ValueError('ds is neither a xr.Dataset nor xr.DataArray')
 
     if 'time' not in da.dims:
-        da = da.expand_dims('time')
-
-    if time is None:
-        time = da.times  # if not defined, get all available times
-    elif isinstance(time, str):  # make sure to get a iterable for slicing
-        time = [time]
-
-    for t in time:
         _single_grid_to_raster(
-            da.sel(time=slice(t)),
+            da,
             x_dim, y_dim, epsg,
-            "{}_{}.tiff".format(filename_tpl, t)
+            f"{filename_tpl}.tiff"
         )
+    else:
+        if time is None:
+            # if not defined, get all available times
+            time = da.time
+        elif isinstance(time, str):
+            # make sure to get an iterable for slicing
+            time = [time]
+
+        for i, t in enumerate(time):
+            _single_grid_to_raster(
+                da.sel(time=t),
+                x_dim, y_dim, epsg,
+                # check for valid filename of time as string
+                f"{filename_tpl}_{t}.tiff"
+                # https://stackoverflow.com/a/47455094
+                if re.match(r'^[^<>:;,?"*|]+$', f"{filename_tpl}_{t}.tiff")
+                # otherwise use integer index instead
+                else f"{filename_tpl}_{i}.tiff"
+            )
+
     return None

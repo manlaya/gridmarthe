@@ -34,6 +34,16 @@ def test_dropna():
     assert np.count_nonzero(arr) == 927, 'zero values still present after dropna'
 
 
+@pytest.mark.filterwarnings("ignore:No variable name found.")
+def test_dropna_no_default():
+    ds = gm.load_marthe_grid('tests/data/grid_wrong_attrs.hsubs')
+    with pytest.warns(UserWarning):
+        ds = gm.dropna(ds)
+        # without default, dropna shoud not raise an exception,
+        # only a warning, then fallback to 9999.
+        assert not np.any(ds['hsubs'].data == 9999.)
+
+
 def test_subset():
     ds = gm.load_marthe_grid('tests/data/hallue.permh')
     ds = gm.subset(ds, 0.)

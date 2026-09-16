@@ -321,7 +321,7 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     if x is not None:
         assert y is not None, 'if x is provided, y cannot be None'
 
-        nearest_xy, nearest_idx = _get_nearest_xy(ds_search, x, y)
+        nearest_xy, nearest_idx, dist = _get_nearest_xy(ds_search, x, y)
 
         # check if xy is in a cell == dx and dy are not greater than grid resolution
         nearest_zone = ds_search.isel(zone=nearest_idx)

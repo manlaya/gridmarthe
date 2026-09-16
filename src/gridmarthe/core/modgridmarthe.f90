@@ -73,14 +73,34 @@ MODULE MODGRIDMARTHE
 
 CONTAINS
 
-    SUBROUTINE SCAN_NU_ZOOMX(XFILE, KNU_ZOOMX)
+    ! This would exit the program, this should only be used in pure Fortran
+    ! prog, not python wrapper. For the latter, we return the iostat to the
+    ! caller, see L122
+    subroutine check_io(filename, iostat, iomsg)
+        character(len=*), intent(in) :: filename, iomsg
+        integer, intent(in) :: iostat
+
+        if (IOSTAT /= 0) then
+            write(*,*) 'Error opening file ', trim(filename)
+            write(*,*) 'I/O status: ', iostat
+            write(*,*) 'I/O message: ', trim(iomsg)
+            ! Stop = Fortran exit --> EDIT, return status to python caller
+            stop iostat
+        endif
+
+    end subroutine check_io
+
+    SUBROUTINE SCAN_NU_ZOOMX(XFILE, KNU_ZOOMX, iostat)
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN) :: XFILE
+        CHARACTER (LEN=*), INTENT(IN) :: XFILE
         INTEGER, INTENT(OUT) :: KNU_ZOOMX
         !
         INTEGER :: INUMSTEP
+        ! IO variables
+        integer, intent(out) :: IOSTAT
+        character(len=132):: IOMSG
         !
         LIRE_DXDY =  0
         IANALY    =  1
@@ -92,30 +112,42 @@ CONTAINS
         NU_ZOO    =  0
         INUMSTEP  =  0
         !
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
+        OPEN( &
+            UNIT=LEC, FILE=TRIM(XFILE), &
+            FORM='formatted', ACTION='read', &
+            status='OLD', IOSTAT=IOSTAT, IOMSG=IOMSG &
+        )
+        ! call check_io(xfile, iostat, iomsg)  ! edit, manage error in python
+        if (iostat /= 0) then
+            iostat = -2  ! force value for py caller
+            return       ! end here, propagate to the caller --> raise an exception in python
+        endif
         !
-        CALL LECSEM_3(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
-                  , IOUCON, LEC, IERLEC, NUMERR, NTOT &
-                  , IANALY &
-                  , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
-                  , DATE, LIBCHIM &
-                  , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
+        CALL LECSEM_3( &
+            X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
+            IOUCON, LEC, IERLEC, NUMERR, NTOT, &
+            IANALY, TYP_DON, TYP_DON3, N_ELEMCH, &
+            ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+            DATE, LIBCHIM, &
+            LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
+        )
         !
         KNU_ZOOMX = NU_ZOOMX
         !
-        CLOSE(10)
+        CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE SCAN_NU_ZOOMX
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! =============================================================================!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !
+    ! ===================================================================
     ! SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KNU_ZOOMX, KDIMEN, KNBSTEP)
-    SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KDIMEN, KNBSTEP)
+    SUBROUTINE SCAN_DIM(XFILE, XTYP_DON, KDIMEN, KNBSTEP, iostat)
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE
-        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
+        CHARACTER (LEN=*),   INTENT(IN)        :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)        :: XTYP_DON
         ! INTEGER, INTENT(IN)                           :: KNU_ZOOMX
         ! INTEGER, DIMENSION(KNU_ZOOMX + 1, 3), INTENT(OUT) :: KDIMEN
         INTEGER, DIMENSION(99, 3), INTENT(OUT) :: KDIMEN
@@ -126,6 +158,9 @@ CONTAINS
         integer  :: N_COUCH_TEMP, NCOUC_MX_TEMP, &
                     NCOL_TEMP, NLIG_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP
         logical :: is_main_grid
+        ! io check
+        integer, intent(out) :: iostat
+        character(len=132) :: MSG
         !
         LIRE_DXDY =  0
         IANALY    =  1
@@ -150,23 +185,34 @@ CONTAINS
         VAR_TO_READ = XTYP_DON
         is_main_grid = .true.
         !
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
+        OPEN( &
+            UNIT=LEC, FILE=TRIM(XFILE), &
+            FORM='formatted', ACTION='read', &
+            status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
+        )
+        if (iostat /= 0) then
+            iostat = -2  ! force value for py caller
+            return
+        endif
         !
         i = 0
         ! allocate temp array to store dimensions while scanning
         DO WHILE (IERLEC == 0)
-            CALL LECSEM_3(&
+
+            CALL LECSEM_3( &
                 X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
                 IOUCON, LEC, IERLEC, NUMERR, NTOT, &
                 IANALY, &
-                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, &
+                NU_ZOO, NU_ZOOMX, &
                 DATE, LIBCHIM, &
                 LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
             )
 
             if (IERLEC /= 0) exit  ! quit loop if error
 
-            if (i == 0 .and. trim(VAR_TO_READ) == '') VAR_TO_READ = TYP_DON  ! if no var specified, take the first one as default
+            ! if no var specified, take the first one as default
+            if (i == 0 .and. trim(VAR_TO_READ) == '') VAR_TO_READ = TYP_DON
 
             IF (TRIM(TYP_DON) == TRIM(VAR_TO_READ)) THEN
                 IF (ISTEP /= ISTEP_TEMP) THEN
@@ -177,7 +223,8 @@ CONTAINS
                 if (ISTEPINC == 1 .AND. (NU_ZOOMX == 0 .AND. NCOUC_MX == 0)) then
                     call fix_metada(&
                         NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
-                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, &
+                        NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
                         i, is_main_grid &
                     )
                 endif
@@ -190,16 +237,18 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
     END SUBROUTINE SCAN_DIM
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! =============================================================================!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !
+    ! ===================================================================
     SUBROUTINE READ_GRID(XFILE, XTYP_DON, KNBSTEP, KNBTOT, KNU_ZOOMX, PVAR, PDATES, &
-        KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM)
+        KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM, SHALLOW_ONLY, iostat)
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
+        CHARACTER (LEN=*), INTENT(IN)                 :: XFILE
+        CHARACTER (LEN=132), INTENT(IN)               :: XTYP_DON
         INTEGER, INTENT(IN)                           :: KNBTOT
         INTEGER, INTENT(IN)                           :: KNBSTEP
         INTEGER, INTENT(IN)                           :: KNU_ZOOMX
@@ -208,12 +257,17 @@ CONTAINS
         REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
         REAL(KIND=8), DIMENSION(KNBSTEP, KNBTOT), INTENT(OUT) :: PVAR
         CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
+        logical, optional                             :: SHALLOW_ONLY
+        logical :: SHALLOW_ONLY_OPT
         ! memo: max in marthe 3000 colonnes, 3000 lignes, 999 couches, 99 gigognes
         INTEGER  :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, i
         integer  :: N_COUCH_TEMP, NCOUC_MX_TEMP, &
                     NCOL_TEMP, NLIG_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP
         logical :: is_main_grid
         character(len=132) :: VAR_TO_READ
+        ! io check
+        integer, intent(out) :: iostat
+        character(len=132) :: MSG
         !
         LIRE_DXDY =  1
         IANALY    =  0
@@ -246,9 +300,24 @@ CONTAINS
         !
         VAR_TO_READ = XTYP_DON
         is_main_grid = .true.
+        !
+        SHALLOW_ONLY_OPT = .false.
+        if (present(SHALLOW_ONLY)) then
+            SHALLOW_ONLY_OPT = SHALLOW_ONLY
+        endif
+        !
         i = 0  ! integer to check if coordinates already read
         ! debug = .FALSE.
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
+        !
+        OPEN( &
+            UNIT=LEC, FILE=TRIM(XFILE), &
+            FORM='formatted', ACTION='read', &
+            status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
+        )
+        if (iostat /= 0) then
+            iostat = -2  ! force value for py caller
+            return
+        endif
         !
         DO WHILE (IERLEC == 0)
             NLIG = 999.
@@ -261,10 +330,12 @@ CONTAINS
                 X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
                 IOUCON, LEC, IERLEC, NUMERR, NTOT, &
                 IANALY, &
-                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
+                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, &
+                NU_ZOO, NU_ZOOMX, &
                 DATE, LIBCHIM, &
                 LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
             )
+
             if (IERLEC /= 0) exit  ! quit loop if error
             if (i == 0 .and. trim(VAR_TO_READ) == '') VAR_TO_READ = TYP_DON
 
@@ -280,7 +351,8 @@ CONTAINS
                 if (ISTEPINC == 1 .AND. (NU_ZOOMX == 0 .AND. NCOUC_MX == 0)) then
                     call fix_metada(&
                         NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
-                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
+                        NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, &
+                        NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
                         i, is_main_grid &
                     )
                 endif
@@ -291,6 +363,20 @@ CONTAINS
                     PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
                     PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
                 ENDIF
+
+                if (SHALLOW_ONLY_OPT .and. N_COUCH > 1) then
+                    cycle ! skip deep layers
+                    ! note: SHALLOW only could also use IANALY = 1
+                    ! if N_COUCH > 1, in lecsem_3. But this would
+                    ! break if metadata are not well parsed.
+                endif
+
+                if ((INTOT_TEMP + NTOT -1) > KNBTOT) then
+                    print *, 'FortranError: grid too large for allocated array'
+                    iostat = 4
+                    return
+                endif
+
                 PVAR(ISTEPINC, INTOT_TEMP:INTOT_TEMP + NTOT -1) = FONC(:NTOT)
                 INTOT_TEMP = INTOT_TEMP + NTOT
                 i = i + 1
@@ -299,9 +385,12 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE READ_GRID
-    ! ------------------------------------------------------------------------
+    !
+    ! ===================================================================
     subroutine fix_metada(NKOL, NLIG, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX, &
         NCOL_TEMP, NLIG_TEMP, N_COUCH_TEMP, NCOUC_MX_TEMP, NU_ZOO_TEMP, NU_ZOOMX_TEMP, &
         i_ncouch, is_main_grid &
@@ -353,123 +442,21 @@ CONTAINS
         endif
     end subroutine fix_metada
     !
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! =============================================================================!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE READ_GRID_SHALLOW(XFILE, XTYP_DON, KNBSTEP, KN_COUCHMX, KNBTOT, &
-        KNU_ZOOMX, PVAR, PDATES, KSTEPS, PXCOL, PYLIG, PDXLU, PDYLU, TITSEM)
-        !
-        IMPLICIT NONE
-        !
-        CHARACTER (LEN=132), INTENT(IN)               :: XFILE, XTYP_DON
-        INTEGER, INTENT(IN)                           :: KNBTOT
-        INTEGER, INTENT(IN)                           :: KNBSTEP
-        INTEGER, INTENT(IN)                           :: KN_COUCHMX
-        INTEGER, INTENT(IN)                           :: KNU_ZOOMX
-        INTEGER, DIMENSION(KNBSTEP), INTENT(OUT)      :: KSTEPS
-        REAL(KIND=4), DIMENSION(KNBSTEP), INTENT(OUT) :: PDATES
-        REAL(KIND=4), DIMENSION(KNU_ZOOMX + 1, 999), INTENT(OUT) :: PXCOL, PYLIG, PDXLU, PDYLU
-        REAL(KIND=8), DIMENSION(KNBSTEP, KNU_ZOOMX + 1, KNBTOT), INTENT(OUT) :: PVAR
-        CHARACTER (LEN=132), INTENT(OUT)              :: TITSEM
-        !
-        !
-        INTEGER    :: ISTEPINC, ISTEP_TEMP, INTOT_TEMP, N_COUCH2
-        INTEGER, DIMENSION(KNU_ZOOMX + 1, 3) :: KDIMEN
-        REAL(KIND=8), DIMENSION(KNBSTEP, KNU_ZOOMX + 1, KN_COUCHMX, KNBTOT) :: ZTEMP
-        !
-        !
-        LIRE_DXDY =  1
-        IANALY    =  0
-        INVERS    =  0
-        IOUCON    = -1
-        LEC       = 10
-        IERLEC    =  0
-        !
-        N_COUCH = 0
-        NU_ZOO  = 0
-        ISTEP   = 0
-        !
-        ZTEMP(:,:,:,:) = 9999.
-        PXCOL(:, :) = 1e+20
-        PYLIG(:, :) = 1e+20
-        PDXLU(:, :) = 1e+20
-        PDYLU(:, :) = 1e+20
-        !
-        ISTEPINC   =  0
-        ISTEP_TEMP = -1
-        INTOT_TEMP =  1
-        !
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
-        !
-        DO WHILE (IERLEC == 0)
-            NLIG = 999.
-            NKOL = 999.
-            NTOT = NLIG * NKOL
-            NCOUC_MX = 99.
-            NU_ZOOMX = 99.
-            CALL LECSEM_3(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
-                      , IOUCON, LEC, IERLEC, NUMERR, NTOT &
-                      , IANALY &
-                      , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
-                      , DATE, LIBCHIM &
-                      , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
-            N_COUCH = 0  ! reset to zero for shallow only
-            ! IF (IERLEC == 0 .AND. TRIM(TYP_DON) == TRIM(XTYP_DON)) THEN
-            IF (IERLEC == 0) THEN
-                N_COUCH = 1  ! add 1 for shallow only break after 1st grid without error
-                KDIMEN(NU_ZOO + 1, 1) = NKOL
-                KDIMEN(NU_ZOO + 1, 2) = NLIG
-                KDIMEN(NU_ZOO + 1, 3) = NCOUC_MX
-                IF (ISTEP /= ISTEP_TEMP) THEN
-                    ISTEPINC = ISTEPINC + 1
-                    ISTEP_TEMP = ISTEP
-                    INTOT_TEMP = 1
-                    KSTEPS(ISTEPINC) = ISTEP
-                    PDATES(ISTEPINC) = real(DATE, 4)
-                ENDIF
-                IF (ISTEPINC == 1 .AND. N_COUCH == 1) THEN
-                    PXCOL(NU_ZOO + 1, :NKOL) = real(XCOL(:NKOL), 4)
-                    PYLIG(NU_ZOO + 1, :NLIG) = real(YLIG(:NLIG), 4)
-                    PDXLU(NU_ZOO + 1, :NKOL) = real(DXLU(:NKOL), 4)
-                    PDYLU(NU_ZOO + 1, :NLIG) = real(DYLU(:NLIG), 4)
-                ENDIF
-                ZTEMP(ISTEPINC, NU_ZOO + 1, N_COUCH, :NTOT) = FONC(:NTOT)
-                exit  ! quit while loop after 1st non error
-            ENDIF
-        ENDDO
-        !
-        CLOSE(LEC)
-        !
-        PVAR(:,:,:) = 9999.
-        DO NU_ZOO = 1, NU_ZOOMX + 1
-            NTOT = KDIMEN(NU_ZOO, 1)*KDIMEN(NU_ZOO, 2)
-            DO N_COUCH = 1, KN_COUCHMX
-                WHERE (ZTEMP(:, NU_ZOO, N_COUCH, :NTOT) /= 9999.)
-                    PVAR(:, NU_ZOO, :NTOT) = ZTEMP(:, NU_ZOO, N_COUCH, :NTOT)
-                END WHERE
-                DO N_COUCH2 = N_COUCH, KN_COUCHMX
-                    WHERE (PVAR(:, NU_ZOO, :NTOT) /= 9999.) ZTEMP(:, NU_ZOO, N_COUCH2, :NTOT) = 9999.
-                ENDDO
-            ENDDO
-        ENDDO
-        !
-        WHERE(PVAR(:,:,:) == 9999.) PVAR(:,:,:) = 1e+20
-        !
-    END SUBROUTINE READ_GRID_SHALLOW
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! =============================================================================!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    SUBROUTINE SCAN_TYPEVAR(XFILE, ZTYP_DON)
+    ! ===================================================================
+    SUBROUTINE SCAN_TYPEVAR(XFILE, ZTYP_DON, iostat)
         !
         ! Get list of available var in gridfile
         !
         IMPLICIT NONE
         !
-        CHARACTER (LEN=132), INTENT(IN)                 :: XFILE
+        CHARACTER (LEN=*), INTENT(IN)                   :: XFILE
         CHARACTER (LEN=13) , DIMENSION(99), INTENT(OUT) :: ZTYP_DON
         !
         INTEGER :: IT
         INTEGER :: N_DIM = 99
+        ! io check
+        integer, intent(out) :: IOSTAT
+        character(len=132) :: MSG
         !
         ! module defined
         LIRE_DXDY =  0
@@ -482,17 +469,29 @@ CONTAINS
         !
         IT = 1
         !
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='read')
+        OPEN( &
+            UNIT=LEC, FILE=TRIM(XFILE), &
+            FORM='formatted', ACTION='read', &
+            status='OLD', IOSTAT=IOSTAT, IOMSG=MSG &
+        )
+        if (iostat /= 0) then
+            iostat = -2
+            return
+        endif
         !
         DO WHILE (IERLEC == 0)
-            CALL LECSEM_3(X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM &
-                      , IOUCON, LEC, IERLEC, NUMERR, NTOT &
-                      , IANALY &
-                      , TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, NU_ZOO, NU_ZOOMX &
-                      , DATE, LIBCHIM &
-                      , LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU)
 
-            IF (IERLEC == 0 .AND. .not.(is_in_array_strings(TYP_DON, ZTYP_DON, N_DIM)) ) THEN
+            CALL LECSEM_3( &
+                X0, Y0, FONC, XCOL, YLIG, NLIG, NKOL, INVERS, TITSEM, &
+                IOUCON, LEC, IERLEC, NUMERR, NTOT, &
+                IANALY, &
+                TYP_DON, TYP_DON3, N_ELEMCH, ISTEP, N_COUCH, NCOUC_MX, &
+                NU_ZOO, NU_ZOOMX, &
+                DATE, LIBCHIM, &
+                LIRE_DXDY, LU_DXDY, LU_XY, DXLU, DYLU &
+            )
+
+            IF (IERLEC == 0 .AND. .not.(is_in_array_strings(TYP_DON, ZTYP_DON, N_DIM))) THEN
                 ZTYP_DON(IT) = TYP_DON
                 IT = IT + 1
             ENDIF
@@ -500,10 +499,12 @@ CONTAINS
         ENDDO
         !
         CLOSE(LEC)
+        if (IERLEC == -1) IERLEC = 0  ! end of file, force to 0, not an error
+        iostat = IERLEC
         !
     END SUBROUTINE SCAN_TYPEVAR
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
+    ! ===================================================================
     function is_in_array_strings(element, array, n_dim) result(test)
         implicit none
         integer :: it, n_dim
@@ -521,16 +522,16 @@ CONTAINS
 
     end function is_in_array_strings
     !
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !
+    ! ===================================================================
     SUBROUTINE WRITE_GRID(ZVAR, XCOL, YLIG, DXLU, DYLU, TYP_DON, TITSEM, &
-                          N_DIMS, NVAL, NGRID, NSTEPS, DATES, XFILE, DEBUG, FORCE_FULL_GRID, &
-                          IEREDI)
+                          N_DIMS, NVAL, NGRID, NSTEPS, DATES, XFILE, DEBUG, &
+                          FORCE_FULL_GRID, IEREDI)
         ! --- Write array to Marthe Grid format (v9.0) ---
         ! ZVAR should not have missing value (if nan, set 9999. before writing !)
         ! BUT, ZVAR should contain all possible value (9999. if nan but do NOT drop nan before)
         ! ZVAR shoult be sorted according to sorted indexes (in this order) :
         !       Time(asc), GRID(main/gig, asc) LAYER(asc), YCOL (dsc), XCOL (asc)
+        ! IEREDI: -1 (IO error), 0 (OK), 1,2 (Write error)
         IMPLICIT NONE
         !
         !inputs
@@ -539,19 +540,24 @@ CONTAINS
         real(kind=8), intent(in), dimension(NSTEPS, NVAL) :: ZVAR
         real(kind=4), intent(in), dimension(NVAL)         :: DXLU, DYLU, XCOL, YLIG
         real(kind=4), intent(in), dimension(NSTEPS)       :: DATES
+        character(len=*)   , intent(in)              :: XFILE
+        character(len=132) , intent(in)              :: TITSEM
         character(len=13)  , intent(in)              :: TYP_DON
-        character(len=132) , intent(in)              :: TITSEM, XFILE
         logical, optional                            :: FORCE_FULL_GRID, DEBUG
         !
         !outputs
         integer, intent(out) :: IEREDI
         !
         ! local
-        integer :: ISTEP, TMP_ISTEP, NU_ZOO, NU_GRID, N_COUCH, LEC, INVY, NKOL, NLIG, NTOT, NLAY, NGIG, start_idx, end_idx, shift, i
+        integer :: ISTEP, TMP_ISTEP, NU_ZOO, NU_GRID, N_COUCH, LEC, INVY, NKOL, &
+            NLIG, NTOT, NLAY, NGIG, start_idx, end_idx, shift, i
         real :: X0, Y0
         real, dimension(:), allocatable :: XTEMPCOL, YTEMPLIG, DXTEMP, DYTEMP
         real, dimension(:), allocatable :: ZTEMPVAR
         logical :: DEBUGG, FORCE_FULL_GRID_OPT
+        ! io check
+        integer :: IOSTAT
+        character(len=132) :: MSG
 
         INVY   = 0
         IEREDI = 0
@@ -564,7 +570,15 @@ CONTAINS
         IF(PRESENT(DEBUG)) DEBUGG = DEBUG
         IF(PRESENT(FORCE_FULL_GRID)) FORCE_FULL_GRID_OPT = FORCE_FULL_GRID
         !
-        OPEN(UNIT=LEC, FILE=TRIM(XFILE), FORM='formatted', ACTION='write')
+        OPEN( &
+            UNIT=LEC, FILE=TRIM(XFILE), &
+            FORM='formatted', ACTION='write', &
+            status='REPLACE', IOSTAT=IOSTAT, IOMSG=MSG &
+        )
+        if (iostat /= 0) then
+            ieredi = -2
+            return
+        endif
 
         ! Starting process:
         ! loop over timesteps, then id_grid (main, gig), then layers. Write each grid.
@@ -579,10 +593,11 @@ CONTAINS
                 NKOL = N_DIMS(NU_GRID, 1)
                 NLIG = N_DIMS(NU_GRID, 2)
 
-                ! To navigate through ZVAR, before computing start_idx, end_idx based on NLAY, NLIG, NKOL,
-                ! we compute a 'shift' index, to jump over previous grids, if id_grid > 0
-                ! number of value to skip depends on nlay and nkol, nlig of every previous grid (main, and each gig)
-                ! wich might not be equals
+                ! To navigate through ZVAR, before computing start_idx, end_idx
+                ! based on NLAY, NLIG, NKOL, we compute a 'shift' index, to jump
+                ! over previous grids, if id_grid > 0 number of value to skip
+                ! depends on nlay and nkol, nlig of every previous grid (main,
+                ! and each gig) wich might not be equals
                 shift = 0
                 IF (NU_ZOO >= 1) THEN
                     DO i=NU_ZOO, 1, -1
@@ -592,20 +607,28 @@ CONTAINS
 
 
                 DO N_COUCH=1, NLAY
-
+                    ! +1 to get 0-based (n-couch -1) to 1-based starting index.
+                    ! if 1st layer return 1 (cause n-couch-1 would be 0)
                     NTOT = NKOL * NLIG
-                    start_idx = ((N_COUCH - 1) * NTOT ) + shift + 1     ! +1 to get 0-based (n-couch -1) to 1-based starting index. if 1st layer return 1 (cause n-couch-1 would be 0)
-                    end_idx   = start_idx + NTOT - 1                    ! here minus 1 cause upper bound is included in fortran, would cause error (idx > len)
+                    start_idx = ((N_COUCH - 1) * NTOT ) + shift + 1
+                    ! here minus 1 cause upper bound is included in fortran,
+                    ! would cause error (idx > len)
+                    end_idx   = start_idx + NTOT - 1
 
                     ! Get current var and coords + transf to real 8 for edsemigl
                     ZTEMPVAR = ZVAR(ISTEP, start_idx:end_idx)
-                    XTEMPCOL = XCOL(start_idx:start_idx + NKOL - 1)  ! x is repeated for every different y, but EDSEMI_3 will subset to NKOL
-                    YTEMPLIG = YLIG(start_idx:end_idx:NKOL)          ! here, same y for each x, so we sample y every nkol (n_x) to get every unique y values, EDSEMI_3 will subset to NLIG
+                    ! x is repeated for every different y, but EDSEMI_3 will subset to NKOL
+                    XTEMPCOL = XCOL(start_idx:start_idx + NKOL - 1)
+                    ! here, same y for each x, so we sample y every nkol (n_x)
+                    ! to get every unique y values, EDSEMI_3 will subset to NLIG
+                    YTEMPLIG = YLIG(start_idx:end_idx:NKOL)
                     DXTEMP   = DXLU(start_idx:start_idx + NKOL - 1)
                     DYTEMP   = DYLU(start_idx:end_idx:NKOL)
                     !
-                    X0 = minval(XTEMPCOL) - (DXTEMP(1)/2)                   ! x0 is lowerleft coordinate, xy read are center of cells
-                    Y0 = minval(YTEMPLIG) - (DYTEMP(Ubound(DYTEMP, 1))/2)   ! y0 is lowerleft coordinate, xy read are center of cells
+                    ! x0 is lowerleft coordinate, xy read are center of cells
+                    X0 = minval(XTEMPCOL) - (DXTEMP(1)/2)
+                    ! y0 is lowerleft coordinate, xy read are center of cells
+                    Y0 = minval(YTEMPLIG) - (DYTEMP(Ubound(DYTEMP, 1))/2)
                     !
                     ! ISTEP = -9999 is code value for no timestep (eg. used in parameters field)
                     IF (DATE == 0.) THEN
@@ -632,10 +655,13 @@ CONTAINS
                         if (DEBUGG) then
                             ! errors might come from non-sorted XY or negatives XY
                             write (LEC, *)"Writing error, status ", IEREDI
-                            write (LEC, *) "Lay=", N_COUCH, "Grid=", NU_ZOO, "X0=", X0, "Y0=", Y0
+                            write (LEC, *) "Lay=", N_COUCH, "Grid=", NU_ZOO, &
+                                            "X0=", X0, "Y0=", Y0
                             write (LEC, *) "NCOL=", NKOL, "NLIG=", NLIG, 'NTOT=', NTOT
-                            write (LEC, *) "len(X)=", size(XTEMPCOL), "len(Y)=", size(YTEMPLIG), "len(v)", size(ZTEMPVAR)
-                            write (LEC, *) 'start_idx=', start_idx, 'end_idx=', end_idx, 'shift_idx=', shift
+                            write (LEC, *) "len(X)=", size(XTEMPCOL), "len(Y)=", &
+                                            size(YTEMPLIG), "len(v)", size(ZTEMPVAR)
+                            write (LEC, *) 'start_idx=', start_idx, 'end_idx=', &
+                                            end_idx, 'shift_idx=', shift
                             write (LEC, *) 'X: ', XTEMPCOL, ''
                             write (LEC, *) 'Y: ', YTEMPLIG, ''
                             write (LEC, *) 'dx:', DXTEMP, ''
@@ -652,13 +678,16 @@ CONTAINS
         CLOSE(LEC)
         !
     END SUBROUTINE WRITE_GRID
-
-    SUBROUTINE CALC_FLOW_DIRECT(FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING, ITYP_DIRECT, EPS_TOP, &
+    !
+    ! ===================================================================
+    SUBROUTINE CALC_FLOW_DIRECT(FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, &
+        FICH_SOR_TOPO, FICH_LISTING, ITYP_DIRECT, EPS_TOP, &
         CHAMP_AUX, NKOL_LOC, NLIG_LOC, X0_LOC , Y0_LOC, TITSEM_LOC, DX_LU, DY_LU)
         integer, intent(in)         :: ITYP_DIRECT
         real(kind=8), intent(in)    :: EPS_TOP
 
-        CHARACTER (LEN=132), INTENT(IN) :: FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_LISTING, FICH_SOR_TOPO
+        CHARACTER (LEN=132), INTENT(IN) ::  FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT,&
+                                            FICH_LISTING, FICH_SOR_TOPO
 
         INTEGER, INTENT(OUT) :: NLIG_LOC, NKOL_LOC
         REAL(kind=8), INTENT(OUT)    :: X0_LOC , Y0_LOC
@@ -669,8 +698,10 @@ CONTAINS
         ! REAL(KIND=8), ALLOCATABLE :: CHAMP_AUX(:)
         ! ALLOCATE(CHAMP_AUX(999*999))
         ! CHAMP_AUX(:) = -9999.
-        CALL Cal_Direct_Drainage(ITYP_DIRECT, EPS_TOP, FICH_PRESENCE, FICH_TOPO, FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING, &
-           CHAMP_AUX, NKOL_LOC, NLIG_LOC, X0_LOC, Y0_LOC, TITSEM_LOC, DX_LU, DY_LU)
+        CALL Cal_Direct_Drainage(ITYP_DIRECT, EPS_TOP, FICH_PRESENCE, FICH_TOPO, &
+            FICH_SOR_DIRECT, FICH_SOR_TOPO, FICH_LISTING, &
+           CHAMP_AUX, NKOL_LOC, NLIG_LOC, X0_LOC, Y0_LOC,&
+           TITSEM_LOC, DX_LU, DY_LU)
 
         ! WRITE(*,*) "Before assignment: X0 =", X0, "X0_LOC =", X0_LOC
         ! X0_LOC = X0
@@ -678,20 +709,27 @@ CONTAINS
 
         ! WRITE(*,*) "CHAMP_AUX", CHAMP_AUX
     END SUBROUTINE CALC_FLOW_DIRECT
-
-    SUBROUTINE CALC_RIV_NETWORK(FICH_PRESENCE, FICH_DIRECT, ITYP_DIRECT, SURF_RIV, NPERIO_TRONC, NBRE_VOIS_STATION, FICH_ENT_EXIS_RIV, &
+    !
+    ! ===================================================================
+    SUBROUTINE CALC_RIV_NETWORK(FICH_PRESENCE, FICH_DIRECT, ITYP_DIRECT, SURF_RIV,&
+        NPERIO_TRONC, NBRE_VOIS_STATION, FICH_ENT_EXIS_RIV, &
         FICH_ENT_SURF_AMO, FICH_X_Y_SURF, FICH_NUMER_SOUS_BV, FICH_COL_LIG_SOUS_BV, &
-        FICH_SOR_EXIS_RIV, FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, FICH_HISTORIQ, FICH_SOUS_BASSIN, FICH_LISTING)
+        FICH_SOR_EXIS_RIV, FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, &
+        FICH_HISTORIQ, FICH_SOUS_BASSIN, FICH_LISTING)
 
         integer, intent(in)         :: ITYP_DIRECT, NPERIO_TRONC, NBRE_VOIS_STATION
-        REAL(kind=8), INTENT(IN)            :: SURF_RIV
-        CHARACTER (LEN=132), INTENT(IN) :: FICH_PRESENCE, FICH_DIRECT, FICH_ENT_EXIS_RIV, FICH_ENT_SURF_AMO, FICH_X_Y_SURF, &
-           FICH_NUMER_SOUS_BV, FICH_COL_LIG_SOUS_BV, FICH_SOR_EXIS_RIV, FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, FICH_HISTORIQ, FICH_SOUS_BASSIN, FICH_LISTING
+        REAL(kind=8), INTENT(IN)    :: SURF_RIV
+        CHARACTER (LEN=132), INTENT(IN) ::  FICH_PRESENCE, FICH_DIRECT, FICH_ENT_EXIS_RIV,&
+            FICH_ENT_SURF_AMO, FICH_X_Y_SURF, FICH_NUMER_SOUS_BV, FICH_COL_LIG_SOUS_BV,&
+            FICH_SOR_EXIS_RIV, FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, &
+            FICH_HISTORIQ, FICH_SOUS_BASSIN, FICH_LISTING
 
-        CALL Cal_reseau_hydro(FICH_PRESENCE, FICH_DIRECT, ITYP_DIRECT, SURF_RIV, NPERIO_TRONC, NBRE_VOIS_STATION, &
-         FICH_ENT_EXIS_RIV, FICH_ENT_SURF_AMO, FICH_X_Y_SURF, FICH_NUMER_SOUS_BV, FICH_COL_LIG_SOUS_BV, &
-         FICH_SOR_EXIS_RIV, FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, FICH_HISTORIQ, FICH_SOUS_BASSIN, FICH_LISTING)
-        
+        CALL Cal_reseau_hydro(FICH_PRESENCE, FICH_DIRECT, ITYP_DIRECT, SURF_RIV, &
+            NPERIO_TRONC, NBRE_VOIS_STATION, FICH_ENT_EXIS_RIV, FICH_ENT_SURF_AMO, &
+            FICH_X_Y_SURF, FICH_NUMER_SOUS_BV, FICH_COL_LIG_SOUS_BV, FICH_SOR_EXIS_RIV, &
+            FICH_SOR_SURF_AMO, FICH_ARBRE, FICH_AFFLU, FICH_TRONC, FICH_HISTORIQ, &
+            FICH_SOUS_BASSIN, FICH_LISTING)
+
     END SUBROUTINE CALC_RIV_NETWORK
 !
 END MODULE MODGRIDMARTHE

@@ -418,7 +418,8 @@ def plot_veloc_quiver(
     return ax
 
 
-def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=None, labels=None):
+def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=None, labels=None,
+                        edgecolor = 'none', **kwargs):
     """ Plot cross-section from a cross-section dataset.
 
     Parameters
@@ -443,6 +444,9 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
         If None, default labels will be used (layer numbers).
     cbar_size : int, optional
         Size of the colorbar as a percentage of the main axis, by default 3.
+    edgecolor : set the polygon patch edge color
+        Default is none
+    **kwargs : polygon properties associated with matplotlib.pyplot.fill 
 
     Returns
     -------
@@ -478,7 +482,7 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
     df = _mk_cross_section_geom(ds_xs)
     for z, gr in df.groupby('z'):
         for polyg in gr['geom']:
-            ax.fill(*polyg.exterior.xy, color=cmap.colors[z-1], edgecolor='none',alpha=0.5)
+            ax.fill(*polyg.exterior.xy, color=cmap.colors[z-1], edgecolor=edgecolor, alpha=0.5, **kwargs)
 
     # Future work: improve colorbar handling
     # extract same corde from plot_outcrop() --> plotting.utils

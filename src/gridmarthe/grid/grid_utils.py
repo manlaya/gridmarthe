@@ -22,12 +22,15 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-import re
+import re, warnings
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
+
+from ._pkg_utils import deprecated_alias
+from .conventions import VARS_ATTRS
 
 
 def _is_sorted(a, asc=True):
@@ -61,7 +64,7 @@ def _nearest_node(node, nodes):
     nodes = np.asarray(nodes)
     dist_2 = np.sum((nodes - node)**2, axis=1)
     idx_nearest = np.argmin(dist_2)
-    return idx_nearest, np.sqrt(idx_nearest)
+    return idx_nearest, np.sqrt(dist_2[idx_nearest])
 
 
 def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
@@ -137,31 +140,43 @@ def read_dates_from_pastp(fpastp, encoding='ISO-8859-1'):
     return pd.concat([_steadystep, times], axis=0)
 
 
-def dropna(ds, nanval: Union[list, float], varname: str = None):
-    """ Drop values corrresponding to NaN (marthe convention, eg. code 9999.)
+@deprecated_alias(nanval='nan_value')
+def dropna(ds, nan_value: Optional[Union[list, float]] = None, varname: str = None):
+    """ Drop mask values corrresponding to NaN (marthe convention, eg. code 9999.)
     for 1D (or 2D (time, zone)) array zone must be a coordinate dimension.
 
     Parameters
     ----------
     ds : xarray.Dataset
         dataset of marthe variable(s)
-    nanval : list or float
-        value to consider as NaN
+    nan_value : list or float, optional
+        value to consider as NaN (a.k.a mask value).
     varname : str, optional
         variable name in dataset to treat
 
     Returns
     -------
-    dataset where variable != nanval
+    xarray.Dataset
+        Dataset without the mask values, i.e. where variable != nanval
     """
-    if isinstance(nanval, (float, int, str)):
-        nanval = [nanval]
-    elif isinstance(nanval, tuple):
-        nanval = list(nanval)  # convert to list to be mutated
-    nanval += [1.e+20]
     if varname is None:
         varname = get_default_variable(ds)
-    mask = ds[varname.lower()].where(~ds[varname.lower()].isin(nanval)).dropna(dim='zone') # drop nanval
+    varname = varname.lower()
+
+    if nan_value is None:
+        nan_value = get_default_nan_value(varname)
+    if isinstance(nan_value, (float, int, str)):
+        nan_value = [nan_value]
+    elif isinstance(nan_value, tuple):
+        nan_value = list(nan_value)  # convert to list to be mutated
+
+    # add special mask values
+    nan_value += [1.e+20]
+    if varname in ['permh', 'perm', 'permeab'] and -9999. not in nan_value:
+        nan_value += [-9999.]
+
+    # Set mask value to NaN and drop zone index where mask value is present
+    mask = ds[varname].where(~ds[varname].isin(nan_value)).dropna(dim='zone')
     ds_no_nan = ds.sel(zone=mask['zone'])
     return ds_no_nan
 
@@ -261,17 +276,15 @@ def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zon
     keep_zone : bool, optional
         keep zone as dimension (will make multiindex). Default is False.
     zone_label : str, optional
-        label of current index. Default is `zone` as read by :py:func:`gridmarthe.load_marthe_grid`
+        label of current index. Default is `zone` as read by
+        :py:func:`gridmarthe.load_marthe_grid`
 
     Returns
     -------
     xr.Dataset
         Dataset with coordinates as dimension.
     """
-    if len(coords) == 3:
-        z_coords = ds.get(coords[2], None) # assert z is here, or bypass
-    else:
-        z_coords = None
+    z_coords = ds.get(coords[2], None) if len(coords) == 3 else None
 
     if add_lay is False:
         # in some case, even if z is included it should not be treated as coord (ex. plot outcrop)
@@ -301,7 +314,10 @@ def assign_coords(ds, add_lay=True, coords=('x', 'y', 'z'), keep_zone=False, zon
     if z_coords is not None:
         da.z.attrs = coords_attrs[2]
 
-    return da.sortby(dims).sortby('y', ascending=False)
+    # Memo: Do not `.sortby('y', ascending=False)` after sortby(dims)
+    # This would results in a slicing error
+    # See (https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/work_items/24)
+    return da.sortby(dims)
 
 
 def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
@@ -325,12 +341,12 @@ def stack_coords(ds, coords=('z', 'y', 'x'), dropna=False):
 
     Notes
     -----
-    For nested grids, the total number of zones cannot be checked
-    when flattening back to 1D from cartesian coords/arrays. It will
-    lead to incorrect total number of zones as different cell sizes exist
-    in the 3D grid. For such cases, it is advised to use dropna=True to remove
-    empty zones. Then write back to marthe grid with :py:func:`gridmarthe.write_marthe_grid`
-    using a permh file as template.
+    For nested grids, the total number of zones cannot be checked when
+    flattening back to 1D from cartesian coords/arrays. It will lead to
+    incorrect total number of zones as different cell sizes exist in the 3D
+    grid. For such cases, it is advised to use dropna=True to remove empty
+    zones. Then write back to marthe grid with
+    :py:func:`gridmarthe.write_marthe_grid` using a permh file as template.
 
     TODO: add a sort option to ensure sorted coords in output
     based on z,y,x order AND dx, dy scale (larger scale first, then smaller)
@@ -367,6 +383,40 @@ def get_default_variable(ds):
     return _vars[0]
 
 
+def get_default_nan_value(varname):
+    """ Get the default NaN/Masked value for a Marthe variable
+
+    Parameters
+    ----------
+    varname : str
+        Name of the variable.
+
+    Returns
+    -------
+    float
+        default mask value
+
+    Warns
+    -----
+    UserWarning
+       If no default value is defined for the variable in `VARS_ATTRS`
+       a warning is raised and the default value 9999. is returned.
+    """
+    # if no  user defined nanval, try to get corresponding val in dict
+    # otherwise, fallback to default to 9999.
+    nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value')
+    if nan_value is None:
+        warnings.warn(
+            f'No NaN/mask value defined for variable {varname}'
+            '(and no default). Fallback to 9999. If this is not the '
+            'correct value, please provided one using `nan_value`',
+            category=UserWarning,
+            stacklevel=1
+        )
+        nan_value = 9999.  # fallback to default
+    return nan_value
+
+
 def _get_nearest_xy(ds, x, y):
     """ Get the nearest (x, y) point in a 1D flattened xarray Dataset
 
@@ -376,17 +426,48 @@ def _get_nearest_xy(ds, x, y):
         The nearest (x, y) point in the dataset
     nearest_idx: int
         Index of the nearest point in the dataset
+    dist: float
+        Distance between current node (x,y) and nearest point in ds
     """
-    nearest, dist = _nearest_node(
-        np.array([(x, y)]),
-        np.array(list(zip(ds['x'].data, ds['y'].data)))
-    )
+    # xy_arr = np.array(list(zip(ds['x'].data, ds['y'].data)))
     xy_arr = np.array([ds['x'].data, ds['y'].data]).T
+    nearest, dist = _nearest_node(np.array([(x, y)]), xy_arr)
     _nearest_xy = xy_arr[nearest]
-    return _nearest_xy, nearest
+    return _nearest_xy, nearest, dist
 
 
-def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return_mask=False):
+def _snap_1d(coords, target, tolerance):
+    """ Snap a scalar or (lo, hi) range to the nearest values of `coords`.
+
+    Returns
+    -------
+    (min, max) tuple of snapped values, or None if out of `tolerance`.
+    """
+    lo, hi = (target, target) if not isinstance(target, (tuple, list)) else target
+    nlo = _find_nearest(coords, lo)
+    nhi = _find_nearest(coords, hi)
+    if abs(nlo - lo) > tolerance or abs(nhi - hi) > tolerance:
+        return None
+    return min(nlo, nhi), max(nlo, nhi)
+
+
+def _snap_box(x_lo, x_hi, y_lo, y_hi, xy_arr, tolerance):
+    """ Snap a bounding box to the nearest corners of `xy_arr`.
+
+    Returns
+    -------
+    (xmin, xmax, ymin, ymax), or None if any corner is out of `tolerance`.
+    """
+    idx1, d1 = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
+    idx2, d2 = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
+    p1, p2 = xy_arr[idx1], xy_arr[idx2]
+    if d1 > tolerance or d2 > tolerance:
+        return None
+    return (min(p1[0], p2[0]), max(p1[0], p2[0]),
+            min(p1[1], p2[1]), max(p1[1], p2[1]))
+
+
+def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, return_mask=False):
     """ Filter a 1D flattened xarray Dataset by spatial (x, y) and/or z ranges.
 
     When grid are stored as 1D vector for spatial dimension, `xarray.Dataset.sel`
@@ -397,10 +478,12 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
     ----------
     ds : xarray.Dataset
         The input dataset with 1D 'zone' dimension and variables 'x', 'y', 'z'.
-    x : float or tuple, optional
-        x-coordinate: float for point selection, (xmin, xmax) for range.
-    y : float or tuple, optional
-        y-coordinate: float for point selection, (ymin, ymax) for range.
+    x : float or tuple or list, optional
+        x-coordinate: float for point selection, (xmin, xmax) for range,
+        or a list of x values for multiple point selection (paired with `y`).
+    y : float or tuple or list, optional
+        y-coordinate: float for point selection, (ymin, ymax) for range,
+        or a list of y values for multiple point selection (paired with `x`).
     z : int or tuple, optional
         z-level: int for exact, (zmin, zmax) for range.
     method : str, optional
@@ -408,7 +491,7 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
         Requires `tolerance` (max distance).
     tolerance : float, optional
         Max distance when using method='nearest' (in same units as x/y).
-        Default is 1e3 (meters).
+        Default is None. This is **required** when using method='nearest'.
     return_mask : bool, optional
         Option to return mask array
 
@@ -438,8 +521,9 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
     """
     mask = np.ones(len(ds.zone), dtype=bool)
 
-    # Handle X and Y point selection with method='nearest'
-    # if (x is not None and isinstance(x, (int, float))) or (y is not None and isinstance(y, (int, float))):
+    x_vals = ds['x'].values
+    y_vals = ds['y'].values
+    xy_arr = np.column_stack([x_vals, y_vals])
 
     if method == 'nearest':
         if tolerance is None:
@@ -447,41 +531,91 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=1e3, return
 
         assert x is not None or y is not None, "At least one of x or y must be provided"
 
-        x_vals = ds['x'].values if x is not None else None
-        y_vals = ds['y'].values if y is not None else None
+        x_is_range = isinstance(x, (tuple, list))
+        y_is_range = isinstance(y, (tuple, list))
 
-        # Compute distances
-        dist_sq = 0.0
-        if x is not None:
-            dist_sq += (x_vals - x)**2
-        if y is not None:
-            dist_sq += (y_vals - y)**2
+        if x is not None and y is not None:
+            if not x_is_range and not y_is_range:
+                # Both scalars: single closest point
+                _nearest_xy, idx_min, dist = _get_nearest_xy(ds, x, y)
+                if dist <= tolerance:
+                    mask = np.zeros_like(mask)
+                    mask[idx_min] = True
+                else:
+                    mask[:] = False
+            else:
+                x_len = len(x) if x_is_range else None
+                y_len = len(y) if y_is_range else None
 
-        # Find the closest point
-        idx_min = np.argmin(dist_sq)
-        dist_min = np.sqrt(dist_sq[idx_min])
-
-        # Only keep it if within tolerance
-        if dist_min <= tolerance:
-            new_mask = np.zeros_like(mask)
-            new_mask[idx_min] = True
-            mask &= new_mask
+                if x_len == 2 or y_len == 2:
+                    # Both axes present, at least one a range: 2D corner snapping
+                    x0, x1 = (x[0], x[1]) if x_is_range else (x, x)
+                    y0, y1 = (y[0], y[1]) if y_is_range else (y, y)
+                    snapped = _snap_box(x0, x1, y0, y1, xy_arr, tolerance)
+                    if snapped is None:
+                        mask[:] = False
+                    else:
+                        sx0, sx1, sy0, sy1 = snapped
+                        mask &= (x_vals >= sx0) & (x_vals <= sx1)
+                        mask &= (y_vals >= sy0) & (y_vals <= sy1)
+                elif x_len is not None and y_len is not None and x_len == y_len:
+                    # Lists of coordinates (same length): keep the nearest
+                    # grid point for each (x, y) pair
+                    selected = np.zeros_like(mask)
+                    for px, py in zip(x, y, strict=True):
+                        _nearest_xy, idx_min, dist = _get_nearest_xy(ds, px, py)
+                        if dist <= tolerance:
+                            selected[idx_min] = True
+                    mask = selected
+                else:
+                    raise ValueError(
+                        "x and y must be scalars, (min, max) ranges, or lists "
+                        "of coordinates of the same length."
+                    )
         else:
-            mask[:] = False  # No point within tolerance
+            # Single axis (x or y), scalar or range: 1D snapping
+            key = 'x' if x is not None else 'y'
+            coords = ds[key].values
+            snapped = _snap_1d(coords, x if key == 'x' else y, tolerance)
+            if snapped is None:
+                mask[:] = False
+            else:
+                lo, hi = snapped
+                mask &= (coords >= lo) & (coords <= hi)
     else:
-        # Look for exact match
-        if isinstance(x, (int, (float, np.floating))):
-            mask &= np.isclose(ds['x'].values, x)
-        if isinstance(y, (int, (float, np.floating))):
-            mask &= np.isclose(ds['y'].values, y)
+        # method = exact
+        x_len = len(x) if isinstance(x, (tuple, list)) else None
+        y_len = len(y) if isinstance(y, (tuple, list)) else None
 
-        # Range or no selection
-        if isinstance(x, (tuple, list)) and len(x) == 2:
-            xmin, xmax = x
-            mask &= (ds['x'].values >= xmin) & (ds['x'].values <= xmax)
-        if isinstance(y, (tuple, list)) and len(y) == 2:
-            ymin, ymax = y
-            mask &= (ds['y'].values >= ymin) & (ds['y'].values <= ymax)
+        if x_len == 2 or y_len == 2:
+            # Exact match on scalars, (min, max) range on 2-length lists
+            if isinstance(x, (int, (float, np.floating))):
+                mask &= np.isclose(x_vals, x)
+            if isinstance(y, (int, (float, np.floating))):
+                mask &= np.isclose(y_vals, y)
+            if isinstance(x, (tuple, list)) and len(x) == 2:
+                xmin, xmax = x
+                mask &= (x_vals >= xmin) & (x_vals <= xmax)
+            if isinstance(y, (tuple, list)) and len(y) == 2:
+                ymin, ymax = y
+                mask &= (y_vals >= ymin) & (y_vals <= ymax)
+        elif x_len is not None and y_len is not None and x_len == y_len:
+            # Lists of coordinates (same length): exact match for each (x, y) pair
+            selected = np.zeros_like(mask)
+            for px, py in zip(x, y, strict=True):
+                selected |= np.isclose(x_vals, px) & np.isclose(y_vals, py)
+            mask &= selected
+        else:
+            # Single axis or scalar: exact match
+            if (x_len is not None and x_len != 2) or (y_len is not None and y_len != 2):
+                raise ValueError(
+                    "x and y must be scalars, (min, max) ranges, or lists "
+                    "of coordinates of the same length."
+                )
+            if isinstance(x, (int, (float, np.floating))):
+                mask &= np.isclose(x_vals, x)
+            if isinstance(y, (int, (float, np.floating))):
+                mask &= np.isclose(y_vals, y)
 
     # Handle Z selection
     if z is not None:

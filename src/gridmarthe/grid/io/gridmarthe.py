@@ -22,6 +22,7 @@
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+from pathlib import Path
 import os, warnings
 
 from typing import Union
@@ -32,6 +33,7 @@ import xarray as xr
 
 from gridmarthe.core import (
     modgridmarthe,
+    _check_fortran_status,
     _read_marthe_grid,
     _transform_xcoords,
     _transform_ycoords,
@@ -41,6 +43,7 @@ from gridmarthe.core import (
     _decode_title,
     _extract_zvar_from_ds,
     _get_dims_from_attrs,
+    _filter_shallow_layer,
     scan_var,
     FortranError
 )
@@ -52,7 +55,8 @@ from ..grid_utils import (
     dropna,
     fillna,
     replace,
-    get_default_variable
+    get_default_variable,
+    get_default_nan_value
 )
 
 from ..conventions import (
@@ -79,7 +83,7 @@ def get_dims_from_attrs(ds):
 
     Returns
     -------
-    list:
+    numpy.ndarray:
         A list of dimensions for each grid (main and nested). List will contains
         `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
     """
@@ -164,7 +168,7 @@ def load_marthe_grid(
     drop_nan: bool = False,
     nan_value: Union[int, float, list, None] = None,
     xyfactor: Union[int, float] = 1.,
-    shallow_only=False,
+    shallow_only: bool=False,
     add_col_row: bool = False,
     add_id_grid: bool = False,
     title: Union[str, None] = None,
@@ -180,7 +184,7 @@ def load_marthe_grid(
     verbose: bool=False,
     **kwargs
 ):
-    """ Read Marthe Grid File as xarray.Dataset
+    """Read Marthe Grid File as xarray.Dataset
 
     The gridfile is read as a sequence: the variable for all layer
     for main grid, then all layer for nested grids, is stored in
@@ -195,14 +199,18 @@ def load_marthe_grid(
     -----
 
     A former known issue with some version of Marthe is that field name is
-    not written in metadata, as number of nested grids or number of layers., which
+    not written in metadata, as number of nested grids or number of layers.
     This can cause some bug when reading grids with gridmarthe.
-    As of `gridmarthe` version 0.4, if no varname is scanned in file and/or number of layer/grids
-    are missing, these informations are guessed when parsing data, which are stored in
-    a variable named 'variable' and a warning is raised to alert user to rename the
-    variable later. This is only valid for parameters grids (with only one timestep).
+
+    As of `gridmarthe` version 0.4, if no varname is scanned in file and/or
+    number of layer/grids are missing, these informations are guessed when
+    parsing data, which are stored in a variable named taken from file extension
+    and a warning is raised to alert user to rename the variable later.
+
+    This is only valid for parameters grids (with only one timestep).
     In case of remaining errors, the command line tool `cleanmgrid`
-    (provided with gridmarthe) can still be used to clean the file and add missing metadata.
+    (provided with gridmarthe) can still be used to clean the file and
+    add missing metadata.
 
     Parameters
     ----------
@@ -221,7 +229,7 @@ def load_marthe_grid(
         - If 'all' is passed,  function will scan all varnames in filename and keep all.
         All datavars are added to dataset, using recursive call to func
 
-        - If wrong variable name is passed, empty data will be returned.
+        - If wrong variable name is passed, a ValueError is raised.
 
     fpastp : str, optional
         A pastp file to read for times
@@ -233,16 +241,17 @@ def load_marthe_grid(
         used.
 
     drop_nan : bool, optional
-        Drop nan values (corresponding to nan_value) in xarray object to return.
-        Default is False (keep nan values).
+        Drop nan values (masked values, corresponding to `nan_value`) in xarray
+        object to return. Default is False (keep nan values).
 
     nan_value : float or list of float, optional
-        A code value for nan values. The default value is inferred from field name.
+        A code value for nan values (a.k.a mask value).
+        The default value is inferred from field name.
         E.g. of default nan values:
 
         - hydraulic conductivity: 0 or -9999. (Warning: a value of +9999. is not
-          a NaN value for hydraulic conductivity. See Marthe User Guide for explanation
-          about this code, refering here to impervious layer);
+          a NaN value for hydraulic conductivity. See Marthe User Guide for
+          explanation about this code, refering here to impervious layer);
 
         - hydraulic head: 9999.;
 
@@ -256,7 +265,6 @@ def load_marthe_grid(
 
     shallow_only : bool, optional
         Boolean to read only the first layer. Default is False.
-        Warning: only valid for NON nested grids for now.
 
     add_col_row : bool, optional
         Add columns (col) and rows (row, formerly lig (v<=0.1.3)) index (from 1 to n).
@@ -364,21 +372,23 @@ def load_marthe_grid(
         zylig, zdxlu, zdylu, ztitle, dims
     ) = _read_marthe_grid(filename, varname, shallow_only=shallow_only)
 
-    if engine == 'numpy':
-        return [zvar, zdates, isteps, zxcol, zylig, zdxlu, zdylu, ztitle, dims]
+    # bool to check if nested grid
+    is_nested = len(dims) > 1
 
     # --- transform data and parse into xarray.Dataset
     if shallow_only:
-        # shadow_only(time, gig, values) -> (time, values)
-        # for now, only valid for regular (non nested) grids
-        # TODO nested grid shallow only?
-        zvar = zvar[:, 0, :]
+        ntot  = np.prod(dims, axis=1)
+        # If shallow_only, filter out shallow layer.
+        # This should not happen since gm v0.5, as this is now done in
+        # Fortran core module, to avoid useless full array allocation before slice.
+        if np.size(zvar[0, :]) != ntot.sum():
+            zvar, dims = _filter_shallow_layer(zvar, dims)
+
+    if engine == 'numpy':
+        return [zvar, zdates, isteps, zxcol, zylig, zdxlu, zdylu, ztitle, dims]
 
     if title is None:
         title = _decode_title(ztitle)
-
-    # bool to check if nested grid
-    is_nested = len(dims) > 1
 
     # memo: dims = [maingrid[x, y, z], gig1[x, y, z], ...]
     xcols, dxlus = _transform_xcoords(zxcol, zylig, zdxlu, nlayer=dims[0][-1], factor=xyfactor)
@@ -388,10 +398,13 @@ def load_marthe_grid(
     if varname == '':
         varname = ext.replace('.', '').upper()
         warnings.warn(
-            f'No variable name found. Using file extension (`{varname}`), which is not a valid '
-            'MARTHE variable name. Please rename variable after reading dataset. '
-            'To permanently remove this warning, please fix the current grid file using either '
-            'gridmarthe command line tool `cleanmgrid` or WinMarthe GUI.',
+            f'No variable name found. Using file extension (`{varname}`), which'
+            ' is not a valid MARTHE variable name. Please consider that'
+            ' `drop_nan` option will probably fail.'
+            ' You can/may also rename variable after reading dataset.'
+            ' To permanently remove this warning, please fix the current grid'
+            ' file using either gridmarthe command line tool `cleanmgrid` or'
+            ' WinMarthe GUI.',
             category=UserWarning,
             stacklevel=1
         )
@@ -455,13 +468,16 @@ def load_marthe_grid(
             'zone': np.arange(1, zvar.shape[1] + 1, dtype=np.int32)
         },
         attrs={
-            **_parse_global_attrs(title, dims, xyfactor, times, is_nested, dxlus, dylus, xcols, yligs, epsg),
+            **_parse_global_attrs(
+                title, dims, xyfactor, times, is_nested,
+                dxlus, dylus, xcols, yligs, epsg
+            ),
             **model_attrs
         }
     )
 
     if drop_time and ds.sizes['time'] == 1:
-        ds = ds.drop_dims('time')
+        ds = ds.squeeze('time').drop_vars('time')
 
     # add non-dimensionnal coordinates
     # ds = ds.assign_coords(  # future
@@ -477,22 +493,7 @@ def load_marthe_grid(
 
     # --- Drop NaN values
     if drop_nan:
-        if nan_value is None:
-             # if no  user defined nanval, try to get corresponding val in dict
-             # other, default to 9999.
-            nan_value = vattrs.get('mart_missing_value', 9999.)
-
-        if not isinstance(nan_value, (list, tuple)):
-            nan_value = [nan_value]
-        elif isinstance(nan_value, tuple):
-            nan_value = list(nan_value)
-
-        if (
-            (varname.lower() == 'permeab' or ext == "permh")
-            and is_nested and -9999. not in nan_value
-        ):
-            nan_value += [-9999.]
-
+        # drop mask/nan values
         ds = dropna(ds, nan_value, varname)
         # add range zone of active cells. memo: remove tuple to set as dimension
         ds['izone'] = ('zone', np.arange(1, np.size(ds['zone'].data) + 1, dtype=np.int32))
@@ -584,7 +585,7 @@ def write_marthe_grid(
     fileout='grid.out',
     varname=None,
     file_permh: str|None = None,
-    nan_value=9999.,
+    nan_value=None,
     title=None,
     dims=None,
     force_full_grid=False,
@@ -631,22 +632,30 @@ def write_marthe_grid(
         Needed to recreate full dimension if NaN dropped before.
 
     nan_value : float, optional
-        custom value to fillna, when using a `permh` field to reset geometry
+        custom value to fillna. By default, inferred from variable defaults.
 
     title : str, optional
         title written in marthe grid file
 
-    dims : list of array, optional
-        list containing array of dimension for every grid (ie len(dims) > 1 if
-        nested grid):
+    dims : numpy.array or list, optional
+        array containing grid dimensions:
 
-        - format is `[[x_main_grid, y_main_grid, z_main_grid], [x_nested_1, ...], ...]`
-        eg. `[[354,252,2], [182,156,2]]`
+        Shape is `(n_grids, 3)` where `n_grids` is the number of grids
+        (main grid + nested grids).
 
-        - if only main grid : `[[nx,ny,nz]]`
+        >>> # dims = np.array(
+        ... #     [
+        ... #       [nx_main_grid, ny_main_grid, nz_main_grid],
+        ... #       [nx_nested_1, ...],
+        ... #       ...
+        ... #       [nx_nested_n, ...]
+        ... #     ]
+        ... # )
+        >>> dims = np.array([[354,252,2], [182,156,2]]) # main grid + 1 nested grid
+        >>> dims = np.array([[nx, ny, nz]]) # only main grid
 
-        - if None (default, dims will be parsed from `ds.attrs['original_dimensions']`
-        which is added when read with :py:func:`gridmarthe.load_marthe_grid`.
+        If None (default, dims will be parsed from `ds.attrs['original_dimensions']`
+        which is added when grid is read with :py:func:`gridmarthe.load_marthe_grid`.
         If not present (lost in some computation for example), please use
         py:func:`gridmarthe.reset_geometry` or provide list of dims manually.
 
@@ -661,7 +670,19 @@ def write_marthe_grid(
     -------
     status: int.
         0 if everything's ok. 1 otherwise.
+
+    Raises
+    ------
+    FortranError:
+        if error occurs in Fortran subroutine to write Marthe grid.
+
+    ValueError:
+        if no dimensions can be parsed from `ds.attrs['original_dimensions']`
+        or if `dims` is not None and does not match dataset dimensions.
     """
+
+    _ = Path(fileout).parent.mkdir(parents=True, exist_ok=True)  # ensure dst dir exists
+
     # TODO: infer nx, ny, nz, ngrid from ds ? --> allow to create a custom grid
     ds2 = ds.copy()
     # if isinstance(ds, xr.DataArray): # en fait, il faut x,y,dx,dy
@@ -670,19 +691,21 @@ def write_marthe_grid(
     if 'time' not in ds2.dims:
         ds2 = ds2.expand_dims('time')
 
-    nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.) \
-        if nan_value is None else nan_value
+    if nan_value is None:
+        nan_value = get_default_nan_value(varname)
 
     if file_permh is not None:
         # if permeab, fill_na with permh file (because either 0 or -9999.)
         _fill_na = varname == 'permeab'
         # reset geometry with full domain (stored in permh file)
-        ds2 = reset_geometry(ds2, path_to_permh=file_permh, variable=varname, fillna=_fill_na)
+        ds2 = reset_geometry(
+            ds2, path_to_permh=file_permh, variable=varname, fillna=_fill_na
+        )
         if not _fill_na:
             # if not permh variable, fill nan with constant values, based on variable
-            if nan_value is None:
-                nan_value = VARS_ATTRS.get(varname, {}).get('mart_missing_value', 9999.)
             ds2  = fillna(ds2, nan_value, varname)
+    elif np.any(np.isnan(ds2[varname].data)):
+        ds2 = fillna(ds2, nan_value, varname)
 
     if dims is None:
         dims = _get_dims_from_attrs(ds2.attrs.get('original_dimensions'))
@@ -690,13 +713,14 @@ def write_marthe_grid(
     # if after parsing, still None, raise error.
     if dims is None:
         raise ValueError(
-            "Original dimensions cannot be None."
-            "Attributes was not founded in dataset so pleave provide a list with original domain dimensions"
+            "Original dimensions cannot be None. "
+            "Attributes was not founded in dataset so pleave provide a list "
+            "with original domain dimensions"
         )
 
     # --- Check if expected dimensions match variable dimensions
     # if not, recreate full grid with domain grid (permh file)
-    _test_shape = np.prod(np.array(dims), axis=1).sum() != np.size(ds2[varname].data)
+    _test_shape = np.prod(dims, axis=1).sum() != np.size(ds2[varname].data)
     if _test_shape:
         # if dimension differs, file_permh is required
         error = "Expected size and actual size (from variable array) differs. "
@@ -740,12 +764,13 @@ def write_marthe_grid(
         xfile=fileout
     )
 
-    if status != 0:
-        raise FortranError(
-            f'Fortran subroutine EDISEM failed with status {status}\n'
-            'Please check array consistency : 9999. or 0. for nan values (no np.nan),'
-            'do not drop nan val before write or provide a `file_permh`.',
-            status
+    # check status and raise a FortranError if status != 0
+    _check_fortran_status(
+        status, fileout, mode='w',
+        suffix=(
+            "Please check array consistency, coordinates order and/or do not"
+            " drop nan val before write or provide a `file_permh`."
         )
+    )
 
     return status

@@ -2,6 +2,7 @@
 # if using vscode/codium, please add the following to your settings.json
 #     "ruff.configurationPreference": "filesystemFirst",
 
+# Same as Black.
 line-length = 88
 indent-width = 4
 
@@ -22,18 +23,20 @@ extend-exclude = [
 select = [
     "W",     # warnings
     "F",     # pyflakes
-    "E4",    # pycodestyle
-    "E7",    # pycodestyle: 
-    "E9",    # pycodestyle: 
-    "E501",  # pycodestyle: 
+    "E4",    # pycodestyle: import
+    "E7",    # pycodestyle: various syntax flags (name, bare-except, etc.)
+    "E9",    # pycodestyle: error (io/syntax)
+    "E251",  # pycodestyle: space around keywords arg
+    # "E501",  # pycodestyle: line too long // too annoying
     "E303",  # pycodestyle: too many blank lines
     "E305",  # pycodestyle: two blank lines between func
     "ARG",   # flake8-unused-arguments
     "B",     # flake8-bugbear, B950
     "C4",    # flake8-comprehensions
-    # "I",     # isort
+    # "I",     # isort // no multiple import by line...
     "ICN",   # flake8-import-conventions
     "NPY",   # NumPy specific rules
+    "PD",    # pandas-vet
     "PIE",   # flake8-pie
     "SIM",   # flake8-simplify
     "YTT",   # flake8-2020
@@ -57,7 +60,8 @@ ignore = [
     "E227",  # missing white space around operatro
     "E231",  # missing whitespace after , => in slice, not so good
     "E721",  # isinstance and not type ==
-    "W291",  # trailing whitespace
+    "E731",  # lambda assignement
+    # "W291",  # trailing whitespace / with editorconfig this is now select (W)
     "E501"   # line too long, deal with it later, just use ruler in texteditor
 ]
 

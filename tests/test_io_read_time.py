@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
+import numpy as np
 import gridmarthe as gm
 
 
@@ -11,7 +12,9 @@ def _check_times(times, is_time=True):
     assert 'time' in times.columns
     assert times['step'].dtype == 'int64'
     if is_time:
-        assert times['time'].dtype == 'datetime64[ns]'
+        # pandas 3.0 : datetime64[ns] -> <M8[ns]
+        # assert times['time'].dtype in ['datetime64[ns]', '<M8[us]']
+        assert np.issubdtype(times['time'].dtype, np.datetime64)
 
 
 def test_read_times():
@@ -31,6 +34,7 @@ def test_read_times_messy_debug():
 def test_read_times_int_fmt():
     times = gm.read_dates_from_pastp('tests/data/albien.pastp')
     _check_times(times, is_time=False)
+    assert np.issubdtype(times['time'].dtype, np.integer)
 
 
 if __name__ == "__main__":
