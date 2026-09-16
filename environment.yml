@@ -2,7 +2,7 @@
 channels:
   - conda-forge
 dependencies:
-  - python=3.12
+  # - python=3.12  # deactivate for ci on git repo, you may choose a version here
   # build deps
   - pip
   - uutils-coreutils  # rust cross-platform version of gnu coreutils
