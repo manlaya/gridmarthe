@@ -7,7 +7,7 @@
 - grid creation (from xy bounds or shape)
 - ugrid export for GIS visualization
 - `sel_by_coords` function to allow selection of a subset of the grid with x, y [z] coordinates,
-  on a 1D-spatial dataset, without requiring `assign_coords`.
+  on a 1D-spatial dataset, without requiring `assign_coords` (see [#25](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/25))
 
 ### Changed
 

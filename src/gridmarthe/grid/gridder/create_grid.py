@@ -410,7 +410,7 @@ def add_zoom(
 
     # update dims
     zoom_dims = _get_dims_from_attrs(zoom_grid.attrs.get('original_dimensions'))
-    dims.extend(zoom_dims)
+    dims = np.concatenate([dims, zoom_dims])
     nested_grid.attrs['original_dimensions'] = (
         'x,y,z [grids]: ' + '; '.join(
             [' '.join(map(str, x)) for x in dims]
