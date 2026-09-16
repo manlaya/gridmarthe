@@ -426,12 +426,14 @@ def _get_nearest_xy(ds, x, y):
         The nearest (x, y) point in the dataset
     nearest_idx: int
         Index of the nearest point in the dataset
+    dist: float
+        Distance between current node (x,y) and nearest point in ds
     """
     # xy_arr = np.array(list(zip(ds['x'].data, ds['y'].data)))
     xy_arr = np.array([ds['x'].data, ds['y'].data]).T
     nearest, dist = _nearest_node(np.array([(x, y)]), xy_arr)
     _nearest_xy = xy_arr[nearest]
-    return _nearest_xy, nearest
+    return _nearest_xy, nearest, dist
 
 
 def _snap_1d(coords, target, tolerance):
@@ -456,11 +458,9 @@ def _snap_box(x_lo, x_hi, y_lo, y_hi, xy_arr, tolerance):
     -------
     (xmin, xmax, ymin, ymax), or None if any corner is out of `tolerance`.
     """
-    idx1, _ = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
-    idx2, _ = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
+    idx1, d1 = _nearest_node(np.array([x_lo, y_lo]), xy_arr)
+    idx2, d2 = _nearest_node(np.array([x_hi, y_hi]), xy_arr)
     p1, p2 = xy_arr[idx1], xy_arr[idx2]
-    d1 = np.sqrt((p1[0] - x_lo)**2 + (p1[1] - y_lo)**2)
-    d2 = np.sqrt((p2[0] - x_hi)**2 + (p2[1] - y_hi)**2)
     if d1 > tolerance or d2 > tolerance:
         return None
     return (min(p1[0], p2[0]), max(p1[0], p2[0]),
@@ -521,15 +521,15 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
     """
     mask = np.ones(len(ds.zone), dtype=bool)
 
+    x_vals = ds['x'].values
+    y_vals = ds['y'].values
+    xy_arr = np.column_stack([x_vals, y_vals])
+
     if method == 'nearest':
         if tolerance is None:
             raise ValueError("tolerance is required when method='nearest'")
 
         assert x is not None or y is not None, "At least one of x or y must be provided"
-
-        x_vals = ds['x'].values
-        y_vals = ds['y'].values
-        xy_arr = np.column_stack([x_vals, y_vals])
 
         x_is_range = isinstance(x, (tuple, list))
         y_is_range = isinstance(y, (tuple, list))
@@ -537,9 +537,8 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
         if x is not None and y is not None:
             if not x_is_range and not y_is_range:
                 # Both scalars: single closest point
-                dist_sq = (x_vals - x)**2 + (y_vals - y)**2
-                idx_min = np.argmin(dist_sq)
-                if np.sqrt(dist_sq[idx_min]) <= tolerance:
+                _nearest_xy, idx_min, dist = _get_nearest_xy(ds, x, y)
+                if dist <= tolerance:
                     mask = np.zeros_like(mask)
                     mask[idx_min] = True
                 else:
@@ -564,9 +563,8 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
                     # grid point for each (x, y) pair
                     selected = np.zeros_like(mask)
                     for px, py in zip(x, y, strict=True):
-                        dist_sq = (x_vals - px)**2 + (y_vals - py)**2
-                        idx_min = np.argmin(dist_sq)
-                        if np.sqrt(dist_sq[idx_min]) <= tolerance:
+                        _nearest_xy, idx_min, dist = _get_nearest_xy(ds, px, py)
+                        if dist <= tolerance:
                             selected[idx_min] = True
                     mask = selected
                 else:
@@ -585,9 +583,7 @@ def sel_by_coords(ds, x=None, y=None, z=None, method=None, tolerance=None, retur
                 lo, hi = snapped
                 mask &= (coords >= lo) & (coords <= hi)
     else:
-        x_vals = ds['x'].values
-        y_vals = ds['y'].values
-
+        # method = exact
         x_len = len(x) if isinstance(x, (tuple, list)) else None
         y_len = len(y) if isinstance(y, (tuple, list)) else None
 
