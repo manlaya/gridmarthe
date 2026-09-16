@@ -1,0 +1,87 @@
+Marthe_Grid Version=9.0
+Title=test_grid                                                              PERMEAB        1
+[Infos]
+Field=PERMEAB
+Type=
+Elem_Number=0
+Name=
+Time_Step=-9999
+Time=0
+Layer=1
+Max_Layer=3
+Nest_grid=0
+Max_NestG=0
+[Structure]
+X_Left_Corner=0
+Y_Lower_Corner=0
+Ncolumn=5
+Nrows=5
+[Constant_Data]
+Uniform_Value=1
+[Num_Columns_/_x_/_dx]
+1	2	3	4	5	
+1	3	5	7	9	
+2	2	2	2	2	
+[Num_Rows_/_y_/_dy]
+1	2	3	4	5	
+9	7	5	3	1	
+2	2	2	2	2	
+[End_Grid]
+Marthe_Grid Version=9.0
+Title=test_grid                                                              PERMEAB        2
+[Infos]
+Field=PERMEAB
+Type=
+Elem_Number=0
+Name=
+Time_Step=-9999
+Time=0
+Layer=2
+Max_Layer=3
+Nest_grid=0
+Max_NestG=0
+[Structure]
+X_Left_Corner=0
+Y_Lower_Corner=0
+Ncolumn=5
+Nrows=5
+[Constant_Data]
+Uniform_Value=1
+[Num_Columns_/_x_/_dx]
+1	2	3	4	5	
+1	3	5	7	9	
+2	2	2	2	2	
+[Num_Rows_/_y_/_dy]
+1	2	3	4	5	
+9	7	5	3	1	
+2	2	2	2	2	
+[End_Grid]
+Marthe_Grid Version=9.0
+Title=test_grid                                                              PERMEAB        3
+[Infos]
+Field=PERMEAB
+Type=
+Elem_Number=0
+Name=
+Time_Step=-9999
+Time=0
+Layer=3
+Max_Layer=3
+Nest_grid=0
+Max_NestG=0
+[Structure]
+X_Left_Corner=0
+Y_Lower_Corner=0
+Ncolumn=5
+Nrows=5
+[Constant_Data]
+Uniform_Value=1
+[Num_Columns_/_x_/_dx]
+1	2	3	4	5	
+1	3	5	7	9	
+2	2	2	2	2	
+[Num_Rows_/_y_/_dy]
+1	2	3	4	5	
+9	7	5	3	1	
+2	2	2	2	2	
+[End_Grid]
