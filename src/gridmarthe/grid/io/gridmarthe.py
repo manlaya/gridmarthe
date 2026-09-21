@@ -84,10 +84,77 @@ def get_dims_from_attrs(ds):
     Returns
     -------
     numpy.ndarray:
-        A list of dimensions for each grid (main and nested). List will contains
+        An array of dimensions for each grid (main and nested). List will contains
         `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
     """
     return _get_dims_from_attrs(ds.attrs.get('original_dimensions'))
+
+def get_dims_from_ds(ds):
+    """ Get Marthe grid dimensions from dataset structure
+
+    Parameters
+    ----------
+    ds: xarray.Dataset
+        Input dataset, read by :py:func:`load_marthe_grid`
+
+    Returns
+    -------
+    numpy.ndarray:
+        An array of dimensions for each grid (main and nested). List will contains
+        `[[main grid: x, y, nlayer], [nest1 x, y, nlayer], ...]`.
+    """
+    if 'x' not in ds.data_vars or 'y' not in ds.data_vars:
+        raise KeyError("Variable 'x' and/or 'y' not found in grid")
+
+    dims = []
+    ids = np.unique(ds['id_grid'].values)
+
+    for id in ids:
+        x = len(np.unique(ds.where(ds['id_grid']==id, drop=True)['x'].values))
+        y = len(np.unique(ds.where(ds['id_grid']==id, drop=True)['y'].values))
+        z = 1 if 'z' not in ds.data_vars else len(np.unique(ds['z'].values))
+        dims.append([x,y,z])
+
+    return np.array(dims)
+
+
+def mask_nest_bound(ds):
+    """Get mask array of the nested grid bound
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        dataset containing data, coordinates (x,y[,z]), dx,dy and dimensions (in attrs).
+
+    Returns
+    -------
+    array:
+        array of zone
+    """
+    if 'zone' not in ds.coords or 'id_grid' not in ds.data_vars:
+        raise KeyError("Variables 'zone' and/or 'id_grid' not found in grid")
+
+    zone = ds['zone'].values
+    id_grid = ds['id_grid'].values
+    dims = get_dims_from_ds(ds)
+
+    mask = []
+    for i, igig in enumerate(dims):
+        if i == 0:
+            continue
+        index = np.argwhere(id_grid == i).flatten()
+        zones = zone[index].reshape(igig[::-1])
+
+        n = zones[..., 0, :]
+        s = zones[..., -1, :]
+        w  = zones[..., :, 0]
+        e  = zones[..., :, -1]
+
+        border = np.concatenate([n.ravel(), s.ravel(),
+                                  w.ravel(), e.ravel()])
+        mask = np.concatenate([mask, border])
+
+    return mask
 
 
 @deprecated_alias(nanval='nan_value')
@@ -326,6 +393,7 @@ def load_marthe_grid(
     # memo: dims = [maingrid[x, y, z], gig1[x, y, z], ...]
     xcols, dxlus = _transform_xcoords(zxcol, zylig, zdxlu, nlayer=dims[0][-1], factor=xyfactor)
     yligs, dylus = _transform_ycoords(zxcol, zylig, zdylu, nlayer=dims[0][-1], factor=xyfactor)
+
 
     if varname == '':
         varname = ext.replace('.', '').upper()
