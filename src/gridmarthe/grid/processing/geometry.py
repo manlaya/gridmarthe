@@ -32,8 +32,11 @@ from .gis import to_geodataframe
 from ..grid_utils import _get_nearest_xy, subset, sel_by_coords
 
 
-def _get_mask_zone(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
-    """ Get mask array of active domain, from permh file (hydraulic conductivity)
+def _get_mask_zone(ds,
+                   varname: str = 'permeab',
+                   nanval: list | tuple = (-9999., 0.)):
+    """ Get mask array of active domain, from permh file (hydraulic
+    conductivity)
 
     Returns
     -------
@@ -44,20 +47,21 @@ def _get_mask_zone(ds, varname: str='permeab', nanval: list=[-9999., 0.]):
 
 
 def get_active_mask(
-    ds, varname: str='permeab',
-    nanval: list=[-9999., 0.],
+    ds,
+    varname: str = 'permeab',
+    nanval: list | tuple = (-9999., 0.),
     as_array=False,
     only_mask=False,
     shp_file=None,
-    epsg=27572
+    epsg=27572,
 ):
     """ Get the mask of active domain from hydraulic conductivity variable
 
-    This function (i) get the active mask as a 0/1 array and optionally
-    (ii) filter the dataset on valid values and dissolve results to get a mask shape
+    This function (i) get the active mask as a 0/1 array and optionally (ii)
+    filter the dataset on valid values and dissolve results to get a mask shape
 
-    Input ds should be the permh dataset (read from permh file, ie Horizontal hydraulic
-    conductivity, **without** the dropnan option).
+    Input ds should be the permh dataset (read from permh file, ie Horizontal
+    hydraulic conductivity, **without** the dropnan option).
 
     Parameters
     ----------
@@ -67,7 +71,7 @@ def get_active_mask(
     varname : str, optional
         default is 'permeab'
 
-    nanval : float or list, optional
+    nanval : float or list or tuple, optional
         default are 'permeab' nan values : 0, -9999.
 
     as_array : bool, optional.
@@ -87,8 +91,8 @@ def get_active_mask(
     Returns
     -------
     xr.Dataset
-        Dataset with ibound field, or gpd.GeoDataFrame of active domain if `as_array`
-        is set to False.
+        Dataset with ibound field, or gpd.GeoDataFrame of active domain if
+        `as_array` is set to False.
     """
 
     mask = _get_mask_zone(ds, varname, nanval)
@@ -121,7 +125,9 @@ def _get_true_topo(topo, key='h_topogr'):
 
 def _get_upper_alt(topo, hsubs, hsubs_name='h_substrat', topo_name='h_topogr'):
     """ Compute upper altitude of cells by layer
-    Topo should contains the same values in all layers, see :py_func:`_get_true_topo`
+
+    Topo should contains the same values in all layers, see
+    :py_func:`_get_true_topo`
 
     TODO: make valid version with time (if topo change with times)
 
@@ -167,13 +173,20 @@ def _get_depth(topo, h_upper):
     return topo - h_upper
 
 
-def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varname='h_substrat'):
+def compute_geometry(
+    topo,
+    hsubs,
+    mask=None,
+    topo_varname='h_topogr',
+    subs_varname='h_substrat',
+):
     """ Compute geometry attributes of Marthe domain
 
     Parameters
     ----------
     topo : xarray.Dataset
-        Topgraphy of the domain (stored in the first layer, in Marthe Conventions).
+        Topgraphy of the domain (stored in the first layer, in Marthe
+        Conventions).
     hsubs : xarray.Dataset
         altitude of all the lower boundary in the domain
     mask : numpy.array, optional
@@ -183,11 +196,11 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
         which will lead to incorrect results. Using the active domain as mask
         is a good practice (See example).
     topo_varname : str, optional
-        name of the variable containing the topography in the corresponding dataset,
-        allow custom name for marthe backward compatibility
+        name of the variable containing the topography in the corresponding
+        dataset, allow custom name for marthe backward compatibility
     subs_varname : str, optional
-        name of the variable containing the substratum in the corresponding dataset,
-        allow custom name for marthe backward compatibility
+        name of the variable containing the substratum in the corresponding
+        dataset, allow custom name for marthe backward compatibility
 
     Returns
     -------
@@ -224,10 +237,10 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
     # put values in xr.Dataset
     ds = xtopo.copy()
     dims = tuple(xtopo.dims)  # ('time', 'zone') in most cases, only 'zone' if no time
-    ds['z_lower']    = (dims, tmp[subs_varname].data)
-    ds['z_upper']    = (dims, tmp['h_upper'].data)
-    ds['thickness']  = (dims, thick)
-    ds['depth']      = (dims, depth)
+    ds['z_lower'] = (dims, tmp[subs_varname].data)
+    ds['z_upper'] = (dims, tmp['h_upper'].data)
+    ds['thickness'] = (dims, thick)
+    ds['depth'] = (dims, depth)
     if 'time' in ds:
         ds = ds.squeeze('time').drop_vars('time')
     return ds
@@ -236,9 +249,10 @@ def compute_geometry(topo, hsubs, mask=None, topo_varname='h_topogr', subs_varna
 def get_surface_layer(ds, aquif_layers=None):
     """ Compute surface mask of marthe domain
 
-    This function return min layer for every zone of a grimarthe dataset with z coords
-    A subset on specific (aquifers) layers can be performed with `aquif_layers`.
-    if set, aquif_layers must be a sequence (list, tuple, array) of layer (list of int).
+    This function return min layer for every zone of a grimarthe dataset with z
+    coords A subset on specific (aquifers) layers can be performed with
+    `aquif_layers`.  if set, aquif_layers must be a sequence (list, tuple,
+    array) of layer (list of int).
 
     This should be used to get a surface mask, ie get zone to filter a dataset.
 
@@ -271,8 +285,11 @@ def get_surface_layer(ds, aquif_layers=None):
     if aquif_layers is not None:
         df = df[df['z'].isin(aquif_layers)]
 
-    idx_z_min = df.groupby(coords).z.idxmin() # get index of min z ("layer") for each x,y,t groups
-    first_aquif_lay = df.loc[idx_z_min].reset_index().set_index('zone').drop('index', axis=1)
+    # get index of min z ("layer") for each x,y,t groups
+    idx_z_min = df.groupby(coords).z.idxmin()
+
+    first_aquif_lay = (df.loc[idx_z_min].reset_index().set_index('zone').drop(
+        'index', axis=1))
     return first_aquif_lay.to_xarray()
 
 
@@ -285,7 +302,8 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
     Notes
     -----
 
-    - if ds is multilayered, you need to provide the layer you want (z arg., int type)
+    - if ds is multilayered, you need to provide the layer you want (z arg., int
+      type)
     - ds should contains dx and dy
     - ds should not have assigned coords (x and y are variables, zone is the
     dimension coordinates (with time))
@@ -330,7 +348,12 @@ def search_zone(ds, i=None, j=None, x=None, y=None, z=None):
 
         # get mask of cell(s) (if several layers) matching xy
         if dx <= nearest_zone.dx.data and dy <= nearest_zone.dy.data:
-            _, mask = sel_by_coords(ds_search, nearest_xy[0], nearest_xy[1], return_mask=True)
+            _, mask = sel_by_coords(
+                ds_search,
+                nearest_xy[0],
+                nearest_xy[1],
+                return_mask=True,
+            )
             mask = xr.DataArray(mask, {"zone": ds_search.zone.data})  # as dataarray to use .where()
         else:
             mask = ds_search['zone'].isnull()

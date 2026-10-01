@@ -113,11 +113,16 @@ VARS_ATTRS = {
     },
 }
 
-# add variants for variable names
-VARS_ATTRS['geom_zone'] = VARS_ATTRS['zone_geom']  # english variant in MARTHE code
-VARS_ATTRS['permh'] = VARS_ATTRS['permeab']  # variant for common variable if varname is not specified
+# --- add variants for variable names
+# variant for common variable if varname is not specified
+VARS_ATTRS['permh'] = VARS_ATTRS['permeab']
+
+# english variant in MARTHE code
+VARS_ATTRS['geom_zone'] = VARS_ATTRS['zone_geom']
+# VARS_ATTRS['discharge'] = VARS_ATTRS['debit_rivi']
 
 
+# ---- Coordinates attrs
 # For memory only, now with pyproj
 COOR_ATTRS = {
     'x' : {
@@ -233,11 +238,11 @@ def _parse_global_attrs(
     crs = pyproj.CRS(epsg) if epsg is not None else None
 
     prologue = {
-        'conventions'         :'CF-1.10',  # check https://cfconventions.org/
+        'conventions'         : 'CF-1.10',  # check https://cfconventions.org/
         'title'               : title if title is not None else '',
         'marthe_grid_version' : 9.0,
         'original_dimensions' : 'x,y,z [grids]: ' + '; '.join(
-            [ ' '.join(map(str, x)) for x in dims]
+            [' '.join(map(str, x)) for x in dims]
         ),
     }
     grid_attrs = {

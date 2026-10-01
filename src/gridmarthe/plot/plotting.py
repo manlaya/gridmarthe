@@ -111,7 +111,7 @@ def plot_nested_grid(ds, ax=None, varname=None, itime=None, layer=None, **kwargs
             x='x', y='y',
             ax=ax, vmin=vmin, vmax=vmax,
             add_colorbar=False,
-            **{k:v for k,v in kwargs.items() if k != 'add_colorbar'}
+            **{k: v for k,v in kwargs.items() if k != 'add_colorbar'}
         )
 
     grid[varname].plot.pcolormesh(x='x', y='y', ax=ax, vmin=vmin, vmax=vmax, cbar_kwargs=cbar_kwargs, **kwargs)
@@ -383,11 +383,11 @@ def plot_veloc_quiver(
         fig, ax = plt.subplots()
 
     # norm data before plot
-    vx, vy = ds['vx'].data, ds['vy'].data
-    x, y = ds['x'].data, ds['y'].data
+    vx, vy, vz = ds['vx'].data, ds['vy'].data, ds['vz'].data
+    x, y, z = ds['x'].data, ds['y'].data, ds['z'].data
     module_v = ds['vmod'].data
     if sqrt_norm:
-        norm = np.sqrt(vx**2 + vy**2)
+        norm = np.sqrt(vx**2 + vy**2)  #+ vz**2
         vx_norm = vx / norm
         vy_norm = vy / norm
     else:
@@ -412,7 +412,12 @@ def plot_veloc_quiver(
     )
     # add scale, copy from : https://tristansalles.github.io/EnviReef/5-xarray/examples/maps.html
     maxstr = r'$%3.1f \cdot 10^{%1.0f} m.s^{-1}$' % (veclenght, np.log10(np.nanmedian(np.abs(norm))))
-    plt.quiverkey(quiver, loc_scale_xy[0], loc_scale_xy[1], veclenght, maxstr, labelpos='S',
+    plt.quiverkey(quiver,
+                  loc_scale_xy[0],
+                  loc_scale_xy[1],
+                  veclenght,
+                  maxstr,
+                  labelpos='S',
                   coordinates='axes').set_zorder(11)
     ax.set_title('Velocity field')
     return ax
@@ -446,7 +451,7 @@ def plot_cross_section(ds_xs, fig=None, ax=None, cbar_size=3, cmap=None, norm=No
         Size of the colorbar as a percentage of the main axis, by default 3.
     edgecolor : set the polygon patch edge color
         Default is none
-    **kwargs : polygon properties associated with matplotlib.pyplot.fill 
+    **kwargs : polygon properties associated with matplotlib.pyplot.fill
 
     Returns
     -------
