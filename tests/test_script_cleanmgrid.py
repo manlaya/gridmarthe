@@ -39,6 +39,7 @@ def test_read_files_from_rma_with_bare_filename(tmp_path, monkeypatch):
     # Create temporary .rma and .layer files
     rma_content = (
         "test.permh = PERMEAB\n"
+        "test.perm = PERMEAB2\n"  # now patch, should be identified as permh
         "test.layer = LAYERS\n"
     )
     layer_content = (
@@ -67,3 +68,7 @@ def test_read_files_from_rma_with_bare_filename(tmp_path, monkeypatch):
         assert ngrid is not None
     finally:
         monkeypatch.chdir(original_cwd)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "--no-cov"])
