@@ -13,26 +13,31 @@ https://www.brgm.fr/en/software/marthe-modelling-software-groundwater-flows
 
 ## gridmarthe in a nutshell
 
-`gridmarthe` allow users to read/write efficiently Marthe Grids (v9, v8, constant_data, etc.)
-with python, for any MARTHE variable.
+`gridmarthe` allow users to read/write efficiently Marthe Grids (v9, v8,
+constant_data, etc.) with python, for any MARTHE variable.
 
-With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be manage with
-`xarray` functions (or `numpy`). Specific treatments/functions are also provided by `gridmarthe`.
+With the `gridmarthe` API, data are stored in a `xarray` dataset, and can be
+manage with `xarray` functions (or `numpy`). Specific treatments/functions are
+also provided by `gridmarthe`.
 
-The package also install different command line tools: `ncmart` to convert Marthe Grid to netCDF format,
-`martshp` to convert in shapefile/geopackage, `cleanmgrid` to fix marthe grid format.
+The package also install different command line tools: `ncmart` to convert
+Marthe Grid to netCDF format, `martshp` to convert in shapefile/geopackage,
+`cleanmgrid` to fix marthe grid format.
 
 Full documentation and tutorials can be founded at https://gridmarthe.readthedocs.io
 
-Grids are stored as a 2 dimensions matrix composed of a 1D spatial vector and a time dimension
-(Reduced Horizontal Grid, as recommended for lossless compression by gathering
-in cf-conventions: see [cf-compression-gathering](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#compression-by-gathering)
-and [cf-reduced-horizontal-grid](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#reduced-horizontal-grid)).
-This means that the spatial domain is flatten in grid, and each point is associated
-with a index, a x coordinate, a y coordinate, eventually a z coordinate (number of layer
-in most cases), and dx, dy values.
+Grids are stored as a 2 dimensions matrix composed of a 1D spatial vector and a
+time dimension (Reduced Horizontal Grid, as recommended for lossless
+compression by gathering in cf-conventions: see
+[cf-compression-gathering](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#compression-by-gathering)
+and
+[cf-reduced-horizontal-grid](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.11/cf-conventions.html#reduced-horizontal-grid)).
+This means that the spatial domain is flatten in grid, and each point is
+associated with a index, a x coordinate, a y coordinate, eventually a z
+coordinate (number of layer in most cases), and dx, dy values.
 
-The `x`, and `y` coordinates are the center of cell. `dx`, `dy` are the dimensions of the cell.
+The `x`, and `y` coordinates are the center of cell. `dx`, `dy` are the
+dimensions of the cell.
 
 
 ## Installation
@@ -72,8 +77,9 @@ mamba install gridmarthe
 
 ### From sources
 
-`gridmarthe` use some Fortran modules which need to be compiled before local installation,
-hence user/developer who want to install from sources will need a Fortran and a C compiler.
+`gridmarthe` use some Fortran modules which need to be compiled before local
+installation, hence user/developer who want to install from sources will need a
+Fortran and a C compiler.
 
 #### Compilation and installation
 
@@ -86,8 +92,9 @@ cd gridmarthe
 
 ##### With pip (Unix-like OS)
 
-On a Unix-like machine, with gfortran, ninja-build, python3, the project `Makefile` will compile
-Fortran sources and install **in development mode** (i.e. **with** editable flag) the package.
+On a Unix-like machine, with gfortran, ninja-build, python3, the project
+`Makefile` will compile Fortran sources and install **in development mode**
+(i.e. **with** editable flag) the package.
 
 ```bash
 make requirements
@@ -150,7 +157,7 @@ Simple examples can be found in the
 ## License
 
 This program is free software and released under the terms of the
-[GNU General Public License (version 3 or later)](LICENSE).
+[GNU General Public License (version 3 or later)](COPYING).
 
 
 ## Authors and acknowledgment
@@ -163,7 +170,8 @@ Authors and contributors:
 - J.P. Vergnes,
 - S. Wang,
 - S. Lopez,
-- S. Magne
+- S. Magne,
+- T. Hallouin
 
 
 ## References

@@ -1,35 +1,80 @@
 # gridmarthe changelog
 
-## [Unreleased]
+<!-- Always keep unreleased changes at the top of the file. -->
+<!-- ## [Unreleased] -->
+
+<!-- ### Added -->
+<!-- ### Changed -->
+<!-- ### Deprecated -->
+<!-- ### Removed -->
+<!-- ### Fixed -->
+<!-- ### Security -->
+
+<!-- ## [0.6.0] - 202X-XX-XX -->
+
+## [0.5.0] - 2026-10-02
 
 ### Added
 
-- grid creation (from xy bounds or shape)
-- ugrid export for GIS visualization
-- `sel_by_coords` function to allow selection of a subset of the grid with x, y [z] coordinates,
-  on a 1D-spatial dataset, without requiring `assign_coords` (see [#25](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/25))
+- grid creation (from xy bounds or shape) / beta for nested grid
+  + functions `create_grid_domain` for regular grids from array dimensions,
+  + `create_grid_from_shape` for regular grids from shapefile,
+  + `add_zoom` to add nested grids with array dimensions,
+  + `add_zoom_from_shape` to add nested grids from shapefile (still beta)
+- function `create_ugrid` to define arrays and attributes following
+  ugrid netCDF convention, from a gridmarthe dataset. This allow better
+  interactions with GIS software QGIS for vizualization and manipulation
+  (see MeshLayer).
+- `sel_by_coords` function to allow selection of a subset of the grid with x, y
+  [z] coordinates, on a 1D-spatial dataset, without requiring `assign_coords`
+  (see [#25](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/25))
+- `get_dims_from_ds` to recreate `dims` array from dataset dimensions
+- `mask_nest_bound` to retrieve nested grid bounds (halo) indices in grid
+- more options from `load_marthe_grid` for `ncmart scripts`, see
+  [#23](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/23)
 
 ### Changed
 
 - dates argument in `gridmarthe.load_marthe_grid` is renamed `times` to be
-consistent with `time` dimension
-- `subset_by_coords` is deprecated in favor of `sel_by_coords`
+  consistent with `time` dimension
 - `gm.plot_nested_grid` calling without `assign_coords` is now allowed
 - `layer` and `time` dimensions can be query in `gm.plot_nested_grid`
 - `dropna()` now detect `varname` and `nan_value`.
+- **revert** change from v0.4.0 in `assign_coords`: sorting y in descending
+  order cause error when slicing the xarray.Dataset, this is removed. See
+  [#24](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/24)
+- improvement of matplotlib args/kwargs in cross section plot, see
+  [!14](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/merge_requests/14)
 
+### Deprecated
+
+- `subset_by_coords` is deprecated in favor of `sel_by_coords`
 
 ### Fixed
 
-- read int/float in times file (pastp)
-- compute geometry with other variable names
+- read int/float times in timestep file (pastp)
+- compute geometry with other variable names (names are now arguments with
+  defaults)
 - time dimension in vtk writer
 - search_zone now returns a list of indices if query with xy on multilayer grids
-- `gridmarthe.compute_geometry` on single layer models (no `z` coordinate)
-- reading file with path length > 132 characters now allow (see [#21](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/21))
-- Fortran IO error is now returned to python caller for better exception management
-- reading grid with `shallow_only` is now allowed for nested grids (see [#22](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/22))
-- Various fixes for raster export
+- `gridmarthe.compute_geometry` on single layer models (no `z` coordinate),
+  see [0c3986e](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/commit/0c3986e30eb69f71226dd0744e8572a11159c086)
+- reading file with path length > 132 characters now allow (see
+  [#21](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/21))
+- Fortran IO error is now returned to python caller for better exception
+  management (see [!13](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/merge_requests/13))
+- reading grid with `shallow_only` is now allowed for nested grids (see
+  [#22](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/22))
+- fixes for raster export without time dimensions (see [!12](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/merge_requests/12))
+- drop_time in load_marthe_grid now use 'squeeze' instead of 'drop' to avoid
+  dropping variable using this dimension, see
+  [#26](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/26)
+
+
+### Tests
+
+- refactor tests, improved coverage
+- add development CI
 
 
 ## [0.4.0] - 2026-05-27
@@ -43,7 +88,6 @@ consistent with `time` dimension
 
 ### Changed
 
-* change: drop support for python 3.10. Minimal requirement is now python 3.11
 * change: default to `varname=None` when writing a marthe grid file (and guess first non dim variable)
 * change: use integer as default dummy time dimension for parameters grid, instead of '1850-01-01' fake date.
 * refact: code refactoring/reorganization with new fortran subroutines
@@ -59,6 +103,10 @@ consistent with `time` dimension
 * fix: cleanmgrid script [#10](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/10) [#15](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/15) [#17](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/17)
 * fix: ncmart script [#9](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/9)
 * fix: netcdf attrs conflict with missing value [#16](https://gitlab.com/brgm/hydrogeological-modelling/marthe-tools/gridmarthe/-/issues/16)
+
+### Removed
+
+* drop support for python 3.10. Minimal requirement is now python 3.11
 
 
 ## [0.3.0] - 2025-12-09
