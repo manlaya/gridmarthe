@@ -59,14 +59,96 @@ def parse_args():
             'it (with xyfactor, attrs, etc.).'
         )
     )
-    parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--varname' , '-n', type=str, default=None, help='Variable Name (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
-    parser.add_argument('--as2d'    , '-d', action="store_const", const=True, default=False, help='Store grid as 2D (or more), default is 1D for space dimension, ie reduced horizontal grid') #choices=('True','False'), dest='monnomdevariable'
-    parser.add_argument('--ugrid'   , '-u', action="store_const", const=True, default=False, help='Store grid with UGRID convention, for QGIS/MDAL compatibility. Default is False.') #choices=('True','False'), dest='monnomdevariable'
-    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
-    parser.add_argument('--dump'    , '-H', action="store_const", const=True, default=False, help='Dump variables names, like ncdump -h FILE.')
-    parser.add_argument('--attrs'   , '-a', type=str, default=None, help='Add global attributes. Comma separated for multiple attrs, = is the separator for key, value. Example: `-a "references=RP-XXXXX-FR,toto=tata"`')
-    parser.add_argument('--version' , '-v', action="store_const", const=True, default=False, help='Show version and exit')
+    parser.add_argument(
+        '--output', '-o',
+        type=str,
+        default=None,
+        help='Output filename. Default is input.nc'
+    )
+    parser.add_argument(
+        '--varname', '-n',
+        type=str,
+        default=None,
+        help='Variable Name (field) to read, default is None: i.e variable '
+             'will be parsed from file and ONLY the first variable will be '
+             'read. Pass \'all\' to get all variables.'
+    )
+    parser.add_argument(
+        '--nan', '-N',
+        type=float,
+        default=None,
+        help='Custom NaN value for output. Optional, default is infer from '
+             'Marthe variable. Use -1 to deactivate nan dropout.'
+    )
+    parser.add_argument(
+        '--grid-id', '-k',
+        action="store_const",
+        const=True,
+        default=False,
+        help='add grid id, column and row ids to output'
+    )
+    parser.add_argument(
+        '--as2d', '-d',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Store grid as 2D (or more), default is 1D for space dimension, '
+             'ie reduced horizontal grid'
+    )  #choices=('True','False'), dest='monnomdevariable'
+
+    parser.add_argument(
+        '--ugrid', '-u',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Store grid with UGRID convention, for QGIS/MDAL compatibility. '
+             'Default is False.'
+    )
+
+    parser.add_argument(
+        '--xyfactor', '-x',
+        type=float,
+        default=1.,
+        help='Transformation factor for coordinates. '
+             'Optional, default is 1 (no transformation).'
+    )
+    parser.add_argument(
+        '--epsg', '-e',
+        type=int,
+        default=27572,
+        help='EPSG code for coordinates. Optional, default is set to 27572 '
+            '(France legacy projection Lambert zone II/extension, EPSG:27572).'
+    )
+
+    parser.add_argument(
+        '--dump', '-H',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Dump variables names, like ncdump -h FILE.'
+    )
+    parser.add_argument(
+        '--attrs', '-a',
+        type=str,
+        default=None,
+        help='Add global attributes. Comma separated for multiple attrs, = is '
+             'the separator for key, value. Example: '
+             '`-a "references=RP-XXXXX-FR,toto=tata"`'
+    )
+    parser.add_argument(
+        '--version', '-v',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Show version and exit'
+    )
+    parser.add_argument(
+        '--debug', '-G',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Debug mode, print options and exit'
+    )
 
     args = parser.parse_args()
 
@@ -74,6 +156,11 @@ def parse_args():
         print('gridmarthe {}'.format(gm.__version__))
         print(_copyleft)
         sys.exit(0)
+
+    if args.debug:
+        print('ncmart: debug mode')
+        print(args)
+        sys.exit(1)
 
     if len(args.opt) == 0:
         print('ncmart: no argument/option')
@@ -107,6 +194,8 @@ def main():
     args   = parse_args()
     fpastp = args.opt[1] if len(args.opt) > 1 else None
 
+
+
     if args.dump:
         _var = gm.scan_var(args.opt[0])
         print('Variable found in file:', _var)
@@ -116,9 +205,13 @@ def main():
         ds = gm.load_marthe_grid(
             args.opt[0],
             fpastp=fpastp,
-            drop_nan=True,
+            drop_nan=args.nan != -1,
+            nan_value=args.nan,
+            add_id_grid=args.grid_id,
+            add_col_row=args.grid_id,
             varname=args.varname,
-            xyfactor=args.xyfactor
+            xyfactor=args.xyfactor,
+            epsg=args.epsg
         )
     else:
         # allow transformation of existing netcdf
@@ -129,6 +222,7 @@ def main():
             ds['dx'].data *= args.xyfactor
             ds['dy'].data *= args.xyfactor
             ds.attrs['scale_factor'] = args.xyfactor
+            # TODO: reset epsg in attrs with pyproj
 
     if args.ugrid:
         ds = gm.create_ugrid(ds, args.varname)
@@ -136,7 +230,7 @@ def main():
 
     if args.as2d:
         ds = gm.assign_coords(ds)
-        # ds = ds.isel(Y=slice(None, None, -1))  # inverse Y-axis, eg for QGIS view
+        # ds = ds.isel(y=slice(None, None, -1))  # inverse Y-axis, eg for QGIS view
 
     # add user attrs
     if args.attrs is not None:

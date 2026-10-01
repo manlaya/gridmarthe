@@ -46,16 +46,88 @@ def parse_args():
         nargs='*',
         help=(
             'Paths to marthe grid [and timesteps if result] files are expected.'
-            'If input is already a netcdf file, this script allow the conversion to shapefile/gpkg.'
+            'If input is already a netcdf file, this script allow the '
+            'conversion to shapefile/gpkg.'
         )
     )
-    parser.add_argument('--output'  , '-o', type=str, default=None, help='Output filename. Default is input.nc')
-    parser.add_argument('--varname' , '-n', type=str, default=None, help='Variable (field) to read, default is None: i.e variable will be parsed from file and ONLY the first variable will be read. Pass \'all\' to get all variables.')
-    parser.add_argument('--xyfactor', '-x', type=float, default=1., help='Transformation factor for coordinates. Optional, default is 1 (no transformation).')
-    parser.add_argument('--gpkg'    , '-g', action="store_const", const=True, default=False, help='Use GPKG format instead of shapefile')
-    parser.add_argument('--mask'    , '-m', action="store_const", const=True, default=False, help='Only get a mask of active domain')
-    parser.add_argument('--version' , '-v', action="store_const", const=True, default=False, help='Show version and exit')
-    parser.add_argument('--wide_fmt', '-w', action="store_const", const=True, default=False, help='Use wide format (columns) for time')
+    parser.add_argument(
+        '--output', '-o',
+        type=str,
+        default=None,
+        help='Output filename. Default is input.nc'
+    )
+    parser.add_argument(
+        '--varname', '-n',
+        type=str,
+        default=None,
+        help='Variable (field) to read, default is None: i.e variable will be '
+             'parsed from file and ONLY the first variable will be read. '
+             'Pass \'all\' to get all variables.'
+    )
+    parser.add_argument(
+        '--xyfactor', '-x',
+        type=float,
+        default=1.,
+        help='Transformation factor for coordinates. Optional, '
+             'default is 1 (no transformation).'
+    )
+    parser.add_argument(
+        '--gpkg', '-g',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Use GPKG format instead of shapefile'
+    )
+    parser.add_argument(
+        '--mask', '-m',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Only get a mask of active domain'
+    )
+    parser.add_argument(
+        '--nan', '-N',
+        type=float,
+        default=None,
+        help='Custom NaN value for output. Optional, default is infer from '
+             'Marthe variable. Use -N -1 to deactivate NaN dropout.'
+    )
+    parser.add_argument(
+        '--grid-id', '-k',
+        action="store_const",
+        const=True,
+        default=False,
+        help='add grid id, column and row ids to output'
+    )
+    parser.add_argument(
+        '--epsg', '-e',
+        type=int,
+        default=27572,
+        help='EPSG code for coordinates. Optional, default is set to 27572 '
+             '(France legacy projection Lambert zone II/extension, EPSG:27572).'
+    )
+
+    parser.add_argument(
+        '--version', '-v',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Show version and exit'
+    )
+    parser.add_argument(
+        '--wide_fmt', '-w',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Use wide format (columns) for time'
+    )
+    parser.add_argument(
+        '--debug', '-G',
+        action="store_const",
+        const=True,
+        default=False,
+        help='Debug mode, print options and exit'
+    )
 
     args = parser.parse_args()
 
@@ -103,9 +175,13 @@ def main():
         ds = gm.load_marthe_grid(
             args.opt[0],
             fpastp=fpastp,
-            drop_nan=True,
+            drop_nan=args.nan != -1,
+            nan_value=args.nan,
+            add_id_grid=args.grid_id,
+            add_col_row=args.grid_id,
             varname=args.varname,
-            xyfactor=args.xyfactor
+            xyfactor=args.xyfactor,
+            epsg=args.epsg
         )
     else:
         ds = xr.open_dataset(args.opt[0])
@@ -115,6 +191,7 @@ def main():
             ds['dx'].data *= args.xyfactor
             ds['dy'].data *= args.xyfactor
             ds.attrs['scale_factor'] = args.xyfactor
+            # TODO: reset epsg in attrs with pyproj
 
     if args.mask:
         mask = gm.get_active_mask(ds)
