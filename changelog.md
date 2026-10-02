@@ -12,6 +12,13 @@
 
 <!-- ## [0.6.0] - 202X-XX-XX -->
 
+## [0.5.3] - 2026-10-03
+
+### Fixed
+
+- hotfix: reading grid with timestep -9999. and a pastp file
+
+
 ## [0.5.0] - 2026-10-02
 
 ### Added

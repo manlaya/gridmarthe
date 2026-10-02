@@ -442,7 +442,7 @@ def load_marthe_grid(
         zlus = _set_layers(dims)
         dic_data['z'] = ("zone", zlus, _assign_z_attrs(full_3d)) # add lay
 
-    if fpastp is not None:
+    if fpastp is not None and isteps[0] != -9999.:
         # add times from a pastp file, case of non-uniform timesteps
         # or edition not set every timestep
         timesteps = read_dates_from_pastp(fpastp)

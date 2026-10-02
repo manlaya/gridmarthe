@@ -244,5 +244,11 @@ def test_path_134():
     d.rmdir()
 
 
+def test_read_time_m9999_wpastp():
+    # until v0.5 bug when adding pastp with a time -9999. in grid
+    ds = gm.load_marthe_grid('tests/data/surf_drainee_riv.out', fpastp='tests/data/hallue.pastp')
+    assert ds['time'].data[0] == 0.  # -9999. should be set as 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, '-v', '--no-cov'])

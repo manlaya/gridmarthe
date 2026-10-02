@@ -132,7 +132,7 @@ lib: $(F90SRC)
 # which is required in linux, otherwise default is /usr/local
 
 # meson editable for dev/testing
-editable:
+editable: requirements
 	$(PIP) install --no-build-isolation --no-deps \
 		--config-settings=editable-verbose=true \
 		--config-settings=setup-args='-Dpip_edit_mode=true' \
