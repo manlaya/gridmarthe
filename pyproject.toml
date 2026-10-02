@@ -123,6 +123,10 @@ archs = ["x86_64"]
 
 [tool.cibuildwheel.windows]
 archs = ["AMD64"]
+# free-threaded builds (cp3??t) are skipped: the cp314t wheel tests fails with a
+# native access violation (0xC0000005). OK with linuw
+# Suspected delvewheel bundling GIL-ABI dlls ?
+build = "cp3??-*"  # will not match cp3??t
 repair-wheel-command = "delvewheel repair -v -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
