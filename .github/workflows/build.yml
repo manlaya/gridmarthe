@@ -1,9 +1,10 @@
-name: Build and Publish
+name: Build, Test and Publish
 
 on:
   push:
     branches:
       - ci
+      - dev
     tags:
       - 'v*'
   pull_request:
@@ -103,9 +104,61 @@ jobs:
           path: dist/*.tar.gz
 
 
+  # port of the "test" stage in .gitlab-ci.yml
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # gridmarthe ships a fortran extension built by meson-python
+      - name: Install build toolchain (gfortran)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gcc gfortran ninja-build
+          gfortran --version
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install gridmarthe with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[dev]"
+
+      - name: Run tests
+        run: pytest --cov=gridmarthe --cov-report=xml --cov-report=term
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: error
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          flags: py${{ matrix.python-version }}
+          name: py${{ matrix.python-version }}
+          # public repo on GitHub, no token needed; uncomment for private repos
+          # token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+
   publish-to-testpypi:
     name: Publish to TestPyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist, test]
     if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'push' && endsWith(github.ref, 'ci'))
     runs-on: ubuntu-latest
 
