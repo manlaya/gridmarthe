@@ -107,9 +107,14 @@ include-package-data = true
 [tool.cibuildwheel]
 skip = "cp-39* cp-310* pp* *musl* *_i686 *_ppc64le *_s390x *_universal2"
 test-requires = ["pytest", "pytest-cov", "vtkwriters"]
-# do not use "cd {project} && ..." here: on windows cibuildwheel spawns the
-# command from a temp dir and the cd is ignored, so relative paths break
-test-command = 'pytest -v --no-cov "{project}/tests/test_io_gridmarthe.py"'
+# tests/conftest.py resolves its fixtures with cwd-relative paths ("tests/data",
+# "tests/tmp_outputs"), so the test has to run from a dir that contains tests/.
+# Do NOT use "cd {project} && ..." here: cibuildwheel spawns the command from a
+# temp dir and the cd is ignored on windows. test-sources copies tests/ there
+# instead, so this behaves the same on linux and windows.
+# https://cibuildwheel.pypa.io/en/stable/options/#test-command
+test-sources = "tests"
+test-command = "pytest -v --no-cov tests/test_io_gridmarthe.py"
 
 
 [tool.cibuildwheel.linux]
